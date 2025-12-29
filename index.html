@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>日文50音 Flash Card（平假名⇄片假名 + Romaji）</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --card:#121a24;
+      --card2:#0f1720;
+      --text:#eaf1ff;
+      --muted:#9fb0c7;
+      --accent:#5fe1b0;
+      --danger:#ff6b6b;
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans", "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(95,225,176,.18), transparent 60%),
+                  radial-gradient(900px 500px at 90% 20%, rgba(80,160,255,.14), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:stretch;
+      justify-content:center;
+      padding: 14px 12px 22px;
+    }
+    .app{
+      width:min(520px, 100%);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    header{
+      padding: 8px 6px 0;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .title{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
+    }
+    h1{
+      margin:0;
+      font-size:18px;
+      letter-spacing:.2px;
+      font-weight:750;
+    }
+    .progress{
+      color:var(--muted);
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .controls{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: var(--radius);
+      padding: 10px;
+    }
+    label{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:13px;
+      color:var(--text);
+      user-select:none;
+    }
+    input[type="checkbox"]{
+      width:18px;
+      height:18px;
+      accent-color: var(--accent);
+    }
+
+    .cardWrap{
+      flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 6px 0 2px;
+    }
+    .card{
+      width:100%;
+      aspect-ratio: 3 / 4;
+      max-height: 72vh;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow: var(--shadow);
+      position:relative;
+      perspective: 1200px;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+      border: 1px solid rgba(255,255,255,.08);
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background: radial-gradient(700px 300px at 40% -10%, rgba(95,225,176,.26), transparent 55%),
+                  radial-gradient(700px 300px at 80% 30%, rgba(80,160,255,.18), transparent 55%);
+      opacity:.55;
+      pointer-events:none;
+    }
+    .inner{
+      position:absolute;
+      inset:0;
+      transform-style: preserve-3d;
+      transition: transform .55s cubic-bezier(.2,.8,.2,1);
+    }
+    .card.flipped .inner{ transform: rotateY(180deg); }
+
+    .face{
+      position:absolute;
+      inset:0;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      backface-visibility:hidden;
+      padding: 18px 16px;
+    }
+    .front{ }
+    .back{
+      transform: rotateY(180deg);
+    }
+
+    .kana{
+      font-size: clamp(72px, 16vw, 120px);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: .5px;
+      margin-bottom: 10px;
+      text-shadow: 0 10px 22px rgba(0,0,0,.35);
+    }
+    .romaji{
+      font-size: clamp(22px, 5vw, 34px);
+      letter-spacing: .8px;
+      color: var(--accent);
+      font-weight: 750;
+      margin-top: 2px;
+    }
+    .hint{
+      position:absolute;
+      bottom: 10px;
+      left: 12px;
+      right: 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      color: var(--muted);
+      font-size: 12px;
+      gap:10px;
+    }
+    .badge{
+      padding:6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      color: var(--muted);
+      font-size: 12px;
+      white-space:nowrap;
+    }
+
+    .btnRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:10px;
+    }
+    button{
+      border:0;
+      border-radius: 14px;
+      padding: 12px 12px;
+      font-size: 14px;
+      font-weight: 750;
+      color: var(--text);
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:active{ transform: translateY(1px); }
+    .primary{ background: rgba(95,225,176,.16); border-color: rgba(95,225,176,.35); }
+    .danger{ background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.30); }
+    .footerNote{
+      color: var(--muted);
+      font-size: 12px;
+      text-align:center;
+      padding: 2px 0 0;
+    }
+    a{ color: var(--accent); text-decoration: none; }
+    a:hover{ text-decoration: underline; }
+
+    @media (prefers-reduced-motion: reduce){
+      .inner{ transition:none; }
+      button:active{ transform:none; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app" role="application" aria-label="Japanese Kana Flash Cards">
+    <header>
+      <div class="title">
+        <h1>日文50音 Flash Card</h1>
+        <div class="progress" id="progress">—</div>
+      </div>
+
+      <div class="controls" aria-label="Deck options">
+        <label><input type="checkbox" id="optDakuten" />加入濁音・半濁音（が/ぱ等）</label>
+        <label><input type="checkbox" id="optYoon" />加入拗音（きゃ/しゃ等）</label>
+      </div>
+    </header>
+
+    <div class="cardWrap">
+      <div class="card" id="card" title="點一下翻面 / Tap to flip" aria-label="flash card" tabindex="0">
+        <div class="inner" id="inner">
+          <div class="face front" aria-label="front">
+            <div class="kana" id="frontKana">あ</div>
+            <div class="romaji" id="frontRomaji">a</div>
+          </div>
+          <div class="face back" aria-label="back">
+            <div class="kana" id="backKana">ア</div>
+            <div class="romaji" id="backRomaji">a</div>
+          </div>
+        </div>
+
+        <div class="hint">
+          <span class="badge" id="deckBadge">基本50音</span>
+          <span class="badge">點卡片翻面</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="btnRow" aria-label="navigation buttons">
+      <button id="btnPrev">上一張</button>
+      <button class="primary" id="btnFlip">翻面</button>
+      <button id="btnNext">下一張</button>
+    </div>
+
+    <div class="btnRow" aria-label="utility buttons">
+      <button id="btnShuffle">隨機洗牌</button>
+      <button id="btnReset">回到第一張</button>
+      <button class="danger" id="btnReveal">顯示答案 1 秒</button>
+    </div>
+
+    <div class="footerNote">
+      建議練法：看到平假名（ひらがな / hiragana）→ 立刻說出片假名（カタカナ / katakana）與發音（romaji）
+    </div>
+  </div>
+
+<script>
+  // --- Data ---------------------------------------------------------------
+  // Each item: {h: hiragana, k: katakana, r: romaji, tag: "basic|dakuten|yoon"}
+  const BASIC = [
+    // a
+    {h:"あ",k:"ア",r:"a",tag:"basic"},
+    {h:"い",k:"イ",r:"i",tag:"basic"},
+    {h:"う",k:"ウ",r:"u",tag:"basic"},
+    {h:"え",k:"エ",r:"e",tag:"basic"},
+    {h:"お",k:"オ",r:"o",tag:"basic"},
+    // ka
+    {h:"か",k:"カ",r:"ka",tag:"basic"},
+    {h:"き",k:"キ",r:"ki",tag:"basic"},
+    {h:"く",k:"ク",r:"ku",tag:"basic"},
+    {h:"け",k:"ケ",r:"ke",tag:"basic"},
+    {h:"こ",k:"コ",r:"ko",tag:"basic"},
+    // sa
+    {h:"さ",k:"サ",r:"sa",tag:"basic"},
+    {h:"し",k:"シ",r:"shi",tag:"basic"},
+    {h:"す",k:"ス",r:"su",tag:"basic"},
+    {h:"せ",k:"セ",r:"se",tag:"basic"},
+    {h:"そ",k:"ソ",r:"so",tag:"basic"},
+    // ta
+    {h:"た",k:"タ",r:"ta",tag:"basic"},
+    {h:"ち",k:"チ",r:"chi",tag:"basic"},
+    {h:"つ",k:"ツ",r:"tsu",tag:"basic"},
+    {h:"て",k:"テ",r:"te",tag:"basic"},
+    {h:"と",k:"ト",r:"to",tag:"basic"},
+    // na
+    {h:"な",k:"ナ",r:"na",tag:"basic"},
+    {h:"に",k:"ニ",r:"ni",tag:"basic"},
+    {h:"ぬ",k:"ヌ",r:"nu",tag:"basic"},
+    {h:"ね",k:"ネ",r:"ne",tag:"basic"},
+    {h:"の",k:"ノ",r:"no",tag:"basic"},
+    // ha
+    {h:"は",k:"ハ",r:"ha",tag:"basic"},
+    {h:"ひ",k:"ヒ",r:"hi",tag:"basic"},
+    {h:"ふ",k:"フ",r:"fu",tag:"basic"},
+    {h:"へ",k:"ヘ",r:"he",tag:"basic"},
+    {h:"ほ",k:"ホ",r:"ho",tag:"basic"},
+    // ma
+    {h:"ま",k:"マ",r:"ma",tag:"basic"},
+    {h:"み",k:"ミ",r:"mi",tag:"basic"},
+    {h:"む",k:"ム",r:"mu",tag:"basic"},
+    {h:"め",k:"メ",r:"me",tag:"basic"},
+    {h:"も",k:"モ",r:"mo",tag:"basic"},
+    // ya
+    {h:"や",k:"ヤ",r:"ya",tag:"basic"},
+    {h:"ゆ",k:"ユ",r:"yu",tag:"basic"},
+    {h:"よ",k:"ヨ",r:"yo",tag:"basic"},
+    // ra
+    {h:"ら",k:"ラ",r:"ra",tag:"basic"},
+    {h:"り",k:"リ",r:"ri",tag:"basic"},
+    {h:"る",k:"ル",r:"ru",tag:"basic"},
+    {h:"れ",k:"レ",r:"re",tag:"basic"},
+    {h:"ろ",k:"ロ",r:"ro",tag:"basic"},
+    // wa + n + wo
+    {h:"わ",k:"ワ",r:"wa",tag:"basic"},
+    {h:"を",k:"ヲ",r:"o",tag:"basic"},
+    {h:"ん",k:"ン",r:"n",tag:"basic"},
+  ];
+
+  const DAKUTEN = [
+    {h:"が",k:"ガ",r:"ga",tag:"dakuten"},
+    {h:"ぎ",k:"ギ",r:"gi",tag:"dakuten"},
+    {h:"ぐ",k:"グ",r:"gu",tag:"dakuten"},
+    {h:"げ",k:"ゲ",r:"ge",tag:"dakuten"},
+    {h:"ご",k:"ゴ",r:"go",tag:"dakuten"},
+
+    {h:"ざ",k:"ザ",r:"za",tag:"dakuten"},
+    {h:"じ",k:"ジ",r:"ji",tag:"dakuten"},
+    {h:"ず",k:"ズ",r:"zu",tag:"dakuten"},
+    {h:"ぜ",k:"ゼ",r:"ze",tag:"dakuten"},
+    {h:"ぞ",k:"ゾ",r:"zo",tag:"dakuten"},
+
+    {h:"だ",k:"ダ",r:"da",tag:"dakuten"},
+    {h:"ぢ",k:"ヂ",r:"ji",tag:"dakuten"},
+    {h:"づ",k:"ヅ",r:"zu",tag:"dakuten"},
+    {h:"で",k:"デ",r:"de",tag:"dakuten"},
+    {h:"ど",k:"ド",r:"do",tag:"dakuten"},
+
+    {h:"ば",k:"バ",r:"ba",tag:"dakuten"},
+    {h:"び",k:"ビ",r:"bi",tag:"dakuten"},
+    {h:"ぶ",k:"ブ",r:"bu",tag:"dakuten"},
+    {h:"べ",k:"ベ",r:"be",tag:"dakuten"},
+    {h:"ぼ",k:"ボ",r:"bo",tag:"dakuten"},
+
+    {h:"ぱ",k:"パ",r:"pa",tag:"dakuten"},
+    {h:"ぴ",k:"ピ",r:"pi",tag:"dakuten"},
+    {h:"ぷ",k:"プ",r:"pu",tag:"dakuten"},
+    {h:"ぺ",k:"ペ",r:"pe",tag:"dakuten"},
+    {h:"ぽ",k:"ポ",r:"po",tag:"dakuten"},
+  ];
+
+  const YOON = [
+    {h:"きゃ",k:"キャ",r:"kya",tag:"yoon"},
+    {h:"きゅ",k:"キュ",r:"kyu",tag:"yoon"},
+    {h:"きょ",k:"キョ",r:"kyo",tag:"yoon"},
+
+    {h:"しゃ",k:"シャ",r:"sha",tag:"yoon"},
+    {h:"しゅ",k:"シュ",r:"shu",tag:"yoon"},
+    {h:"しょ",k:"ショ",r:"sho",tag:"yoon"},
+
+    {h:"ちゃ",k:"チャ",r:"cha",tag:"yoon"},
+    {h:"ちゅ",k:"チュ",r:"chu",tag:"yoon"},
+    {h:"ちょ",k:"チョ",r:"cho",tag:"yoon"},
+
+    {h:"にゃ",k:"ニャ",r:"nya",tag:"yoon"},
+    {h:"にゅ",k:"ニュ",r:"nyu",tag:"yoon"},
+    {h:"にょ",k:"ニョ",r:"nyo",tag:"yoon"},
+
+    {h:"ひゃ",k:"ヒャ",r:"hya",tag:"yoon"},
+    {h:"ひゅ",k:"ヒュ",r:"hyu",tag:"yoon"},
+    {h:"ひょ",k:"ヒョ",r:"hyo",tag:"yoon"},
+
+    {h:"みゃ",k:"ミャ",r:"mya",tag:"yoon"},
+    {h:"みゅ",k:"ミュ",r:"myu",tag:"yoon"},
+    {h:"みょ",k:"ミョ",r:"myo",tag:"yoon"},
+
+    {h:"りゃ",k:"リャ",r:"rya",tag:"yoon"},
+    {h:"りゅ",k:"リュ",r:"ryu",tag:"yoon"},
+    {h:"りょ",k:"リョ",r:"ryo",tag:"yoon"},
+
+    {h:"ぎゃ",k:"ギャ",r:"gya",tag:"yoon"},
+    {h:"ぎゅ",k:"ギュ",r:"gyu",tag:"yoon"},
+    {h:"ぎょ",k:"ギョ",r:"gyo",tag:"yoon"},
+
+    {h:"じゃ",k:"ジャ",r:"ja",tag:"yoon"},
+    {h:"じゅ",k:"ジュ",r:"ju",tag:"yoon"},
+    {h:"じょ",k:"ジョ",r:"jo",tag:"yoon"},
+
+    {h:"びゃ",k:"ビャ",r:"bya",tag:"yoon"},
+    {h:"びゅ",k:"ビュ",r:"byu",tag:"yoon"},
+    {h:"びょ",k:"ビョ",r:"byo",tag:"yoon"},
+
+    {h:"ぴゃ",k:"ピャ",r:"pya",tag:"yoon"},
+    {h:"ぴゅ",k:"ピュ",r:"pyu",tag:"yoon"},
+    {h:"ぴょ",k:"ピョ",r:"pyo",tag:"yoon"},
+  ];
+
+  // --- State --------------------------------------------------------------
+  const el = (id) => document.getElementById(id);
+
+  const card = el("card");
+  const progress = el("progress");
+  const deckBadge = el("deckBadge");
+
+  const frontKana = el("frontKana");
+  const frontRomaji = el("frontRomaji");
+  const backKana = el("backKana");
+  const backRomaji = el("backRomaji");
+
+  const optDakuten = el("optDakuten");
+  const optYoon = el("optYoon");
+
+  let deck = [];
+  let index = 0;
+
+  // --- Helpers ------------------------------------------------------------
+  function buildDeck(){
+    const parts = [BASIC];
+    if (optDakuten.checked) parts.push(DAKUTEN);
+    if (optYoon.checked) parts.push(YOON);
+
+    deck = parts.flat();
+    index = Math.min(index, deck.length - 1);
+    if (deck.length <= 0){
+      deck = BASIC.slice();
+      index = 0;
+    }
+
+    const labels = ["基本50音"];
+    if (optDakuten.checked) labels.push("濁音/半濁音");
+    if (optYoon.checked) labels.push("拗音");
+    deckBadge.textContent = labels.join(" + ");
+
+    render();
+    savePrefs();
+  }
+
+  function render(){
+    const item = deck[index];
+    frontKana.textContent = item.h;
+    frontRomaji.textContent = item.r;
+    backKana.textContent = item.k;
+    backRomaji.textContent = item.r;
+
+    progress.textContent = `${index + 1} / ${deck.length}`;
+    // Always show front when moving
+    card.classList.remove("flipped");
+  }
+
+  function next(){
+    index = (index + 1) % deck.length;
+    render();
+  }
+  function prev(){
+    index = (index - 1 + deck.length) % deck.length;
+    render();
+  }
+
+  function shuffle(){
+    // Fisher–Yates
+    for (let i = deck.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    index = 0;
+    render();
+  }
+
+  function flip(){
+    card.classList.toggle("flipped");
+  }
+
+  function revealOneSecond(){
+    const wasFlipped = card.classList.contains("flipped");
+    card.classList.add("flipped");
+    setTimeout(() => {
+      if (!wasFlipped) card.classList.remove("flipped");
+    }, 1000);
+  }
+
+  function savePrefs(){
+    const prefs = {
+      dakuten: optDakuten.checked,
+      yoon: optYoon.checked
+    };
+    localStorage.setItem("kanaFlashPrefs", JSON.stringify(prefs));
+  }
+
+  function loadPrefs(){
+    try{
+      const raw = localStorage.getItem("kanaFlashPrefs");
+      if (!raw) return;
+      const p = JSON.parse(raw);
+      optDakuten.checked = !!p.dakuten;
+      optYoon.checked = !!p.yoon;
+    }catch(_){}
+  }
+
+  // --- Events -------------------------------------------------------------
+  el("btnNext").addEventListener("click", next);
+  el("btnPrev").addEventListener("click", prev);
+  el("btnFlip").addEventListener("click", flip);
+  el("btnShuffle").addEventListener("click", shuffle);
+  el("btnReset").addEventListener("click", () => { index = 0; render(); });
+  el("btnReveal").addEventListener("click", revealOneSecond);
+
+  card.addEventListener("click", flip);
+  card.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flip(); }
+    if (e.key === "ArrowRight") next();
+    if (e.key === "ArrowLeft") prev();
+  });
+
+  optDakuten.addEventListener("change", buildDeck);
+  optYoon.addEventListener("change", buildDeck);
+
+  // Swipe support (mobile)
+  let startX = null;
+  card.addEventListener("touchstart", (e) => { startX = e.touches[0].clientX; }, {passive:true});
+  card.addEventListener("touchend", (e) => {
+    if (startX == null) return;
+    const endX = e.changedTouches[0].clientX;
+    const dx = endX - startX;
+    startX = null;
+    if (Math.abs(dx) < 40) return;
+    if (dx < 0) next(); else prev();
+  }, {passive:true});
+
+  // Init
+  loadPrefs();
+  buildDeck();
+</script>
+</body>
+</html>
