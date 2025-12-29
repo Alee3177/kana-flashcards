@@ -7,8 +7,6 @@
   <style>
     :root{
       --bg:#0b0f14;
-      --card:#121a24;
-      --card2:#0f1720;
       --text:#eaf1ff;
       --muted:#9fb0c7;
       --accent:#5fe1b0;
@@ -16,9 +14,13 @@
       --shadow: 0 12px 30px rgba(0,0,0,.35);
       --radius: 18px;
 
-      /* NEW: katakana light gray */
-      --katakana:#c7cfdb;
+      /* Color scheme requested */
+      --hira:#ffffff;     /* 平假名 = 白色 */
+      --kata:#e6c76a;     /* 片假名 = 金色 */
+      --yoon:#f0b35a;     /* 拗音 = 金色偏橘 */
+      --dakuten:#e07a6f;  /* 濁音/半濁音 = 金色偏紅 */
     }
+
     *{box-sizing:border-box}
     body{
       margin:0;
@@ -62,6 +64,7 @@
       font-size:12px;
       white-space:nowrap;
     }
+
     .controls{
       display:grid;
       grid-template-columns: 1fr 1fr;
@@ -144,21 +147,22 @@
       letter-spacing: .5px;
       margin-bottom: 10px;
       text-shadow: 0 10px 22px rgba(0,0,0,.35);
-      color: var(--text);
+      color: var(--hira); /* 平假名預設白 */
     }
 
-    /* NEW: all katakana (back side kana) becomes light gray */
+    /* Back side (katakana) default = gold */
     .back .kana{
-      color: var(--katakana);
+      color: var(--kata);
     }
 
     .romaji{
       font-size: clamp(22px, 5vw, 34px);
       letter-spacing: .8px;
-      color: var(--accent);
+      color: var(--accent); /* romaji stays same */
       font-weight: 750;
       margin-top: 2px;
     }
+
     .hint{
       position:absolute;
       bottom: 10px;
@@ -201,6 +205,11 @@
     button:active{ transform: translateY(1px); }
     .primary{ background: rgba(95,225,176,.16); border-color: rgba(95,225,176,.35); }
     .danger{ background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.30); }
+
+    /* NEW: familiarity buttons */
+    .know{ background: rgba(95,225,176,.16); border-color: rgba(95,225,176,.35); }
+    .dont{ background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.30); }
+
     .footerNote{
       color: var(--muted);
       font-size: 12px;
@@ -226,6 +235,8 @@
       <div class="controls" aria-label="Deck options">
         <label><input type="checkbox" id="optDakuten" />加入濁音・半濁音（が/ぱ等）</label>
         <label><input type="checkbox" id="optYoon" />加入拗音（きゃ/しゃ等）</label>
+        <label><input type="checkbox" id="optSound" />音效（可靜音）</label>
+        <label><input type="checkbox" id="optAutoFront" />移動後自動回正面</label>
       </div>
     </header>
 
@@ -244,7 +255,7 @@
 
         <div class="hint">
           <span class="badge" id="deckBadge">基本50音</span>
-          <span class="badge">點卡片翻面</span>
+          <span class="badge" id="statBadge">會 0 / 不會 0</span>
         </div>
       </div>
     </div>
@@ -261,16 +272,25 @@
       <button class="danger" id="btnReveal">顯示答案 3 秒</button>
     </div>
 
+    <div class="btnRow" aria-label="familiarity buttons">
+      <button class="know" id="btnKnow">會（延後再出）</button>
+      <button class="dont" id="btnDont">不會（稍後再出）</button>
+      <button id="btnStatsReset">重置熟悉度</button>
+    </div>
+
     <div class="footerNote">
       建議練法：看到平假名（ひらがな / hiragana）→ 立刻說出片假名（カタカナ / katakana）與發音（romaji）
     </div>
   </div>
 
 <script>
-  // --- Click sound (NEW) --------------------------------------------------
-  // Simple UI "toggle" click using WebAudio (works on mobile after user gesture).
+  // --- Preferences / Sound ------------------------------------------------
   let audioCtx = null;
+  const el = (id) => document.getElementById(id);
+
+  const optSound = el("optSound");
   function playClickSound(){
+    if (!optSound.checked) return;
     try{
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === "suspended") audioCtx.resume();
@@ -279,7 +299,6 @@
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
 
-      // a short "click": quick pitch drop
       osc.type = "square";
       osc.frequency.setValueAtTime(880, t0);
       osc.frequency.exponentialRampToValueAtTime(440, t0 + 0.03);
@@ -296,7 +315,33 @@
     }catch(_){}
   }
 
+  function savePrefs(){
+    const prefs = {
+      dakuten: optDakuten.checked,
+      yoon: optYoon.checked,
+      sound: optSound.checked,
+      autoFront: optAutoFront.checked
+    };
+    localStorage.setItem("kanaFlashPrefs", JSON.stringify(prefs));
+  }
+
+  function loadPrefs(){
+    try{
+      const raw = localStorage.getItem("kanaFlashPrefs");
+      if (!raw) return;
+      const p = JSON.parse(raw);
+      optDakuten.checked = !!p.dakuten;
+      optYoon.checked = !!p.yoon;
+      optSound.checked = (p.sound !== undefined) ? !!p.sound : true; // default ON if not set
+      optAutoFront.checked = (p.autoFront !== undefined) ? !!p.autoFront : true; // default ON
+    }catch(_){
+      optSound.checked = true;
+      optAutoFront.checked = true;
+    }
+  }
+
   // --- Data ---------------------------------------------------------------
+  // tag: "basic" | "dakuten" | "yoon"
   const BASIC = [
     {h:"あ",k:"ア",r:"a",tag:"basic"},
     {h:"い",k:"イ",r:"i",tag:"basic"},
@@ -433,12 +478,11 @@
     {h:"ぴょ",k:"ピョ",r:"pyo",tag:"yoon"},
   ];
 
-  // --- State --------------------------------------------------------------
-  const el = (id) => document.getElementById(id);
-
+  // --- UI elements --------------------------------------------------------
   const card = el("card");
   const progress = el("progress");
   const deckBadge = el("deckBadge");
+  const statBadge = el("statBadge");
 
   const frontKana = el("frontKana");
   const frontRomaji = el("frontRomaji");
@@ -447,11 +491,53 @@
 
   const optDakuten = el("optDakuten");
   const optYoon = el("optYoon");
+  const optAutoFront = el("optAutoFront");
 
+  const btnNext = el("btnNext");
+  const btnPrev = el("btnPrev");
+  const btnFlip = el("btnFlip");
+  const btnShuffle = el("btnShuffle");
+  const btnReset = el("btnReset");
+  const btnReveal = el("btnReveal");
+  const btnKnow = el("btnKnow");
+  const btnDont = el("btnDont");
+  const btnStatsReset = el("btnStatsReset");
+
+  // --- Deck / Scheduling --------------------------------------------------
   let deck = [];
   let index = 0;
 
-  // --- Helpers ------------------------------------------------------------
+  // Familiarity stats per item key (h|k|r|tag)
+  let stats = {};
+  let knowCount = 0;
+  let dontCount = 0;
+
+  function keyOf(item){ return `${item.h}|${item.k}|${item.r}|${item.tag}`; }
+
+  function loadStats(){
+    try{
+      const raw = localStorage.getItem("kanaFlashStats");
+      if (!raw) return;
+      const obj = JSON.parse(raw);
+      stats = obj.stats || {};
+      knowCount = obj.knowCount || 0;
+      dontCount = obj.dontCount || 0;
+    }catch(_){}
+  }
+  function saveStats(){
+    localStorage.setItem("kanaFlashStats", JSON.stringify({stats, knowCount, dontCount}));
+  }
+  function resetStats(){
+    stats = {};
+    knowCount = 0;
+    dontCount = 0;
+    saveStats();
+    updateStatsUI();
+  }
+  function updateStatsUI(){
+    statBadge.textContent = `會 ${knowCount} / 不會 ${dontCount}`;
+  }
+
   function buildDeck(){
     const parts = [BASIC];
     if (optDakuten.checked) parts.push(DAKUTEN);
@@ -473,6 +559,18 @@
     savePrefs();
   }
 
+  function applyKanaColorByTag(tag){
+    // Front (hiragana) always white, but optionally tint by category for learning focus.
+    // Requirement: category colors are primarily for katakana / special groups.
+    // We'll keep hiragana white to match requirement.
+    frontKana.style.color = "var(--hira)";
+
+    // Back (katakana) color by tag
+    if (tag === "yoon") backKana.style.color = "var(--yoon)";
+    else if (tag === "dakuten") backKana.style.color = "var(--dakuten)";
+    else backKana.style.color = "var(--kata)";
+  }
+
   function render(){
     const item = deck[index];
     frontKana.textContent = item.h;
@@ -480,8 +578,11 @@
     backKana.textContent = item.k;
     backRomaji.textContent = item.r;
 
+    applyKanaColorByTag(item.tag);
+
     progress.textContent = `${index + 1} / ${deck.length}`;
-    card.classList.remove("flipped");
+
+    if (optAutoFront.checked) card.classList.remove("flipped");
   }
 
   function next(){
@@ -511,33 +612,59 @@
     card.classList.add("flipped");
     setTimeout(() => {
       if (!wasFlipped) card.classList.remove("flipped");
-    }, 3000); // NEW: 3 seconds
+    }, 3000);
   }
 
+  // Simple SRS-like scheduling:
+  // - Know: move current card later (about 60% deck length)
+  // - Don't know: move current card soon (after ~8 cards)
+  function rescheduleCurrent(mode){
+    const item = deck[index];
+    deck.splice(index, 1); // remove current item
+
+    if (mode === "know"){
+      const offset = Math.max(10, Math.floor(deck.length * 0.60));
+      const insertAt = Math.min(deck.length, index + offset);
+      deck.splice(insertAt, 0, item);
+      knowCount++;
+    }else{
+      const offset = 8; // short delay, not immediate repeat
+      const insertAt = Math.min(deck.length, index + offset);
+      deck.splice(insertAt, 0, item);
+      dontCount++;
+    }
+
+    // keep index at same position to show the "next" card after removal
+    if (index >= deck.length) index = 0;
+
+    const k = keyOf(item);
+    if (!stats[k]) stats[k] = {know:0, dont:0};
+    if (mode === "know") stats[k].know++;
+    else stats[k].dont++;
+
+    saveStats();
+    updateStatsUI();
+    render();
+  }
+
+  // --- Preferences --------------------------------------------------------
   function savePrefs(){
-    const prefs = { dakuten: optDakuten.checked, yoon: optYoon.checked };
+    const prefs = {
+      dakuten: optDakuten.checked,
+      yoon: optYoon.checked,
+      sound: optSound.checked,
+      autoFront: optAutoFront.checked
+    };
     localStorage.setItem("kanaFlashPrefs", JSON.stringify(prefs));
   }
 
-  function loadPrefs(){
-    try{
-      const raw = localStorage.getItem("kanaFlashPrefs");
-      if (!raw) return;
-      const p = JSON.parse(raw);
-      optDakuten.checked = !!p.dakuten;
-      optYoon.checked = !!p.yoon;
-    }catch(_){}
+  function loadAll(){
+    loadPrefs();
+    loadStats();
+    updateStatsUI();
   }
 
   // --- Events -------------------------------------------------------------
-  const btnNext = el("btnNext");
-  const btnPrev = el("btnPrev");
-  const btnFlip = el("btnFlip");
-  const btnShuffle = el("btnShuffle");
-  const btnReset = el("btnReset");
-  const btnReveal = el("btnReveal");
-
-  // NEW: add click sound on button press (and do the action)
   btnNext.addEventListener("click", () => { playClickSound(); next(); });
   btnPrev.addEventListener("click", () => { playClickSound(); prev(); });
   btnFlip.addEventListener("click", () => { playClickSound(); flip(); });
@@ -545,7 +672,10 @@
   btnReset.addEventListener("click", () => { playClickSound(); index = 0; render(); });
   btnReveal.addEventListener("click", () => { playClickSound(); revealThreeSeconds(); });
 
-  // Card tap: flip (optional: also play sound)
+  btnKnow.addEventListener("click", () => { playClickSound(); rescheduleCurrent("know"); });
+  btnDont.addEventListener("click", () => { playClickSound(); rescheduleCurrent("dont"); });
+  btnStatsReset.addEventListener("click", () => { playClickSound(); resetStats(); });
+
   card.addEventListener("click", () => { playClickSound(); flip(); });
 
   card.addEventListener("keydown", (e) => {
@@ -556,6 +686,8 @@
 
   optDakuten.addEventListener("change", () => { playClickSound(); buildDeck(); });
   optYoon.addEventListener("change", () => { playClickSound(); buildDeck(); });
+  optSound.addEventListener("change", () => { savePrefs(); });
+  optAutoFront.addEventListener("change", () => { savePrefs(); });
 
   // Swipe support (mobile)
   let startX = null;
@@ -571,7 +703,7 @@
   }, {passive:true});
 
   // Init
-  loadPrefs();
+  loadAll();
   buildDeck();
 </script>
 </body>
