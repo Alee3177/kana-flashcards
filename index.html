@@ -15,6 +15,9 @@
       --danger:#ff6b6b;
       --shadow: 0 12px 30px rgba(0,0,0,.35);
       --radius: 18px;
+
+      /* NEW: katakana light gray */
+      --katakana:#c7cfdb;
     }
     *{box-sizing:border-box}
     body{
@@ -130,7 +133,6 @@
       backface-visibility:hidden;
       padding: 18px 16px;
     }
-    .front{ }
     .back{
       transform: rotateY(180deg);
     }
@@ -142,7 +144,14 @@
       letter-spacing: .5px;
       margin-bottom: 10px;
       text-shadow: 0 10px 22px rgba(0,0,0,.35);
+      color: var(--text);
     }
+
+    /* NEW: all katakana (back side kana) becomes light gray */
+    .back .kana{
+      color: var(--katakana);
+    }
+
     .romaji{
       font-size: clamp(22px, 5vw, 34px);
       letter-spacing: .8px;
@@ -198,8 +207,6 @@
       text-align:center;
       padding: 2px 0 0;
     }
-    a{ color: var(--accent); text-decoration: none; }
-    a:hover{ text-decoration: underline; }
 
     @media (prefers-reduced-motion: reduce){
       .inner{ transition:none; }
@@ -251,7 +258,7 @@
     <div class="btnRow" aria-label="utility buttons">
       <button id="btnShuffle">隨機洗牌</button>
       <button id="btnReset">回到第一張</button>
-      <button class="danger" id="btnReveal">顯示答案 1 秒</button>
+      <button class="danger" id="btnReveal">顯示答案 3 秒</button>
     </div>
 
     <div class="footerNote">
@@ -260,62 +267,89 @@
   </div>
 
 <script>
+  // --- Click sound (NEW) --------------------------------------------------
+  // Simple UI "toggle" click using WebAudio (works on mobile after user gesture).
+  let audioCtx = null;
+  function playClickSound(){
+    try{
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+
+      const t0 = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      // a short "click": quick pitch drop
+      osc.type = "square";
+      osc.frequency.setValueAtTime(880, t0);
+      osc.frequency.exponentialRampToValueAtTime(440, t0 + 0.03);
+
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(0.10, t0 + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.06);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(t0);
+      osc.stop(t0 + 0.07);
+    }catch(_){}
+  }
+
   // --- Data ---------------------------------------------------------------
-  // Each item: {h: hiragana, k: katakana, r: romaji, tag: "basic|dakuten|yoon"}
   const BASIC = [
-    // a
     {h:"あ",k:"ア",r:"a",tag:"basic"},
     {h:"い",k:"イ",r:"i",tag:"basic"},
     {h:"う",k:"ウ",r:"u",tag:"basic"},
     {h:"え",k:"エ",r:"e",tag:"basic"},
     {h:"お",k:"オ",r:"o",tag:"basic"},
-    // ka
+
     {h:"か",k:"カ",r:"ka",tag:"basic"},
     {h:"き",k:"キ",r:"ki",tag:"basic"},
     {h:"く",k:"ク",r:"ku",tag:"basic"},
     {h:"け",k:"ケ",r:"ke",tag:"basic"},
     {h:"こ",k:"コ",r:"ko",tag:"basic"},
-    // sa
+
     {h:"さ",k:"サ",r:"sa",tag:"basic"},
     {h:"し",k:"シ",r:"shi",tag:"basic"},
     {h:"す",k:"ス",r:"su",tag:"basic"},
     {h:"せ",k:"セ",r:"se",tag:"basic"},
     {h:"そ",k:"ソ",r:"so",tag:"basic"},
-    // ta
+
     {h:"た",k:"タ",r:"ta",tag:"basic"},
     {h:"ち",k:"チ",r:"chi",tag:"basic"},
     {h:"つ",k:"ツ",r:"tsu",tag:"basic"},
     {h:"て",k:"テ",r:"te",tag:"basic"},
     {h:"と",k:"ト",r:"to",tag:"basic"},
-    // na
+
     {h:"な",k:"ナ",r:"na",tag:"basic"},
     {h:"に",k:"ニ",r:"ni",tag:"basic"},
     {h:"ぬ",k:"ヌ",r:"nu",tag:"basic"},
     {h:"ね",k:"ネ",r:"ne",tag:"basic"},
     {h:"の",k:"ノ",r:"no",tag:"basic"},
-    // ha
+
     {h:"は",k:"ハ",r:"ha",tag:"basic"},
     {h:"ひ",k:"ヒ",r:"hi",tag:"basic"},
     {h:"ふ",k:"フ",r:"fu",tag:"basic"},
     {h:"へ",k:"ヘ",r:"he",tag:"basic"},
     {h:"ほ",k:"ホ",r:"ho",tag:"basic"},
-    // ma
+
     {h:"ま",k:"マ",r:"ma",tag:"basic"},
     {h:"み",k:"ミ",r:"mi",tag:"basic"},
     {h:"む",k:"ム",r:"mu",tag:"basic"},
     {h:"め",k:"メ",r:"me",tag:"basic"},
     {h:"も",k:"モ",r:"mo",tag:"basic"},
-    // ya
+
     {h:"や",k:"ヤ",r:"ya",tag:"basic"},
     {h:"ゆ",k:"ユ",r:"yu",tag:"basic"},
     {h:"よ",k:"ヨ",r:"yo",tag:"basic"},
-    // ra
+
     {h:"ら",k:"ラ",r:"ra",tag:"basic"},
     {h:"り",k:"リ",r:"ri",tag:"basic"},
     {h:"る",k:"ル",r:"ru",tag:"basic"},
     {h:"れ",k:"レ",r:"re",tag:"basic"},
     {h:"ろ",k:"ロ",r:"ro",tag:"basic"},
-    // wa + n + wo
+
     {h:"わ",k:"ワ",r:"wa",tag:"basic"},
     {h:"を",k:"ヲ",r:"o",tag:"basic"},
     {h:"ん",k:"ン",r:"n",tag:"basic"},
@@ -447,7 +481,6 @@
     backRomaji.textContent = item.r;
 
     progress.textContent = `${index + 1} / ${deck.length}`;
-    // Always show front when moving
     card.classList.remove("flipped");
   }
 
@@ -461,7 +494,6 @@
   }
 
   function shuffle(){
-    // Fisher–Yates
     for (let i = deck.length - 1; i > 0; i--){
       const j = Math.floor(Math.random() * (i + 1));
       [deck[i], deck[j]] = [deck[j], deck[i]];
@@ -474,19 +506,16 @@
     card.classList.toggle("flipped");
   }
 
-  function revealOneSecond(){
+  function revealThreeSeconds(){
     const wasFlipped = card.classList.contains("flipped");
     card.classList.add("flipped");
     setTimeout(() => {
       if (!wasFlipped) card.classList.remove("flipped");
-    }, 1000);
+    }, 3000); // NEW: 3 seconds
   }
 
   function savePrefs(){
-    const prefs = {
-      dakuten: optDakuten.checked,
-      yoon: optYoon.checked
-    };
+    const prefs = { dakuten: optDakuten.checked, yoon: optYoon.checked };
     localStorage.setItem("kanaFlashPrefs", JSON.stringify(prefs));
   }
 
@@ -501,22 +530,32 @@
   }
 
   // --- Events -------------------------------------------------------------
-  el("btnNext").addEventListener("click", next);
-  el("btnPrev").addEventListener("click", prev);
-  el("btnFlip").addEventListener("click", flip);
-  el("btnShuffle").addEventListener("click", shuffle);
-  el("btnReset").addEventListener("click", () => { index = 0; render(); });
-  el("btnReveal").addEventListener("click", revealOneSecond);
+  const btnNext = el("btnNext");
+  const btnPrev = el("btnPrev");
+  const btnFlip = el("btnFlip");
+  const btnShuffle = el("btnShuffle");
+  const btnReset = el("btnReset");
+  const btnReveal = el("btnReveal");
 
-  card.addEventListener("click", flip);
+  // NEW: add click sound on button press (and do the action)
+  btnNext.addEventListener("click", () => { playClickSound(); next(); });
+  btnPrev.addEventListener("click", () => { playClickSound(); prev(); });
+  btnFlip.addEventListener("click", () => { playClickSound(); flip(); });
+  btnShuffle.addEventListener("click", () => { playClickSound(); shuffle(); });
+  btnReset.addEventListener("click", () => { playClickSound(); index = 0; render(); });
+  btnReveal.addEventListener("click", () => { playClickSound(); revealThreeSeconds(); });
+
+  // Card tap: flip (optional: also play sound)
+  card.addEventListener("click", () => { playClickSound(); flip(); });
+
   card.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flip(); }
-    if (e.key === "ArrowRight") next();
-    if (e.key === "ArrowLeft") prev();
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); playClickSound(); flip(); }
+    if (e.key === "ArrowRight") { playClickSound(); next(); }
+    if (e.key === "ArrowLeft") { playClickSound(); prev(); }
   });
 
-  optDakuten.addEventListener("change", buildDeck);
-  optYoon.addEventListener("change", buildDeck);
+  optDakuten.addEventListener("change", () => { playClickSound(); buildDeck(); });
+  optYoon.addEventListener("change", () => { playClickSound(); buildDeck(); });
 
   // Swipe support (mobile)
   let startX = null;
@@ -527,6 +566,7 @@
     const dx = endX - startX;
     startX = null;
     if (Math.abs(dx) < 40) return;
+    playClickSound();
     if (dx < 0) next(); else prev();
   }, {passive:true});
 
