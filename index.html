@@ -219,6 +219,14 @@
       .inner{ transition:none; }
       button:active{ transform:none; }
     }
+	/* === Responsive font scaling for small screens ＆ 依「高度」也一起判斷（極小裝置）=== */
+@media (max-width: 420px), (max-height: 700px){
+  :root{
+    --kana-scale: 1.5; /* 小螢幕：Kana + Romaji 縮回 1.5x */
+    --ui-scale: 1.15;  /* 小螢幕：UI 縮回 15% */
+  }
+}
+
   </style>
 </head>
 
