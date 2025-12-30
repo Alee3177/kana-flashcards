@@ -182,10 +182,14 @@
       display: flex;
       justify-content: flex-start; /* 若想置中可改 center,預設由 first/last-child 決定對齊方式 */
     }
-	/* 視覺調整說明：
+	/* 視覺調整說明（目前停用）：
         - 上行（題庫狀態 deckBadge）置中
         - 下行（學習狀態 statBadge）靠左
-       若想兩行都置中，兩個都改成 center */
+       若想兩行都置中，兩個都改成 center 
+	   排版邏輯是：
+	   1. .hint → 決定 上下兩行
+       2. .hintLine → 決定 每一行的對齊方式
+       3. first-child / last-child → 覆蓋預設行為
     .hintLine:first-child{
       justify-content: center;
     }
@@ -193,7 +197,7 @@
     .hintLine:last-child{
       justify-content: flex-start;
     }
-
+    */
     .badge{
       padding:6px 10px;
       border-radius: 999px;
