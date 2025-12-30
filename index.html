@@ -14,11 +14,15 @@
       --shadow: 0 12px 30px rgba(0,0,0,.35);
       --radius: 18px;
 
-      /* Color scheme requested */
+      /* Color scheme */
       --hira:#ffffff;     /* 平假名 = 白色 */
       --kata:#e6c76a;     /* 片假名 = 金色 */
       --yoon:#f0b35a;     /* 拗音 = 金色偏橘 */
       --dakuten:#e07a6f;  /* 濁音/半濁音 = 金色偏紅 */
+
+      /* Sizing controls */
+      --ui-scale: 1.3;    /* UI文字放大30% */
+      --kana-scale: 2;    /* 平假名/片假名 + romaji 放大1倍(=x2) */
     }
 
     *{box-sizing:border-box}
@@ -55,13 +59,13 @@
     }
     h1{
       margin:0;
-      font-size:18px;
+      font-size: calc(18px * var(--ui-scale));
       letter-spacing:.2px;
       font-weight:750;
     }
     .progress{
       color:var(--muted);
-      font-size:12px;
+      font-size: calc(12px * var(--ui-scale));
       white-space:nowrap;
     }
 
@@ -78,7 +82,7 @@
       display:flex;
       align-items:center;
       gap:8px;
-      font-size:13px;
+      font-size: calc(13px * var(--ui-scale));
       color:var(--text);
       user-select:none;
     }
@@ -140,25 +144,20 @@
       transform: rotateY(180deg);
     }
 
+    /* Kana + Romaji display: x2 (1倍放大) */
     .kana{
-      font-size: clamp(72px, 16vw, 120px);
+      font-size: calc(clamp(72px, 16vw, 120px) * var(--kana-scale));
       font-weight: 800;
       line-height: 1;
       letter-spacing: .5px;
       margin-bottom: 10px;
       text-shadow: 0 10px 22px rgba(0,0,0,.35);
-      color: var(--hira); /* 平假名預設白 */
+      color: var(--hira);
     }
-
-    /* Back side (katakana) default = gold */
-    .back .kana{
-      color: var(--kata);
-    }
-
     .romaji{
-      font-size: clamp(22px, 5vw, 34px);
+      font-size: calc(clamp(22px, 5vw, 34px) * var(--kana-scale));
       letter-spacing: .8px;
-      color: var(--accent); /* romaji stays same */
+      color: var(--accent);
       font-weight: 750;
       margin-top: 2px;
     }
@@ -172,7 +171,7 @@
       align-items:center;
       justify-content:space-between;
       color: var(--muted);
-      font-size: 12px;
+      font-size: calc(12px * var(--ui-scale));
       gap:10px;
     }
     .badge{
@@ -181,7 +180,7 @@
       background: rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.08);
       color: var(--muted);
-      font-size: 12px;
+      font-size: calc(12px * var(--ui-scale));
       white-space:nowrap;
     }
 
@@ -194,7 +193,7 @@
       border:0;
       border-radius: 14px;
       padding: 12px 12px;
-      font-size: 14px;
+      font-size: calc(14px * var(--ui-scale));
       font-weight: 750;
       color: var(--text);
       background: rgba(255,255,255,.06);
@@ -206,13 +205,12 @@
     .primary{ background: rgba(95,225,176,.16); border-color: rgba(95,225,176,.35); }
     .danger{ background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.30); }
 
-    /* NEW: familiarity buttons */
     .know{ background: rgba(95,225,176,.16); border-color: rgba(95,225,176,.35); }
     .dont{ background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.30); }
 
     .footerNote{
       color: var(--muted);
-      font-size: 12px;
+      font-size: calc(12px * var(--ui-scale));
       text-align:center;
       padding: 2px 0 0;
     }
@@ -255,7 +253,7 @@
 
         <div class="hint">
           <span class="badge" id="deckBadge">基本50音</span>
-          <span class="badge" id="statBadge">會 0 / 不會 0</span>
+          <span class="badge" id="statBadge">請先顯示答案｜會 0 / 不會 0</span>
         </div>
       </div>
     </div>
@@ -275,20 +273,45 @@
     <div class="btnRow" aria-label="familiarity buttons">
       <button class="know" id="btnKnow">會（延後再出）</button>
       <button class="dont" id="btnDont">不會（稍後再出）</button>
-      <button id="btnStatsReset">重置熟悉度</button>
+      <button id="btnStatsClear">清除會 / 不會紀錄</button>
     </div>
 
     <div class="footerNote">
-      建議練法：看到平假名（ひらがな / hiragana）→ 立刻說出片假名（カタカナ / katakana）與發音（romaji）
+      教學模式（寬鬆）：翻到背面或顯示答案後，才能按「會 / 不會」
     </div>
   </div>
 
 <script>
-  // --- Preferences / Sound ------------------------------------------------
-  let audioCtx = null;
+  // --- Helpers / Elements -------------------------------------------------
   const el = (id) => document.getElementById(id);
 
+  const card = el("card");
+  const progress = el("progress");
+  const deckBadge = el("deckBadge");
+  const statBadge = el("statBadge");
+
+  const frontKana = el("frontKana");
+  const frontRomaji = el("frontRomaji");
+  const backKana = el("backKana");
+  const backRomaji = el("backRomaji");
+
+  const optDakuten = el("optDakuten");
+  const optYoon = el("optYoon");
   const optSound = el("optSound");
+  const optAutoFront = el("optAutoFront");
+
+  const btnNext = el("btnNext");
+  const btnPrev = el("btnPrev");
+  const btnFlip = el("btnFlip");
+  const btnShuffle = el("btnShuffle");
+  const btnReset = el("btnReset");
+  const btnReveal = el("btnReveal");
+  const btnKnow = el("btnKnow");
+  const btnDont = el("btnDont");
+  const btnStatsClear = el("btnStatsClear");
+
+  // --- Sound --------------------------------------------------------------
+  let audioCtx = null;
   function playClickSound(){
     if (!optSound.checked) return;
     try{
@@ -315,29 +338,26 @@
     }catch(_){}
   }
 
-  function savePrefs(){
-    const prefs = {
-      dakuten: optDakuten.checked,
-      yoon: optYoon.checked,
-      sound: optSound.checked,
-      autoFront: optAutoFront.checked
-    };
-    localStorage.setItem("kanaFlashPrefs", JSON.stringify(prefs));
+  // --- Teaching mode (loose): must show answer before grading -------------
+  let hasShownAnswer = false;
+
+  function updateStatsUI(){
+    if (!hasShownAnswer){
+      statBadge.textContent = `請先顯示答案｜會 ${knowCount} / 不會 ${dontCount}`;
+    } else {
+      statBadge.textContent = `已顯示答案｜會 ${knowCount} / 不會 ${dontCount}`;
+    }
   }
 
-  function loadPrefs(){
-    try{
-      const raw = localStorage.getItem("kanaFlashPrefs");
-      if (!raw) return;
-      const p = JSON.parse(raw);
-      optDakuten.checked = !!p.dakuten;
-      optYoon.checked = !!p.yoon;
-      optSound.checked = (p.sound !== undefined) ? !!p.sound : true; // default ON if not set
-      optAutoFront.checked = (p.autoFront !== undefined) ? !!p.autoFront : true; // default ON
-    }catch(_){
-      optSound.checked = true;
-      optAutoFront.checked = true;
-    }
+  function setKnowDontEnabled(enabled){
+    btnKnow.disabled = !enabled;
+    btnDont.disabled = !enabled;
+
+    btnKnow.style.opacity = enabled ? "1" : "0.45";
+    btnDont.style.opacity = enabled ? "1" : "0.45";
+    btnKnow.style.cursor = enabled ? "pointer" : "not-allowed";
+    btnDont.style.cursor = enabled ? "pointer" : "not-allowed";
+    updateStatsUI();
   }
 
   // --- Data ---------------------------------------------------------------
@@ -478,42 +498,19 @@
     {h:"ぴょ",k:"ピョ",r:"pyo",tag:"yoon"},
   ];
 
-  // --- UI elements --------------------------------------------------------
-  const card = el("card");
-  const progress = el("progress");
-  const deckBadge = el("deckBadge");
-  const statBadge = el("statBadge");
-
-  const frontKana = el("frontKana");
-  const frontRomaji = el("frontRomaji");
-  const backKana = el("backKana");
-  const backRomaji = el("backRomaji");
-
-  const optDakuten = el("optDakuten");
-  const optYoon = el("optYoon");
-  const optAutoFront = el("optAutoFront");
-
-  const btnNext = el("btnNext");
-  const btnPrev = el("btnPrev");
-  const btnFlip = el("btnFlip");
-  const btnShuffle = el("btnShuffle");
-  const btnReset = el("btnReset");
-  const btnReveal = el("btnReveal");
-  const btnKnow = el("btnKnow");
-  const btnDont = el("btnDont");
-  const btnStatsReset = el("btnStatsReset");
-
-  // --- Deck / Scheduling --------------------------------------------------
+  // --- Deck / stats -------------------------------------------------------
   let deck = [];
   let index = 0;
 
-  // Familiarity stats per item key (h|k|r|tag)
-  let stats = {};
   let knowCount = 0;
   let dontCount = 0;
 
   function keyOf(item){ return `${item.h}|${item.k}|${item.r}|${item.tag}`; }
+  let stats = {}; // per card: {know, dont}
 
+  function saveStats(){
+    localStorage.setItem("kanaFlashStats", JSON.stringify({stats, knowCount, dontCount}));
+  }
   function loadStats(){
     try{
       const raw = localStorage.getItem("kanaFlashStats");
@@ -524,26 +521,47 @@
       dontCount = obj.dontCount || 0;
     }catch(_){}
   }
-  function saveStats(){
-    localStorage.setItem("kanaFlashStats", JSON.stringify({stats, knowCount, dontCount}));
-  }
-  function resetStats(){
+  function clearKnowDontRecords(){
     stats = {};
     knowCount = 0;
     dontCount = 0;
     saveStats();
     updateStatsUI();
   }
-  function updateStatsUI(){
-    statBadge.textContent = `會 ${knowCount} / 不會 ${dontCount}`;
+
+  // --- Preferences --------------------------------------------------------
+  function savePrefs(){
+    const prefs = {
+      dakuten: optDakuten.checked,
+      yoon: optYoon.checked,
+      sound: optSound.checked,
+      autoFront: optAutoFront.checked
+    };
+    localStorage.setItem("kanaFlashPrefs", JSON.stringify(prefs));
   }
 
+  function loadPrefs(){
+    try{
+      const raw = localStorage.getItem("kanaFlashPrefs");
+      if (!raw) throw new Error("no prefs");
+      const p = JSON.parse(raw);
+      optDakuten.checked = !!p.dakuten;
+      optYoon.checked = !!p.yoon;
+      optSound.checked = (p.sound !== undefined) ? !!p.sound : true;
+      optAutoFront.checked = (p.autoFront !== undefined) ? !!p.autoFront : true;
+    }catch(_){
+      optSound.checked = true;
+      optAutoFront.checked = true;
+    }
+  }
+
+  // --- Build / render -----------------------------------------------------
   function buildDeck(){
     const parts = [BASIC];
     if (optDakuten.checked) parts.push(DAKUTEN);
     if (optYoon.checked) parts.push(YOON);
-
     deck = parts.flat();
+
     index = Math.min(index, deck.length - 1);
     if (deck.length <= 0){
       deck = BASIC.slice();
@@ -560,12 +578,10 @@
   }
 
   function applyKanaColorByTag(tag){
-    // Front (hiragana) always white, but optionally tint by category for learning focus.
-    // Requirement: category colors are primarily for katakana / special groups.
-    // We'll keep hiragana white to match requirement.
+    // Hiragana stays white as requested
     frontKana.style.color = "var(--hira)";
 
-    // Back (katakana) color by tag
+    // Katakana color by category
     if (tag === "yoon") backKana.style.color = "var(--yoon)";
     else if (tag === "dakuten") backKana.style.color = "var(--dakuten)";
     else backKana.style.color = "var(--kata)";
@@ -583,6 +599,10 @@
     progress.textContent = `${index + 1} / ${deck.length}`;
 
     if (optAutoFront.checked) card.classList.remove("flipped");
+
+    // Teaching mode: new card => must show answer again
+    hasShownAnswer = false;
+    setKnowDontEnabled(false);
   }
 
   function next(){
@@ -593,7 +613,6 @@
     index = (index - 1 + deck.length) % deck.length;
     render();
   }
-
   function shuffle(){
     for (let i = deck.length - 1; i > 0; i--){
       const j = Math.floor(Math.random() * (i + 1));
@@ -605,22 +624,35 @@
 
   function flip(){
     card.classList.toggle("flipped");
+
+    // Teaching mode (loose): if now showing back, unlock grading
+    if (card.classList.contains("flipped")) {
+      hasShownAnswer = true;
+      setKnowDontEnabled(true);
+    }
   }
 
   function revealThreeSeconds(){
     const wasFlipped = card.classList.contains("flipped");
     card.classList.add("flipped");
+
+    // Teaching mode: reveal => unlock grading
+    hasShownAnswer = true;
+    setKnowDontEnabled(true);
+
     setTimeout(() => {
       if (!wasFlipped) card.classList.remove("flipped");
     }, 3000);
   }
 
-  // Simple SRS-like scheduling:
+  // Simple scheduling:
   // - Know: move current card later (about 60% deck length)
   // - Don't know: move current card soon (after ~8 cards)
   function rescheduleCurrent(mode){
+    if (!hasShownAnswer) return; // hard gate
+
     const item = deck[index];
-    deck.splice(index, 1); // remove current item
+    deck.splice(index, 1);
 
     if (mode === "know"){
       const offset = Math.max(10, Math.floor(deck.length * 0.60));
@@ -628,13 +660,12 @@
       deck.splice(insertAt, 0, item);
       knowCount++;
     }else{
-      const offset = 8; // short delay, not immediate repeat
+      const offset = 8;
       const insertAt = Math.min(deck.length, index + offset);
       deck.splice(insertAt, 0, item);
       dontCount++;
     }
 
-    // keep index at same position to show the "next" card after removal
     if (index >= deck.length) index = 0;
 
     const k = keyOf(item);
@@ -643,25 +674,9 @@
     else stats[k].dont++;
 
     saveStats();
-    updateStatsUI();
+
+    // After grading, move on to next card (same index now points to next due to removal)
     render();
-  }
-
-  // --- Preferences --------------------------------------------------------
-  function savePrefs(){
-    const prefs = {
-      dakuten: optDakuten.checked,
-      yoon: optYoon.checked,
-      sound: optSound.checked,
-      autoFront: optAutoFront.checked
-    };
-    localStorage.setItem("kanaFlashPrefs", JSON.stringify(prefs));
-  }
-
-  function loadAll(){
-    loadPrefs();
-    loadStats();
-    updateStatsUI();
   }
 
   // --- Events -------------------------------------------------------------
@@ -674,7 +689,7 @@
 
   btnKnow.addEventListener("click", () => { playClickSound(); rescheduleCurrent("know"); });
   btnDont.addEventListener("click", () => { playClickSound(); rescheduleCurrent("dont"); });
-  btnStatsReset.addEventListener("click", () => { playClickSound(); resetStats(); });
+  btnStatsClear.addEventListener("click", () => { playClickSound(); clearKnowDontRecords(); });
 
   card.addEventListener("click", () => { playClickSound(); flip(); });
 
@@ -689,7 +704,7 @@
   optSound.addEventListener("change", () => { savePrefs(); });
   optAutoFront.addEventListener("change", () => { savePrefs(); });
 
-  // Swipe support (mobile)
+  // Swipe (mobile)
   let startX = null;
   card.addEventListener("touchstart", (e) => { startX = e.touches[0].clientX; }, {passive:true});
   card.addEventListener("touchend", (e) => {
@@ -702,8 +717,10 @@
     if (dx < 0) next(); else prev();
   }, {passive:true});
 
-  // Init
-  loadAll();
+  // --- Init ---------------------------------------------------------------
+  loadPrefs();
+  loadStats();
+  updateStatsUI();
   buildDeck();
 </script>
 </body>
