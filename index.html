@@ -1,253 +1,910 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>日文50音 Flash Card</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>日文50音 Flash Card（平假名⇄片假名 + Romaji）</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --text:#eaf1ff;
+      --muted:#9fb0c7;
+      --accent:#5fe1b0;
+      --danger:#ff6b6b;
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --radius: 18px;
 
-<style>
-:root{
-  --bg:#0b0f14;
-  --text:#eaf1ff;
-  --muted:#9fb0c7;
-  --accent:#5fe1b0;
-  --danger:#ff6b6b;
+      /* Color scheme */
+      --hira:#ffffff;     /* 平假名 = 白色 */
+      --kata:#e6c76a;     /* 片假名 = 金色 */
+      --yoon:#f0b35a;     /* 拗音 = 金色偏橘 */
+      --dakuten:#e07a6f;  /* 濁音/半濁音 = 金色偏紅 */
 
-  --hira:#ffffff;
-  --kata:#e6c76a;
-  --yoon:#f0b35a;
-  --dakuten:#e07a6f;
+      /* Sizing controls */
+      --ui-scale: 1.3;    /* UI文字放大30% */
+      --kana-scale: 2;    /* 平假名/片假名 + romaji 放大1倍(=x2) */
+    }
 
-  --ui-scale:1.3;
-  --kana-scale:2;
-}
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans", "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(95,225,176,.18), transparent 60%),
+                  radial-gradient(900px 500px at 90% 20%, rgba(80,160,255,.14), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:stretch;
+      justify-content:center;
+      padding: 14px 12px 22px;
+    }
+    .app{
+      width:min(520px, 100%);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    header{
+      padding: 8px 6px 0;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .title{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
+    }
+    h1{
+      margin:0;
+      font-size: calc(18px * var(--ui-scale));
+      letter-spacing:.2px;
+      font-weight:750;
+    }
+    .progress{
+      color:var(--muted);
+      font-size: calc(12px * var(--ui-scale));
+      white-space:nowrap;
+    }
 
-@media (max-width:420px),(max-height:700px){
+    .controls{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: var(--radius);
+      padding: 10px;
+    }
+    label{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size: calc(13px * var(--ui-scale));
+      color:var(--text);
+      user-select:none;
+    }
+    input[type="checkbox"]{
+      width:18px;
+      height:18px;
+      accent-color: var(--accent);
+    }
+
+
+    select{
+      width:100%;
+      border-radius: 12px;
+      padding: 10px 10px;
+      font-size: calc(13px * var(--ui-scale));
+      font-weight: 700;
+      color: var(--text);
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      outline:none;
+      appearance:none;
+      -webkit-appearance:none;
+    }
+    select:focus{
+      border-color: rgba(95,225,176,.45);
+      box-shadow: 0 0 0 3px rgba(95,225,176,.18);
+    }
+
+    .cardWrap{
+      flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 6px 0 2px;
+    }
+    .card{
+      width:100%;
+      aspect-ratio: 3 / 4;
+      max-height: 72vh;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow: var(--shadow);
+      position:relative;
+      perspective: 1200px;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+      border: 1px solid rgba(255,255,255,.08);
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background: radial-gradient(700px 300px at 40% -10%, rgba(95,225,176,.26), transparent 55%),
+                  radial-gradient(700px 300px at 80% 30%, rgba(80,160,255,.18), transparent 55%);
+      opacity:.55;
+      pointer-events:none;
+    }
+    .inner{
+      position:absolute;
+      inset:0;
+      transform-style: preserve-3d;
+      transition: transform .55s cubic-bezier(.2,.8,.2,1);
+    }
+    .card.flipped .inner{ transform: rotateY(180deg); }
+
+    .face{
+      position:absolute;
+      inset:0;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      backface-visibility:hidden;
+      padding: 18px 16px;
+    }
+    .back{
+      transform: rotateY(180deg);
+    }
+
+    /* Kana + Romaji display: x2 (1倍放大) */
+    .kana{
+      font-size: calc(clamp(72px, 16vw, 120px) * var(--kana-scale));
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: .5px;
+      margin-bottom: 10px;
+      text-shadow: 0 10px 22px rgba(0,0,0,.35);
+      color: var(--hira);
+    }
+    .romaji{
+      font-size: calc(clamp(22px, 5vw, 34px) * var(--kana-scale));
+      letter-spacing: .8px;
+      color: var(--accent);
+      font-weight: 750;
+      margin-top: 2px;
+    }
+
+    .hint{
+      position:absolute;
+      bottom: 10px;
+      left: 12px;
+      right: 12px;
+
+      display:flex;
+      flex-direction: column;   /* ← 關鍵：改為直排 */
+      gap: 6px;                 /* 兩行間距 */
+
+      align-items: flex-start;  /* 靠左（想置中可改 center） */
+
+      color: var(--muted);
+      font-size: calc(12px * var(--ui-scale));
+    }
+    .hintLine{
+      width: 100%;
+      display: flex;
+      justify-content: flex-start; /* 若想置中可改 center,預設由 first/last-child 決定對齊方式 */
+    }
+	/* 視覺調整說明（目前停用）：
+        - 上行（題庫狀態 deckBadge）置中
+        - 下行（學習狀態 statBadge）靠左
+       若想兩行都置中，兩個都改成 center 
+	   排版邏輯是：
+	   1. .hint → 決定 上下兩行
+       2. .hintLine → 決定 每一行的對齊方式
+       3. first-child / last-child → 覆蓋預設行為
+    .hintLine:first-child{
+      justify-content: center;
+    }
+
+    .hintLine:last-child{
+      justify-content: flex-start;
+    }
+    */
+    .badge{
+      padding:6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      color: var(--muted);
+      font-size: calc(12px * var(--ui-scale));
+      white-space:nowrap;
+    }
+
+    .btnRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:10px;
+    }
+    button{
+      border:0;
+      border-radius: 14px;
+      padding: 12px 12px;
+      font-size: calc(14px * var(--ui-scale));
+      font-weight: 750;
+      color: var(--text);
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:active{ transform: translateY(1px); }
+    .primary{ background: rgba(95,225,176,.16); border-color: rgba(95,225,176,.35); }
+    .danger{ background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.30); }
+
+    .know{ background: rgba(95,225,176,.16); border-color: rgba(95,225,176,.35); }
+    .dont{ background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.30); }
+
+    .footerNote{
+      color: var(--muted);
+      font-size: calc(12px * var(--ui-scale));
+      text-align:center;
+      padding: 2px 0 0;
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .inner{ transition:none; }
+      button:active{ transform:none; }
+    }
+	/* === Responsive font scaling for small screens ＆ 依「高度」也一起判斷（極小裝置）=== */
+@media (max-width: 420px), (max-height: 700px){
   :root{
-    --ui-scale:1.15;
-    --kana-scale:1.5;
+    --kana-scale: 1.5; /* 小螢幕：Kana + Romaji 縮回 1.5x */
+    --ui-scale: 1.15;  /* 小螢幕：UI 縮回 15% */
   }
 }
 
-body{
-  margin:0;
-  font-family:system-ui,-apple-system,BlinkMacSystemFont;
-  background:var(--bg);
-  color:var(--text);
-  display:flex;
-  justify-content:center;
-}
-
-.app{
-  width:min(520px,100%);
-  padding:12px;
-}
-
-h1{font-size:calc(18px * var(--ui-scale));margin:0;}
-
-.controls label{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  font-size:calc(13px * var(--ui-scale));
-}
-
-.card{
-  margin-top:12px;
-  height:70vh;
-  background:#111;
-  border-radius:16px;
-  position:relative;
-  perspective:1200px;
-}
-
-.inner{
-  position:absolute;
-  inset:0;
-  transition:transform .6s;
-  transform-style:preserve-3d;
-}
-
-.card.flipped .inner{transform:rotateY(180deg);}
-
-.face{
-  position:absolute;
-  inset:0;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  backface-visibility:hidden;
-}
-
-.back{transform:rotateY(180deg);}
-
-.kana{
-  font-size:calc(96px * var(--kana-scale));
-  font-weight:800;
-}
-
-.romaji{
-  font-size:calc(24px * var(--kana-scale));
-  color:var(--accent);
-}
-
-.hint{
-  position:absolute;
-  bottom:10px;
-  left:12px;
-  right:12px;
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  font-size:calc(12px * var(--ui-scale));
-}
-
-.hintLine{display:flex;}
-
-.badge{
-  padding:6px 10px;
-  background:#222;
-  border-radius:999px;
-}
-
-.buttons button{
-  font-size:calc(14px * var(--ui-scale));
-  margin:4px;
-}
-</style>
+  </style>
 </head>
 
 <body>
-<div class="app">
+  <div class="app" role="application" aria-label="Japanese Kana Flash Cards">
+    <header>
+      <div class="title">
+        <h1>日文50音 Flash Card</h1>
+        <div class="progress" id="progress">—</div>
+      </div>
 
-<h1>日文50音 Flash Card</h1>
-
-<div class="controls">
-  <label><input type="checkbox" id="optDakuten"> 濁音</label>
-  <label><input type="checkbox" id="optYoon"> 拗音</label>
-  <label><input type="checkbox" id="optSound"> 音效</label>
-  <label><input type="checkbox" id="optAutoFront"> 自動回正面</label>
-
-  <label>
-    出牌模式：
-    <select id="optOrderMode">
-      <option value="random">隨機</option>
-      <option value="row">行唸法</option>
-      <option value="col">段唸法</option>
-      <option value="interleave">行×段交錯</option>
-    </select>
-  </label>
-
-  <label>
-    行 / 段內：
-    <select id="optInnerMode">
-      <option value="none">不隨機</option>
-      <option value="row">行內隨機</option>
-      <option value="col">段內隨機</option>
-    </select>
-  </label>
+      <div class="controls" aria-label="Deck options">
+        <label><input type="checkbox" id="optDakuten" />加入濁音・半濁音（が/ぱ等）</label>
+        <label><input type="checkbox" id="optYoon" />加入拗音（きゃ/しゃ等）</label>
+        <label><input type="checkbox" id="optSound" />音效（可靜音）</label>
+        <label><input type="checkbox" id="optAutoFront" />移動後自動回正面</label>
+      
+        <label>
+          出牌模式（行/段/交錯）
+          <select id="optOrderMode" aria-label="Order mode">
+            <option value="random">隨機（原本）</option>
+            <option value="row">行唸法（あいうえお）</option>
+            <option value="col">段唸法（あかさたな）</option>
+            <option value="interleave">行×段交錯（あ→か→さ→い→き→し）</option>
+          </select>
+        </label>
+        <label>
+          行內/段內隨機
+          <select id="optInnerMode" aria-label="Inner random mode">
+            <option value="none">不隨機</option>
+            <option value="row">行內隨機</option>
+            <option value="col">段內隨機</option>
+          </select>
+        </label>
 </div>
+    </header>
 
-<div class="card" id="card">
-  <div class="inner">
-    <div class="face">
-      <div class="kana" id="frontKana">あ</div>
-      <div class="romaji" id="frontRomaji">a</div>
+    <div class="cardWrap">
+      <div class="card" id="card" title="點一下翻面 / Tap to flip" aria-label="flash card" tabindex="0">
+        <div class="inner" id="inner">
+          <div class="face front" aria-label="front">
+            <div class="kana" id="frontKana">あ</div>
+            <div class="romaji" id="frontRomaji">a</div>
+          </div>
+          <div class="face back" aria-label="back">
+            <div class="kana" id="backKana">ア</div>
+            <div class="romaji" id="backRomaji">a</div>
+          </div>
+        </div>
+
+    <div class="hint">
+        <div class="hintLine">
+          <span class="badge" id="deckBadge">基本50音</span>
+        </div>
+        <div class="hintLine">
+          <span class="badge" id="statBadge">請先顯示答案｜會 0 / 不會 0</span>
+        </div>
     </div>
-    <div class="face back">
-      <div class="kana" id="backKana">ア</div>
-      <div class="romaji" id="backRomaji">a</div>
+
+      </div>
+    </div>
+
+    <div class="btnRow" aria-label="navigation buttons">
+      <button id="btnPrev">上一張</button>
+      <button class="primary" id="btnFlip">翻面</button>
+      <button id="btnNext">下一張</button>
+    </div>
+
+    <div class="btnRow" aria-label="utility buttons">
+      <button id="btnShuffle">隨機洗牌</button>
+      <button id="btnReset">回到第一張</button>
+      <button class="danger" id="btnReveal">顯示答案 3 秒</button>
+    </div>
+
+    <div class="btnRow" aria-label="familiarity buttons">
+      <button class="know" id="btnKnow">會（延後再出）</button>
+      <button class="dont" id="btnDont">不會（稍後再出）</button>
+      <button id="btnStatsClear">清除會 / 不會紀錄</button>
+    </div>
+
+    <div class="footerNote">
+      教學模式（寬鬆）：翻到背面或顯示答案後，才能按「會 / 不會」
     </div>
   </div>
-
-  <div class="hint">
-    <div class="hintLine"><span class="badge" id="deckBadge"></span></div>
-    <div class="hintLine"><span class="badge" id="statBadge"></span></div>
-  </div>
-</div>
-
-<div class="buttons">
-  <button id="btnFlip">翻面</button>
-  <button id="btnReveal">顯示答案</button>
-  <button id="btnKnow">會</button>
-  <button id="btnDont">不會</button>
-</div>
-
-</div>
 
 <script>
-// ===== 資料表（已測試版，略）=====
-// 👉 這裡保留你目前已上線測試成功的 BASIC / DAKUTEN / YOON（含 row / col）
-// ⚠️ 為避免重複，我此處假設你「直接保留剛剛那一版資料」
+  // --- Helpers / Elements -------------------------------------------------
+  const el = (id) => document.getElementById(id);
 
-/* ===== 新增排序模組（完全獨立） ===== */
+  const card = el("card");
+  const progress = el("progress");
+  const deckBadge = el("deckBadge");
+  const statBadge = el("statBadge");
 
-let orderMode = localStorage.getItem("orderMode") || "random";
-let innerMode = localStorage.getItem("innerMode") || "none";
+  const frontKana = el("frontKana");
+  const frontRomaji = el("frontRomaji");
+  const backKana = el("backKana");
+  const backRomaji = el("backRomaji");
 
-const orderDesc = {
-  random: "隨機出牌",
-  row: "行唸法（あ→い→う）",
-  col: "段唸法（あ→か→さ）",
-  interleave: "行×段交錯"
-};
+  const optDakuten = el("optDakuten");
+  const optYoon = el("optYoon");
+  const optSound = el("optSound");
+  const optAutoFront = el("optAutoFront");
 
-document.getElementById("optOrderMode").value = orderMode;
-document.getElementById("optInnerMode").value = innerMode;
+  const optOrderMode = el("optOrderMode");
+  const optInnerMode = el("optInnerMode");
 
-function applyOrderMode(){
-  if(orderMode==="row"){
-    deck.sort((a,b)=>a.row-b.row||a.col-b.col);
+  const btnNext = el("btnNext");
+  const btnPrev = el("btnPrev");
+  const btnFlip = el("btnFlip");
+  const btnShuffle = el("btnShuffle");
+  const btnReset = el("btnReset");
+  const btnReveal = el("btnReveal");
+  const btnKnow = el("btnKnow");
+  const btnDont = el("btnDont");
+  const btnStatsClear = el("btnStatsClear");
+
+  // --- Sound --------------------------------------------------------------
+  let audioCtx = null;
+  function playClickSound(){
+    if (!optSound.checked) return;
+    try{
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+
+      const t0 = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = "square";
+      osc.frequency.setValueAtTime(880, t0);
+      osc.frequency.exponentialRampToValueAtTime(440, t0 + 0.03);
+
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(0.10, t0 + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.06);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(t0);
+      osc.stop(t0 + 0.07);
+    }catch(_){}
   }
-  if(orderMode==="col"){
-    deck.sort((a,b)=>a.col-b.col||a.row-b.row);
-  }
-  if(orderMode==="interleave"){
-    deck = interleave(deck);
-  }
-  applyInnerRandom();
-}
 
-function interleave(list){
-  const result=[];
-  const rows=[...new Set(list.map(k=>k.row))].sort();
-  const cols=[...new Set(list.map(k=>k.col))].sort();
-  cols.forEach(c=>rows.forEach(r=>{
-    list.filter(k=>k.row===r&&k.col===c).forEach(k=>result.push(k));
-  }));
-  return result;
-}
+  // --- Teaching mode (loose): must show answer before grading -------------
+  let hasShownAnswer = false;
 
-function applyInnerRandom(){
-  if(innerMode==="none")return;
-  const map={};
-  deck.forEach(k=>{
-    const key=innerMode==="row"?k.row:k.col;
-    (map[key]??=[]).push(k);
+  function updateStatsUI(){
+    if (!hasShownAnswer){
+      statBadge.textContent = `請先顯示答案｜會 ${knowCount} / 不會 ${dontCount}`;
+    } else {
+      statBadge.textContent = `已顯示答案｜會 ${knowCount} / 不會 ${dontCount}`;
+    }
+  }
+
+  function setKnowDontEnabled(enabled){
+    btnKnow.disabled = !enabled;
+    btnDont.disabled = !enabled;
+
+    btnKnow.style.opacity = enabled ? "1" : "0.45";
+    btnDont.style.opacity = enabled ? "1" : "0.45";
+    btnKnow.style.cursor = enabled ? "pointer" : "not-allowed";
+    btnDont.style.cursor = enabled ? "pointer" : "not-allowed";
+    updateStatsUI();
+  }
+
+  // --- Data ---------------------------------------------------------------
+  // tag: "basic" | "dakuten" | "yoon"
+  const BASIC = [
+    {h:"あ",k:"ア",r:"a",tag:"basic",row:0,col:0},
+    {h:"い",k:"イ",r:"i",tag:"basic",row:0,col:1},
+    {h:"う",k:"ウ",r:"u",tag:"basic",row:0,col:2},
+    {h:"え",k:"エ",r:"e",tag:"basic",row:0,col:3},
+    {h:"お",k:"オ",r:"o",tag:"basic",row:0,col:4},
+    {h:"か",k:"カ",r:"ka",tag:"basic",row:1,col:0},
+    {h:"き",k:"キ",r:"ki",tag:"basic",row:1,col:1},
+    {h:"く",k:"ク",r:"ku",tag:"basic",row:1,col:2},
+    {h:"け",k:"ケ",r:"ke",tag:"basic",row:1,col:3},
+    {h:"こ",k:"コ",r:"ko",tag:"basic",row:1,col:4},
+    {h:"さ",k:"サ",r:"sa",tag:"basic",row:2,col:0},
+    {h:"し",k:"シ",r:"shi",tag:"basic",row:2,col:1},
+    {h:"す",k:"ス",r:"su",tag:"basic",row:2,col:2},
+    {h:"せ",k:"セ",r:"se",tag:"basic",row:2,col:3},
+    {h:"そ",k:"ソ",r:"so",tag:"basic",row:2,col:4},
+    {h:"た",k:"タ",r:"ta",tag:"basic",row:3,col:0},
+    {h:"ち",k:"チ",r:"chi",tag:"basic",row:3,col:1},
+    {h:"つ",k:"ツ",r:"tsu",tag:"basic",row:3,col:2},
+    {h:"て",k:"テ",r:"te",tag:"basic",row:3,col:3},
+    {h:"と",k:"ト",r:"to",tag:"basic",row:3,col:4},
+    {h:"な",k:"ナ",r:"na",tag:"basic",row:4,col:0},
+    {h:"に",k:"ニ",r:"ni",tag:"basic",row:4,col:1},
+    {h:"ぬ",k:"ヌ",r:"nu",tag:"basic",row:4,col:2},
+    {h:"ね",k:"ネ",r:"ne",tag:"basic",row:4,col:3},
+    {h:"の",k:"ノ",r:"no",tag:"basic",row:4,col:4},
+    {h:"は",k:"ハ",r:"ha",tag:"basic",row:5,col:0},
+    {h:"ひ",k:"ヒ",r:"hi",tag:"basic",row:5,col:1},
+    {h:"ふ",k:"フ",r:"fu",tag:"basic",row:5,col:2},
+    {h:"へ",k:"ヘ",r:"he",tag:"basic",row:5,col:3},
+    {h:"ほ",k:"ホ",r:"ho",tag:"basic",row:5,col:4},
+    {h:"ま",k:"マ",r:"ma",tag:"basic",row:6,col:0},
+    {h:"み",k:"ミ",r:"mi",tag:"basic",row:6,col:1},
+    {h:"む",k:"ム",r:"mu",tag:"basic",row:6,col:2},
+    {h:"め",k:"メ",r:"me",tag:"basic",row:6,col:3},
+    {h:"も",k:"モ",r:"mo",tag:"basic",row:6,col:4},
+    {h:"や",k:"ヤ",r:"ya",tag:"basic",row:7,col:0},
+    {h:"ゆ",k:"ユ",r:"yu",tag:"basic",row:7,col:2},
+    {h:"よ",k:"ヨ",r:"yo",tag:"basic",row:7,col:4},
+    {h:"ら",k:"ラ",r:"ra",tag:"basic",row:8,col:0},
+    {h:"り",k:"リ",r:"ri",tag:"basic",row:8,col:1},
+    {h:"る",k:"ル",r:"ru",tag:"basic",row:8,col:2},
+    {h:"れ",k:"レ",r:"re",tag:"basic",row:8,col:3},
+    {h:"ろ",k:"ロ",r:"ro",tag:"basic",row:8,col:4},
+    {h:"わ",k:"ワ",r:"wa",tag:"basic",row:9,col:0},
+    {h:"を",k:"ヲ",r:"o",tag:"basic",row:9,col:4},
+    {h:"ん",k:"ン",r:"n",tag:"basic",row:9,col:2},
+  ];
+
+  const DAKUTEN = [
+    {h:"が",k:"ガ",r:"ga",tag:"dakuten",row:1,col:0},
+    {h:"ぎ",k:"ギ",r:"gi",tag:"dakuten",row:1,col:1},
+    {h:"ぐ",k:"グ",r:"gu",tag:"dakuten",row:1,col:2},
+    {h:"げ",k:"ゲ",r:"ge",tag:"dakuten",row:1,col:3},
+    {h:"ご",k:"ゴ",r:"go",tag:"dakuten",row:1,col:4},
+    {h:"ざ",k:"ザ",r:"za",tag:"dakuten",row:2,col:0},
+    {h:"じ",k:"ジ",r:"ji",tag:"dakuten",row:2,col:1},
+    {h:"ず",k:"ズ",r:"zu",tag:"dakuten",row:2,col:2},
+    {h:"ぜ",k:"ゼ",r:"ze",tag:"dakuten",row:2,col:3},
+    {h:"ぞ",k:"ゾ",r:"zo",tag:"dakuten",row:2,col:4},
+    {h:"だ",k:"ダ",r:"da",tag:"dakuten",row:3,col:0},
+    {h:"ぢ",k:"ヂ",r:"ji",tag:"dakuten",row:3,col:1},
+    {h:"づ",k:"ヅ",r:"zu",tag:"dakuten",row:3,col:2},
+    {h:"で",k:"デ",r:"de",tag:"dakuten",row:3,col:3},
+    {h:"ど",k:"ド",r:"do",tag:"dakuten",row:3,col:4},
+    {h:"ば",k:"バ",r:"ba",tag:"dakuten",row:5,col:0},
+    {h:"び",k:"ビ",r:"bi",tag:"dakuten",row:5,col:1},
+    {h:"ぶ",k:"ブ",r:"bu",tag:"dakuten",row:5,col:2},
+    {h:"べ",k:"ベ",r:"be",tag:"dakuten",row:5,col:3},
+    {h:"ぼ",k:"ボ",r:"bo",tag:"dakuten",row:5,col:4},
+    {h:"ぱ",k:"パ",r:"pa",tag:"dakuten",row:5,col:0},
+    {h:"ぴ",k:"ピ",r:"pi",tag:"dakuten",row:5,col:1},
+    {h:"ぷ",k:"プ",r:"pu",tag:"dakuten",row:5,col:2},
+    {h:"ぺ",k:"ペ",r:"pe",tag:"dakuten",row:5,col:3},
+    {h:"ぽ",k:"ポ",r:"po",tag:"dakuten",row:5,col:4},
+  ];
+
+  const YOON = [
+    {h:"きゃ",k:"キャ",r:"kya",tag:"yoon",row:1,col:0},
+    {h:"きゅ",k:"キュ",r:"kyu",tag:"yoon",row:1,col:2},
+    {h:"きょ",k:"キョ",r:"kyo",tag:"yoon",row:1,col:4},
+    {h:"しゃ",k:"シャ",r:"sha",tag:"yoon",row:2,col:0},
+    {h:"しゅ",k:"シュ",r:"shu",tag:"yoon",row:2,col:2},
+    {h:"しょ",k:"ショ",r:"sho",tag:"yoon",row:2,col:4},
+    {h:"ちゃ",k:"チャ",r:"cha",tag:"yoon",row:3,col:0},
+    {h:"ちゅ",k:"チュ",r:"chu",tag:"yoon",row:3,col:2},
+    {h:"ちょ",k:"チョ",r:"cho",tag:"yoon",row:3,col:4},
+    {h:"にゃ",k:"ニャ",r:"nya",tag:"yoon",row:4,col:0},
+    {h:"にゅ",k:"ニュ",r:"nyu",tag:"yoon",row:4,col:2},
+    {h:"にょ",k:"ニョ",r:"nyo",tag:"yoon",row:4,col:4},
+    {h:"ひゃ",k:"ヒャ",r:"hya",tag:"yoon",row:5,col:0},
+    {h:"ひゅ",k:"ヒュ",r:"hyu",tag:"yoon",row:5,col:2},
+    {h:"ひょ",k:"ヒョ",r:"hyo",tag:"yoon",row:5,col:4},
+    {h:"みゃ",k:"ミャ",r:"mya",tag:"yoon",row:6,col:0},
+    {h:"みゅ",k:"ミュ",r:"myu",tag:"yoon",row:6,col:2},
+    {h:"みょ",k:"ミョ",r:"myo",tag:"yoon",row:6,col:4},
+    {h:"りゃ",k:"リャ",r:"rya",tag:"yoon",row:8,col:0},
+    {h:"りゅ",k:"リュ",r:"ryu",tag:"yoon",row:8,col:2},
+    {h:"りょ",k:"リョ",r:"ryo",tag:"yoon",row:8,col:4},
+    {h:"ぎゃ",k:"ギャ",r:"gya",tag:"yoon",row:1,col:0},
+    {h:"ぎゅ",k:"ギュ",r:"gyu",tag:"yoon",row:1,col:2},
+    {h:"ぎょ",k:"ギョ",r:"gyo",tag:"yoon",row:1,col:4},
+    {h:"じゃ",k:"ジャ",r:"ja",tag:"yoon",row:2,col:0},
+    {h:"じゅ",k:"ジュ",r:"ju",tag:"yoon",row:2,col:2},
+    {h:"じょ",k:"ジョ",r:"jo",tag:"yoon",row:2,col:4},
+    {h:"びゃ",k:"ビャ",r:"bya",tag:"yoon",row:5,col:0},
+    {h:"びゅ",k:"ビュ",r:"byu",tag:"yoon",row:5,col:2},
+    {h:"びょ",k:"ビョ",r:"byo",tag:"yoon",row:5,col:4},
+    {h:"ぴゃ",k:"ピャ",r:"pya",tag:"yoon",row:5,col:0},
+    {h:"ぴゅ",k:"ピュ",r:"pyu",tag:"yoon",row:5,col:2},
+    {h:"ぴょ",k:"ピョ",r:"pyo",tag:"yoon",row:5,col:4},
+  ];
+
+  // --- Deck / stats -------------------------------------------------------
+  let deck = [];
+  let index = 0;
+
+  let knowCount = 0;
+  let dontCount = 0;
+
+  function keyOf(item){ return `${item.h}|${item.k}|${item.r}|${item.tag}`; }
+  let stats = {}; // per card: {know, dont}
+
+  function saveStats(){
+    localStorage.setItem("kanaFlashStats", JSON.stringify({stats, knowCount, dontCount}));
+  }
+  function loadStats(){
+    try{
+      const raw = localStorage.getItem("kanaFlashStats");
+      if (!raw) return;
+      const obj = JSON.parse(raw);
+      stats = obj.stats || {};
+      knowCount = obj.knowCount || 0;
+      dontCount = obj.dontCount || 0;
+    }catch(_){}
+  }
+  function clearKnowDontRecords(){
+    stats = {};
+    knowCount = 0;
+    dontCount = 0;
+    saveStats();
+    updateStatsUI();
+  }
+
+  // --- Preferences --------------------------------------------------------
+  // --- Order modes (行唸法 × 段唸法) -----------------------------------------
+  // orderMode: random | row | col | interleave
+  // innerMode: none | row | col   (randomize within row/col groups after ordering)
+  let orderMode = "random";
+  let innerMode = "none";
+
+  function savePrefs(){
+    const prefs = {
+      dakuten: optDakuten.checked,
+      yoon: optYoon.checked,
+      sound: optSound.checked,
+      autoFront: optAutoFront.checked,
+      orderMode,
+      innerMode
+    });
+    localStorage.setItem("kanaFlashPrefs", JSON.stringify(prefs));
+  }
+
+  function loadPrefs(){
+    try{
+      const raw = localStorage.getItem("kanaFlashPrefs");
+      if (!raw) throw new Error("no prefs");
+      const p = JSON.parse(raw);
+      optDakuten.checked = !!p.dakuten;
+      optYoon.checked = !!p.yoon;
+      optSound.checked = (p.sound !== undefined) ? !!p.sound : true;
+      optAutoFront.checked = (p.autoFront !== undefined) ? !!p.autoFront : true;
+
+      orderMode = (p.orderMode) ? p.orderMode : "random";
+      innerMode = (p.innerMode) ? p.innerMode : "none";
+      if (optOrderMode) optOrderMode.value = orderMode;
+      if (optInnerMode) optInnerMode.value = innerMode;
+    }catch(_){
+      optSound.checked = true;
+      optAutoFront.checked = true;
+      orderMode = "random";
+      innerMode = "none";
+      if (optOrderMode) optOrderMode.value = orderMode;
+      if (optInnerMode) optInnerMode.value = innerMode;
+    }
+  }
+
+  // --- Build / render -----------------------------------------------------
+  function buildDeck(){
+    const parts = [BASIC];
+    if (optDakuten.checked) parts.push(DAKUTEN);
+    if (optYoon.checked) parts.push(YOON);
+    deck = parts.flat();
+
+    index = Math.min(index, deck.length - 1);
+    if (deck.length <= 0){
+      deck = BASIC.slice();
+      index = 0;
+    }
+
+    const labels = ["基本50音"];
+    if (optDakuten.checked) labels.push("濁音/半濁音");
+    if (optYoon.checked) labels.push("拗音");
+
+    applyOrderAndInner();
+    updateDeckBadge(labels);
+
+    render();
+    savePrefs();
+  }
+
+  function applyKanaColorByTag(tag){
+    // Hiragana stays white as requested
+    frontKana.style.color = "var(--hira)";
+
+    // Katakana color by category
+    if (tag === "yoon") backKana.style.color = "var(--yoon)";
+    else if (tag === "dakuten") backKana.style.color = "var(--dakuten)";
+    else backKana.style.color = "var(--kata)";
+  }
+
+  function render(){
+    const item = deck[index];
+    frontKana.textContent = item.h;
+    frontRomaji.textContent = item.r;
+    backKana.textContent = item.k;
+    backRomaji.textContent = item.r;
+
+    applyKanaColorByTag(item.tag);
+
+    progress.textContent = `${index + 1} / ${deck.length}`;
+
+    if (optAutoFront.checked) card.classList.remove("flipped");
+
+    // Teaching mode: new card => must show answer again
+    hasShownAnswer = false;
+    setKnowDontEnabled(false);
+  }
+
+  function next(){
+    index = (index + 1) % deck.length;
+    render();
+  }
+  function prev(){
+    index = (index - 1 + deck.length) % deck.length;
+    render();
+  }
+  function shuffle(){
+    for (let i = deck.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    index = 0;
+    render();
+  }
+
+
+  // --- Order / inner-random (行唸法 × 段唸法) -------------------------------
+  const ORDER_DESC = {
+    random: "隨機",
+    row: "行唸法（あいうえお）",
+    col: "段唸法（あかさたな）",
+    interleave: "行×段交錯（あ→か→さ→い→き→し）"
+  };
+  const INNER_DESC = {
+    none: "",
+    row: "行內隨機",
+    col: "段內隨機"
+  };
+
+  function shuffleArray(arr){
+    for (let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+
+  function applyOrderAndInner(){
+    if (!deck || deck.length === 0) return;
+
+    if (orderMode === "row"){
+      deck.sort((a,b)=> (a.row - b.row) || (a.col - b.col) || a.r.localeCompare(b.r));
+    } else if (orderMode === "col"){
+      deck.sort((a,b)=> (a.col - b.col) || (a.row - b.row) || a.r.localeCompare(b.r));
+    } else if (orderMode === "interleave"){
+      deck = interleaveRowCol(deck);
+    } // random: keep as-is
+
+    // inner random only makes sense when not fully random
+    if (orderMode !== "random" && innerMode !== "none"){
+      const groups = {};
+      for (const it of deck){
+        const key = (innerMode === "row") ? it.row : it.col;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(it);
+      }
+
+      // preserve group order as currently arranged, but randomize within each group
+      const keys = Object.keys(groups).map(Number).sort((a,b)=>a-b);
+      const rebuilt = [];
+      for (const k of keys){
+        shuffleArray(groups[k]);
+        rebuilt.push(...groups[k]);
+      }
+      deck = rebuilt;
+    }
+  }
+
+  // Interleave by columns then rows: あ→か→さ… then い→き→し…
+  function interleaveRowCol(list){
+    const map = {};
+    for (const it of list){
+      const key = `${it.row}-${it.col}`;
+      if (!map[key]) map[key] = [];
+      map[key].push(it);
+    }
+
+    const rows = [...new Set(list.map(x=>x.row))].sort((a,b)=>a-b);
+    const cols = [...new Set(list.map(x=>x.col))].sort((a,b)=>a-b);
+
+    const out = [];
+    for (const c of cols){
+      for (const r of rows){
+        const key = `${r}-${c}`;
+        if (map[key]) out.push(...map[key]);
+      }
+    }
+    return out;
+  }
+
+  function updateDeckBadge(labels){
+    let text = labels.join(" + ");
+
+    // auto switch deckBadge explanation when in 行/段 mode
+    if (orderMode && orderMode !== "random"){
+      text += `｜${ORDER_DESC[orderMode] || ""}`;
+      if (innerMode && innerMode !== "none"){
+        text += `｜${INNER_DESC[innerMode] || ""}`;
+      }
+    }
+    deckBadge.textContent = text;
+  }
+
+  function flip(){
+    card.classList.toggle("flipped");
+
+    // Teaching mode (loose): if now showing back, unlock grading
+    if (card.classList.contains("flipped")) {
+      hasShownAnswer = true;
+      setKnowDontEnabled(true);
+    }
+  }
+
+  function revealThreeSeconds(){
+    const wasFlipped = card.classList.contains("flipped");
+    card.classList.add("flipped");
+
+    // Teaching mode: reveal => unlock grading
+    hasShownAnswer = true;
+    setKnowDontEnabled(true);
+
+    setTimeout(() => {
+      if (!wasFlipped) card.classList.remove("flipped");
+    }, 3000);
+  }
+
+  // Simple scheduling:
+  // - Know: move current card later (about 60% deck length)
+  // - Don't know: move current card soon (after ~8 cards)
+  function rescheduleCurrent(mode){
+    if (!hasShownAnswer) return; // hard gate
+
+    const item = deck[index];
+    deck.splice(index, 1);
+
+    if (mode === "know"){
+      const offset = Math.max(10, Math.floor(deck.length * 0.60));
+      const insertAt = Math.min(deck.length, index + offset);
+      deck.splice(insertAt, 0, item);
+      knowCount++;
+    }else{
+      const offset = 8;
+      const insertAt = Math.min(deck.length, index + offset);
+      deck.splice(insertAt, 0, item);
+      dontCount++;
+    }
+
+    if (index >= deck.length) index = 0;
+
+    const k = keyOf(item);
+    if (!stats[k]) stats[k] = {know:0, dont:0};
+    if (mode === "know") stats[k].know++;
+    else stats[k].dont++;
+
+    saveStats();
+
+    // After grading, move on to next card (same index now points to next due to removal)
+    render();
+  }
+
+  // --- Events -------------------------------------------------------------
+  btnNext.addEventListener("click", () => { playClickSound(); next(); });
+  btnPrev.addEventListener("click", () => { playClickSound(); prev(); });
+  btnFlip.addEventListener("click", () => { playClickSound(); flip(); });
+  btnShuffle.addEventListener("click", () => { playClickSound(); orderMode = "random"; innerMode = "none"; if (optOrderMode) optOrderMode.value = orderMode; if (optInnerMode) optInnerMode.value = innerMode; shuffle(); savePrefs(); });
+  btnReset.addEventListener("click", () => { playClickSound(); index = 0; render(); });
+  btnReveal.addEventListener("click", () => { playClickSound(); revealThreeSeconds(); });
+
+  btnKnow.addEventListener("click", () => { playClickSound(); rescheduleCurrent("know"); });
+  btnDont.addEventListener("click", () => { playClickSound(); rescheduleCurrent("dont"); });
+  btnStatsClear.addEventListener("click", () => { playClickSound(); clearKnowDontRecords(); });
+
+  card.addEventListener("click", () => { playClickSound(); flip(); });
+
+  card.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); playClickSound(); flip(); }
+    if (e.key === "ArrowRight") { playClickSound(); next(); }
+    if (e.key === "ArrowLeft") { playClickSound(); prev(); }
   });
-  deck=Object.values(map).flatMap(g=>g.sort(()=>Math.random()-0.5));
-}
 
-/* ===== UI 事件 ===== */
+  optDakuten.addEventListener("change", () => { playClickSound(); buildDeck(); });
+  optYoon.addEventListener("change", () => { playClickSound(); buildDeck(); });
+  optSound.addEventListener("change", () => { savePrefs(); });
+  optAutoFront.addEventListener("change", () => { savePrefs(); });
 
-optOrderMode.onchange=e=>{
-  orderMode=e.target.value;
-  localStorage.setItem("orderMode",orderMode);
+
+  optOrderMode.addEventListener("change", () => {
+    playClickSound();
+    orderMode = optOrderMode.value;
+    // if switching back to random, inner random is irrelevant
+    if (orderMode === "random") innerMode = "none";
+    if (optInnerMode) optInnerMode.value = innerMode;
+    index = 0;
+    buildDeck();
+  });
+
+  optInnerMode.addEventListener("change", () => {
+    playClickSound();
+    innerMode = optInnerMode.value;
+    // inner random only applies when not random order
+    if (orderMode === "random" && innerMode !== "none"){
+      innerMode = "none";
+      optInnerMode.value = innerMode;
+    }
+    index = 0;
+    buildDeck();
+  });
+
+  // Swipe (mobile)
+  let startX = null;
+  card.addEventListener("touchstart", (e) => { startX = e.touches[0].clientX; }, {passive:true});
+  card.addEventListener("touchend", (e) => {
+    if (startX == null) return;
+    const endX = e.changedTouches[0].clientX;
+    const dx = endX - startX;
+    startX = null;
+    if (Math.abs(dx) < 40) return;
+    playClickSound();
+    if (dx < 0) next(); else prev();
+  }, {passive:true});
+
+  // --- Init ---------------------------------------------------------------
+  loadPrefs();
+  loadStats();
+  updateStatsUI();
   buildDeck();
-};
-
-optInnerMode.onchange=e=>{
-  innerMode=e.target.value;
-  localStorage.setItem("innerMode",innerMode);
-  buildDeck();
-};
-
-/* ===== 你既有 buildDeck() 最後只需加一行 =====
-applyOrderMode();
-deckBadge.textContent = labels.join(" + ") + "｜" + orderDesc[orderMode];
-*/
-
 </script>
 </body>
 </html>
