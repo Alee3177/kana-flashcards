@@ -167,13 +167,33 @@
       bottom: 10px;
       left: 12px;
       right: 12px;
+
       display:flex;
-      align-items:center;
-      justify-content:space-between;
+      flex-direction: column;   /* ← 關鍵：改為直排 */
+      gap: 6px;                 /* 兩行間距 */
+
+      align-items: flex-start;  /* 靠左（想置中可改 center） */
+
       color: var(--muted);
       font-size: calc(12px * var(--ui-scale));
-      gap:10px;
     }
+    .hintLine{
+      width: 100%;
+      display: flex;
+      justify-content: flex-start; /* 若想置中可改 center,預設由 first/last-child 決定對齊方式 */
+    }
+	/* 視覺調整說明：
+        - 上行（題庫狀態 deckBadge）置中
+        - 下行（學習狀態 statBadge）靠左
+       若想兩行都置中，兩個都改成 center */
+    .hintLine:first-child{
+      justify-content: center;
+    }
+
+    .hintLine:last-child{
+      justify-content: flex-start;
+    }
+
     .badge{
       padding:6px 10px;
       border-radius: 999px;
@@ -259,10 +279,15 @@
           </div>
         </div>
 
-        <div class="hint">
+    <div class="hint">
+        <div class="hintLine">
           <span class="badge" id="deckBadge">基本50音</span>
+        </div>
+        <div class="hintLine">
           <span class="badge" id="statBadge">請先顯示答案｜會 0 / 不會 0</span>
         </div>
+    </div>
+
       </div>
     </div>
 
