@@ -271,7 +271,16 @@
   }
 }
 
-  </style>
+  
+    .tappable{
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tappable:active{
+      transform: scale(0.99);
+    }
+</style>
 </head>
 
 <body>
@@ -312,11 +321,11 @@
       <div class="card" id="card" title="點一下翻面 / Tap to flip" aria-label="flash card" tabindex="0">
         <div class="inner" id="inner">
           <div class="face front" aria-label="front">
-            <div class="kana" id="frontKana">あ</div>
+            <div class="kana tappable" id="frontKana">あ</div>
             <div class="romaji" id="frontRomaji">a</div>
           </div>
           <div class="face back" aria-label="back">
-            <div class="kana" id="backKana">ア</div>
+            <div class="kana tappable" id="backKana">ア</div>
             <div class="romaji" id="backRomaji">a</div>
           </div>
         </div>
@@ -416,6 +425,35 @@
     }catch(_){}
   }
 
+  // --- Kana audio (MP3 in ./sounds) --------------------------------------
+  // Rule: play ONLY on (1) flip action, (2) tapping the kana text (front/back).
+  // Uses the same mute toggle: optSound.checked.
+  let kanaAudio = null;
+
+  function getCurrentAudioKey(){
+    const item = deck?.[index];
+    if (!item) return null;
+    // Prefer explicit audioKey if provided (e.g., を -> wo), otherwise fall back to romaji.
+    return item.audioKey || item.r || null;
+  }
+
+  function playKanaAudio(){
+    if (!optSound.checked) return; // mute switch
+    const key = getCurrentAudioKey();
+    if (!key) return;
+
+    try{
+      if (kanaAudio){
+        kanaAudio.pause();
+        kanaAudio.currentTime = 0;
+      }
+      // MP3 path: sounds/{key}.mp3 (relative to index.html)
+      kanaAudio = new Audio(`sounds/${key}.mp3`);
+      kanaAudio.play().catch(()=>{});
+    }catch(_){}
+  }
+
+
   // --- Teaching mode (loose): must show answer before grading -------------
   let hasShownAnswer = false;
 
@@ -485,7 +523,7 @@
     {h:"れ",k:"レ",r:"re",tag:"basic",row:8,col:3},
     {h:"ろ",k:"ロ",r:"ro",tag:"basic",row:8,col:4},
     {h:"わ",k:"ワ",r:"wa",tag:"basic",row:9,col:0},
-    {h:"を",k:"ヲ",r:"o",tag:"basic",row:9,col:4},
+    {h:"を",k:"ヲ",r:"o",audioKey:"wo",tag:"basic",row:9,col:4},
     {h:"ん",k:"ン",r:"n",tag:"basic",row:9,col:2},
   ];
 
@@ -783,14 +821,19 @@
     deckBadge.textContent = text;
   }
 
-  function flip(){
+  function flip(playAudio=true){
     card.classList.toggle("flipped");
 
     // Teaching mode (loose): if now showing back, unlock grading
     if (card.classList.contains("flipped")) {
       hasShownAnswer = true;
       setKnowDontEnabled(true);
+
+    // Play kana audio only when the back side is shown.
+    if (playAudio && card.classList.contains("flipped")){
+      playKanaAudio();
     }
+  }
   }
 
   function revealThreeSeconds(){
@@ -840,10 +883,23 @@
     render();
   }
 
+
+  // Tap kana text (front/back) to replay audio (does NOT flip the card)
+  function bindKanaTap(){
+    [frontKana, backKana].forEach((node) => {
+      if (!node) return;
+      node.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation(); // keep 'tap anywhere to flip' on the card, but not when tapping the text
+        playKanaAudio();
+      });
+    });
+  }
+
   // --- Events -------------------------------------------------------------
   btnNext.addEventListener("click", () => { playClickSound(); next(); });
   btnPrev.addEventListener("click", () => { playClickSound(); prev(); });
-  btnFlip.addEventListener("click", () => { playClickSound(); flip(); });
+  btnFlip.addEventListener("click", () => { playClickSound(); flip(true); });
   btnShuffle.addEventListener("click", () => { playClickSound(); orderMode = "random"; innerMode = "none"; if (optOrderMode) optOrderMode.value = orderMode; if (optInnerMode) optInnerMode.value = innerMode; shuffle(); savePrefs(); });
   btnReset.addEventListener("click", () => { playClickSound(); index = 0; render(); });
   btnReveal.addEventListener("click", () => { playClickSound(); revealThreeSeconds(); });
@@ -852,10 +908,10 @@
   btnDont.addEventListener("click", () => { playClickSound(); rescheduleCurrent("dont"); });
   btnStatsClear.addEventListener("click", () => { playClickSound(); clearKnowDontRecords(); });
 
-  card.addEventListener("click", () => { playClickSound(); flip(); });
+  card.addEventListener("click", () => { playClickSound(); flip(true); });
 
   card.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); playClickSound(); flip(); }
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); playClickSound(); flip(true); }
     if (e.key === "ArrowRight") { playClickSound(); next(); }
     if (e.key === "ArrowLeft") { playClickSound(); prev(); }
   });
@@ -905,6 +961,7 @@
   loadPrefs();
   loadStats();
   updateStatsUI();
+  bindKanaTap();
   buildDeck();
 </script>
 </body>

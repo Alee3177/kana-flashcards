@@ -1,0 +1,14 @@
+# ===== Google Cloud / API Keys (DO NOT COMMIT) =====
+# Google service account keys
+*service-account*.json
+*serviceaccount*.json
+*service_account*.json
+
+# Your project key naming (kana-tts-xxxxkey.json / kana-tts-key.json)
+kana-tts*.json
+
+# Generic key patterns (keep, but narrower than *key*.json if you want)
+*apikey*.json
+*api-key*.json
+*credentials*.json
+*secret*.json
