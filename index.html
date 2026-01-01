@@ -296,6 +296,7 @@
         <label><input type="checkbox" id="optYoon" />加入拗音（きゃ/しゃ等）</label>
         <label><input type="checkbox" id="optSound" />音效（可靜音）</label>
         <label><input type="checkbox" id="optAutoFront" />移動後自動回正面</label>
+        <div class="footerNote" id="moveNavAudioNote">提示：未勾選「移動後自動回正面」且停在片假名面時，按「上一張 / 下一張」會自動發音。</div>
       
         <label>
           出牌模式（行/段/交錯）
@@ -454,7 +455,17 @@
   }
 
 
-  // --- Teaching mode (loose): must show answer before grading -------------
+    // Play kana audio on Prev/Next ONLY when:
+  // - Sound is ON (optSound checked)
+  // - "移動後自動回正面" is OFF
+  // - Current view is Katakana side (card is flipped)
+  function shouldPlayKanaOnMove(){
+    if (!optSound.checked) return false;          // mute switch
+    if (optAutoFront.checked) return false;      // keep existing behavior when auto-front is enabled
+    return card.classList.contains("flipped");   // katakana side
+  }
+
+// --- Teaching mode (loose): must show answer before grading -------------
   let hasShownAnswer = false;
 
   function updateStatsUI(){
@@ -523,7 +534,7 @@
     {h:"れ",k:"レ",r:"re",tag:"basic",row:8,col:3},
     {h:"ろ",k:"ロ",r:"ro",tag:"basic",row:8,col:4},
     {h:"わ",k:"ワ",r:"wa",tag:"basic",row:9,col:0},
-    {h:"を",k:"ヲ",r:"o",audioKey:"wo",tag:"basic",row:9,col:4},
+    {h:"を",k:"ヲ",r:"wo(o)",audioKey:"wo",tag:"basic",row:9,col:4},
     {h:"ん",k:"ン",r:"n",tag:"basic",row:9,col:2},
   ];
 
@@ -897,8 +908,16 @@
   }
 
   // --- Events -------------------------------------------------------------
-  btnNext.addEventListener("click", () => { playClickSound(); next(); });
-  btnPrev.addEventListener("click", () => { playClickSound(); prev(); });
+  btnNext.addEventListener("click", () => {
+    playClickSound();
+    next();
+    if (shouldPlayKanaOnMove()) playKanaAudio();
+  });
+  btnPrev.addEventListener("click", () => {
+    playClickSound();
+    prev();
+    if (shouldPlayKanaOnMove()) playKanaAudio();
+  });
   btnFlip.addEventListener("click", () => { playClickSound(); flip(true); });
   btnShuffle.addEventListener("click", () => { playClickSound(); orderMode = "random"; innerMode = "none"; if (optOrderMode) optOrderMode.value = orderMode; if (optInnerMode) optInnerMode.value = innerMode; shuffle(); savePrefs(); });
   btnReset.addEventListener("click", () => { playClickSound(); index = 0; render(); });

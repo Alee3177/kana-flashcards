@@ -1,0 +1,167 @@
+UPDATE_AUDIO_SOP.txt
+Kana Flashcards 聲音更新標準流程（SOP）
+==================================================
+
+【目的】
+本文件說明如何「安全、正確」更新假名卡片的語音檔（mp3），
+並同步發佈至 GitHub Pages，同時避免金鑰外洩與 GitHub Push 被阻擋。
+
+
+--------------------------------------------------
+一、專案結構（唯一標準）
+--------------------------------------------------
+
+只使用「乾淨專案資料夾」：
+
+kana-flashcards-clean/
+├─ index.html
+├─ sounds/
+│  ├─ a.mp3
+│  ├─ i.mp3
+│  ├─ u.mp3
+│  └─ ...
+├─ README.md
+├─ .gitignore
+└─ UPDATE_AUDIO_SOP.txt
+
+【重要】
+- 舊的 kana-flashcards/ 資料夾不再使用
+- GitHub Pages 來源為 gh-pages 分支
+
+
+--------------------------------------------------
+二、安全原則（必須遵守）
+--------------------------------------------------
+
+1. 絕對禁止提交（commit / push）任何金鑰
+2. 不得將以下檔案放入 repo：
+   - *.json（service account / key / credentials）
+3. Google Cloud 金鑰只存在於本機，例如：
+   C:\Users\...\ .gcp\kana-tts-prod.json
+4. repo 內只允許：
+   - HTML
+   - mp3
+   - README / SOP 文件
+
+
+--------------------------------------------------
+三、更新聲音的完整流程（標準作業）
+--------------------------------------------------
+
+【Step 1】在本機產生聲音
+- 使用 Python + Google Cloud Text-to-Speech
+- 確認 GOOGLE_APPLICATION_CREDENTIALS 指向本機金鑰
+- 產生 mp3 檔案
+
+【輸出位置必須是】
+kana-flashcards-clean/sounds/
+
+範例：
+sounds/ka.mp3
+sounds/sa.mp3
+
+
+--------------------------------------------------
+【Step 2】檢查檔案內容（非常重要）
+--------------------------------------------------
+
+確認：
+- sounds/ 裡面只有 .mp3
+- 沒有任何 .json、key、credential 檔案
+- .gitignore 已正確存在
+
+
+--------------------------------------------------
+【Step 3】開啟 GitHub Desktop
+--------------------------------------------------
+
+- Repository：kana-flashcards
+- Branch：gh-pages（網站用分支）
+
+
+--------------------------------------------------
+【Step 4】Commit 變更
+--------------------------------------------------
+
+在 GitHub Desktop 左側 Changes 應該看到：
+- sounds/*.mp3
+- 或 index.html
+
+填寫 Commit Summary：
+Update audio files
+
+然後點擊：
+Commit to gh-pages
+
+
+--------------------------------------------------
+【Step 5】Push 到 GitHub
+--------------------------------------------------
+
+點擊右上角：
+Push origin
+
+
+--------------------------------------------------
+四、發佈確認
+--------------------------------------------------
+
+【GitHub Repo】
+https://github.com/Alee3177/kana-flashcards
+
+- 切換到 gh-pages 分支
+- 確認存在：
+  - index.html
+  - sounds/ 資料夾
+
+【GitHub Pages】
+https://alee3177.github.io/kana-flashcards/
+
+- 點擊翻卡
+- 點擊假名文字
+- 聲音正常播放即完成
+
+
+--------------------------------------------------
+五、常見錯誤與處理方式
+--------------------------------------------------
+
+【錯誤 1】Push 被 GitHub 擋下（Secret detected）
+原因：
+- 金鑰曾被 commit 過（即使後來刪除）
+
+正確處理：
+- 不要使用 Bypass
+- 使用乾淨 repo（kana-flashcards-clean）
+- 確保 .gitignore 正確
+
+
+【錯誤 2】GitHub Desktop 出現 kana-tts-key.json
+處理方式：
+- 直接刪除該檔案
+- 或 Discard changes
+- 絕對不要 Commit
+
+
+--------------------------------------------------
+六、記憶口訣（請記住）
+--------------------------------------------------
+
+「改檔 → 看 Changes → Commit → Push」
+「聲音只放 sounds/」
+「金鑰永不進 repo」
+
+
+--------------------------------------------------
+七、備註
+--------------------------------------------------
+
+- .gitignore 已包含：
+  kana-tts*.json
+  *service_account*.json
+  *credentials*.json
+- 若未來調整聲音命名或結構，請同步更新本文件
+
+
+（文件結束）
+==================================================
