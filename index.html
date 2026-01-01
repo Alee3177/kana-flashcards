@@ -310,33 +310,27 @@
       .inner{ transition:none; }
       button:active{ transform:none; }
     }
+/* 小螢幕字體縮放（用高度判斷） */
 @media (max-height: 700px){
   :root{
     --kana-scale: 1.5;
     --ui-scale: 1.15;
   }
 }
-/* 手機版結構（不論直向 or 橫向） */
-@media (max-width: 768px) and (orientation: portrait),
-       (max-width: 900px) and (orientation: landscape){
-  .modeRow{
-    grid-template-columns: 1fr;   /* 改為上下堆疊 */
-  }
 
-  .controls{
-    grid-template-columns: 1fr;   /* 控制區全部單欄 */
-  }
+@media (max-width: 768px){
+  .controls{ grid-template-columns: 1fr; }
+  .modeRow{ grid-template-columns: 1fr; }
 
-  .actionBar, .controlsBar, .bottomControls{
-    flex-wrap: wrap;
-  }
+  /* ★ 核心修正：按鈕列在手機改為直排 */
+  .btnRow{ grid-template-columns: 1fr;  }
 }
 
-/* === Small screen: modeRow 改為上下排列 「只管版面」 === */
-@media (max-width: 420px){
-  .modeRow{
-    grid-template-columns: 1fr;
-  }
+/* 手機觸控裝置：防桌面模式 */
+@media (hover: none) and (pointer: coarse){
+  .controls{ grid-template-columns: 1fr; }
+  .modeRow{ grid-template-columns: 1fr; }
+  .actionBar, .controlsBar, .bottomControls{ flex-wrap: wrap; }
 }
   
     .tappable{
