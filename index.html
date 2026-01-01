@@ -6,6 +6,28 @@
   <link rel="icon" href="data:,">
   <title>日文50音 Flash Card（平假名⇄片假名 + Romaji）</title>
   <style>
+  /* 出牌模式 + 提示：左右並排 */
+	.modeRow{
+      grid-column: 1 / -1;   /* ★ 關鍵：吃滿 controls 兩欄 */
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+/* 出牌模式那一塊別被 label 預設樣式影響太大 */
+    .orderModeLabel{
+     display: block;
+     line-height: 1.3;
+    }
+
+/* 小螢幕改為上下堆疊，避免擠爆 */
+@media (max-width: 520px){
+    .modeRow{
+      grid-template-columns: 1fr;
+    }
+    }
+  
     :root{
       --bg:#0b0f14;
       --text:#eaf1ff;
@@ -79,6 +101,7 @@
       border-radius: var(--radius);
       padding: 10px;
     }
+
     label{
       display:flex;
       align-items:center;
@@ -255,7 +278,7 @@
     .footerNote{
       color: var(--muted);
       font-size: calc(12px * var(--ui-scale));
-      text-align:center;
+      text-align:left;
       padding: 2px 0 0;
     }
 
@@ -291,31 +314,39 @@
         <div class="progress" id="progress">—</div>
       </div>
 
-      <div class="controls" aria-label="Deck options">
-        <label><input type="checkbox" id="optDakuten" />加入濁音・半濁音（が/ぱ等）</label>
-        <label><input type="checkbox" id="optYoon" />加入拗音（きゃ/しゃ等）</label>
-        <label><input type="checkbox" id="optSound" />音效（可靜音）</label>
-        <label><input type="checkbox" id="optAutoFront" />移動後自動回正面</label>
-        <div class="footerNote" id="moveNavAudioNote">提示：未勾選「移動後自動回正面」且停在片假名面時，按「上一張 / 下一張」會自動發音。</div>
-      
-        <label>
-          出牌模式（行/段/交錯）
-          <select id="optOrderMode" aria-label="Order mode">
-            <option value="random">隨機（原本）</option>
-            <option value="row">行唸法（あいうえお）</option>
-            <option value="col">段唸法（あかさたな）</option>
-            <option value="interleave">行×段交錯（あ→か→さ→い→き→し）</option>
-          </select>
-        </label>
-        <label>
-          行內/段內隨機
-          <select id="optInnerMode" aria-label="Inner random mode">
-            <option value="none">不隨機</option>
-            <option value="row">行內隨機</option>
-            <option value="col">段內隨機</option>
-          </select>
-        </label>
+<div class="controls" aria-label="Deck options">
+  <label><input type="checkbox" id="optDakuten" />加入濁音・半濁音（が/ぱ等）</label>
+  <label><input type="checkbox" id="optYoon" />加入拗音（きゃ/しゃ等）</label>
+  <label><input type="checkbox" id="optSound" />音效（可靜音）</label>
+  <label><input type="checkbox" id="optAutoFront" />移動後自動回正面</label>
+
+  <div class="modeRow">
+    <label class="orderModeLabel">
+      出牌模式<br>（行/段/交錯）
+      <select id="optOrderMode" aria-label="出牌順序模式">
+        <option value="random">隨機（原本）</option>
+        <option value="row">行唸法（あいうえお）</option>
+        <option value="col">段唸法（あかさたな）</option>
+        <option value="interleave">行×段交錯（あ→か→さ→い→き→し）</option>
+      </select>
+    </label>
+
+    <div class="footerNote" id="moveNavAudioNote">
+      提示：未勾選「移動後自動回正面」且停在片假名面時，按「上一張 / 下一張」<br>
+      會自動發音。
+    </div>
+  </div>
+
+  <label>
+    行內/段內隨機
+    <select id="optInnerMode" aria-label="Inner random mode">
+      <option value="none">不隨機</option>
+      <option value="row">行內隨機</option>
+      <option value="col">段內隨機</option>
+    </select>
+  </label>
 </div>
+
     </header>
 
     <div class="cardWrap">
