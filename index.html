@@ -117,6 +117,12 @@
       padding: 10px;
     }
 
+    /* Ensure the warning note and selectors occupy full width (avoid splitting across 2 columns) */
+    #moveNavAudioNote{ grid-column: 1 / -1; }
+    .orderModeLabel{ grid-column: 1 / -1; }
+    .innerModeLabel{ grid-column: 1 / -1; }
+
+
     label{
       display:flex;
       align-items:center;
@@ -343,7 +349,8 @@
   <label><input type="checkbox" id="optSound" />音效（可靜音）</label>
   <label><input type="checkbox" id="optAutoFront" />移動後自動回正面</label>
 
-  <div class="modeRow">
+  <div class="footerNote warning" id="moveNavAudioNote">提示：未勾選「移動後自動回正面」且停在片假名面時，按「上一張 / 下一張」會自動發音。</div>
+
 <label class="orderModeLabel">
   <span class="modeTitle">出牌模式</span>
   <span class="modeSub">（行/段/交錯）</span>
@@ -356,17 +363,17 @@
   </select>
 </label>
 
-    <div class="footerNote warning" id="moveNavAudioNote">提示：未勾選「移動後自動回正面」且停在片假名面時，按「上一張 / 下一張」會自動發音。</div>
-  </div>
 
-  <label>
-    行內/段內隨機
+<label class="innerModeLabel">
+  行內/段內隨機
     <select id="optInnerMode" aria-label="Inner random mode">
       <option value="none">不隨機</option>
       <option value="row">行內隨機</option>
       <option value="col">段內隨機</option>
     </select>
   </label>
+
+</div>
 </div>
 
     </header>
