@@ -22,11 +22,7 @@
     }
 
 /* 小螢幕改為上下堆疊，避免擠爆 */
-@media (max-width: 520px){
-    .modeRow{
-      grid-template-columns: 1fr;
-    }
-    }
+
   
     :root{
       --bg:#0b0f14;
@@ -275,8 +271,9 @@
     .know{ background: rgba(95,225,176,.16); border-color: rgba(95,225,176,.35); }
     .dont{ background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.30); }
 
-    .footerNote{
-      color: var(--muted);
+    .footerNote.warning{
+      color: rgba(255,200,0,0.55);
+    }
       font-size: calc(12px * var(--ui-scale));
       text-align:left;
       padding: 2px 0 0;
@@ -323,7 +320,7 @@
   <div class="modeRow">
     <label class="orderModeLabel">
       出牌模式<br>（行/段/交錯）
-      <select id="optOrderMode" aria-label="出牌順序模式">
+      <select id="optOrderMode" aria-label="Order mode">
         <option value="random">隨機（原本）</option>
         <option value="row">行唸法（あいうえお）</option>
         <option value="col">段唸法（あかさたな）</option>
@@ -331,9 +328,7 @@
       </select>
     </label>
 
-    <div class="footerNote" id="moveNavAudioNote">
-      提示：未勾選「移動後自動回正面」且停在片假名面時，按「上一張 / 下一張」會自動發音。
-    </div>
+    <div class="footerNote warning" id="moveNavAudioNote">提示：未勾選「移動後自動回正面」且停在片假名面時，按「上一張 / 下一張」會自動發音。</div>
   </div>
 
   <label>
