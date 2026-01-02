@@ -116,6 +116,42 @@
       border-radius: var(--radius);
       padding: 10px;
     }
+    /* Controls: keep 2-column checkboxes on phones; only collapse at very narrow widths */
+    .controls > label{ min-width:0; }
+    .controls > label{ display:flex; align-items:center; gap:8px; }
+
+    /* Mode + Note: left (2 selects stacked) / right (note) */
+    .modeRow{
+      grid-column: 1 / -1;
+      display:grid;
+      grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+      gap:12px;
+      align-items:start;
+      margin-top: 6px;
+    }
+    .modeRow > *{ min-width:0; }
+
+    .modeLeft{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-width:0;
+    }
+
+    /* Note stays on right and wraps instead of pushing layout */
+    .controls .footerNote{
+      margin:0; /* inside grid, don't add extra bottom gap */
+      overflow-wrap:anywhere;
+      word-break:break-word;
+      line-height:1.35;
+    }
+
+    /* Very small phones: stack Mode+Note, and (only then) collapse controls to 1 column */
+    @media (max-width: 360px){
+      .controls{ grid-template-columns: 1fr; }
+      .modeRow{ grid-template-columns: 1fr; }
+    }
+
 
     label{
       display:flex;
@@ -321,14 +357,6 @@
   }
 }
 /* Safety: if viewport width is small, controls must be 1-col */
-@media (max-width: 768px){
-  .controls{ grid-template-columns: 1fr; }
-}
-
-@media (hover: none) and (pointer: coarse){
-  .controls{ grid-template-columns: 1fr; }
-  .modeRow{ grid-template-columns: 1fr; }
-}
 /* === Button rows: GRID (prevents vertical pillar buttons on mobile) === */
 .btnRow{
   display: grid;
@@ -707,14 +735,6 @@ label{
   }
 }
 /* Safety: if viewport width is small, controls must be 1-col */
-@media (max-width: 768px){
-  .controls{ grid-template-columns: 1fr; }
-}
-
-@media (hover: none) and (pointer: coarse){
-  .controls{ grid-template-columns: 1fr; }
-  .modeRow{ grid-template-columns: 1fr; }
-}
 /* === Button rows: GRID (prevents vertical pillar buttons on mobile) === */
 .btnRow{
   display: grid;
@@ -752,34 +772,39 @@ label{
         <div class="progress" id="progress">—</div>
       </div>
 
-      <div class="controls" aria-label="Deck options">
-        <label><input type="checkbox" id="optDakuten" />加入濁音・半濁音（が/ぱ等）</label>
-        <label><input type="checkbox" id="optYoon" />加入拗音（きゃ/しゃ等）</label>
-        <label><input type="checkbox" id="optSound" />音效（可靜音）</label>
-        <label><input type="checkbox" id="optAutoFront" />移動後自動回正面</label>
-        <div class="footerNote" id="moveNavAudioNote">提示：未勾選「移動後自動回正面」且停在片假名面時，按「上一張 / 下一張」會自動發音。</div>
-      
-        <label>
-          出牌模式（行/段/交錯）
-          <select id="optOrderMode" aria-label="Order mode">
-            <option value="random">隨機（原本）</option>
-            <option value="row">行唸法（あいうえお）</option>
-            <option value="col">段唸法（あかさたな）</option>
-            <option value="interleave">行×段交錯（あ→か→さ→い→き→し）</option>
-          </select>
-        </label>
-        <label>
-          行內/段內隨機
-          <select id="optInnerMode" aria-label="Inner random mode">
-            <option value="none">不隨機</option>
-            <option value="row">行內隨機</option>
-            <option value="col">段內隨機</option>
-          </select>
-        </label>
-</div>
-    </header>
+<div class="controls" id="controlsPanel">
+  <label><input type="checkbox" id="optDakuten" />加入濁音・半濁音（が/ぱ等）</label>
+  <label><input type="checkbox" id="optYoon" />加入拗音（きゃ/しゃ等）</label>
+  <label><input type="checkbox" id="optSound" />音效（可靜音）</label>
+  <label><input type="checkbox" id="optAutoFront" />移動後自動回正面</label>
 
-    <div class="cardWrap">
+  <div class="modeRow">
+    <div class="modeLeft">
+      <label class="orderModeLabel">
+      <span class="modeTitle">出牌模式</span>
+      <span class="modeSub">（行/段/交錯）</span>
+      <select id="optOrderMode" aria-label="出牌順序模式">
+        <option value="random">隨機（原本）</option>
+        <option value="row">行唸法（あいうえお）</option>
+        <option value="col">段唸法（あかさたな）</option>
+        <option value="interleave">行×段交錯（あ→か→さ→い→き→し）</option>
+      </select>
+    </label>
+
+    <label class="innerModeLabel">
+      <span class="modeTitle">行內/段內隨機</span>
+      <select id="optInnerMode" aria-label="行內段內隨機模式">
+        <option value="none">不隨機</option>
+        <option value="row">行內隨機</option>
+        <option value="col">段內隨機</option>
+      </select>
+    </label>
+    </div>
+    <div class="footerNote warning" id="moveNavAudioNote">提示：未勾選「移動後自動回正面」且停在片假名面時，按「上一張 / 下一張」會自動發音。</div>
+  </div>
+</div>
+
+<div class="cardWrap">
       <div class="card" id="card" title="點一下翻面 / Tap to flip" aria-label="flash card" tabindex="0">
         <div class="inner" id="inner">
           <div class="face front" aria-label="front">
