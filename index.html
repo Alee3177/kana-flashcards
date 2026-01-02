@@ -332,10 +332,32 @@
 /* === Button rows: GRID (prevents vertical pillar buttons on mobile) === */
 .btnRow{
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+
+/* 按鈕：避免逐字換行變直立長柱 */
+.btnRow .btn,
+.btnRow button{
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 更窄：2 欄 */
+@media (max-width: 360px){
+  .btnRow{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* 極窄：1 欄 */
+@media (max-width: 300px){
+  .btnRow{ grid-template-columns: 1fr; }
+}
 .modeTitle{
   display: block;
-  margin-bottom: 6px;   /* 控制「出牌模式」與副標的距離 */
+  margin-bottom: 6px;
   font-weight: 600;
 }
 
@@ -809,7 +831,7 @@ label{
     </div>
 
     <div class="footerNote">
-      教學模式（寬鬆）：翻到背面或顯示答案後，才能按「會 / 不會」
+      溫馨提醒:翻到背面或顯示答案後，才能按「會/ 不會」
     </div>
   </div>
 
