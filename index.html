@@ -318,13 +318,39 @@
   }
 }
 
+/* ===== Fix mobile: prevent "vertical pillar buttons" ===== */
 @media (max-width: 768px){
-  .controls{ grid-template-columns: 1fr; }
-  .modeRow{ grid-template-columns: 1fr; }
+  /* 按鈕列：最多 3 欄，且每欄允許縮小 */
+  .btnRow{
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
 
-  /* ★ 核心修正：按鈕列在手機改為直排 */
-  .btnRow{ grid-template-columns: 1fr;  }
+  /* 按鈕：禁止逐字換行，避免變成直立長柱 */
+  .btn, button{
+    white-space: nowrap;
+    word-break: keep-all;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 手機上按鈕字稍微縮一點，減少擠爆 */
+  .btn, button{
+    font-size: calc(14px * var(--ui-scale));
+    padding: calc(10px * var(--ui-scale)) calc(10px * var(--ui-scale));
+  }
 }
+
+/* 更窄的手機（例如 360px 以下）：改 2 欄更穩 */
+@media (max-width: 360px){
+  .btnRow{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* 極窄：改 1 欄 */
+@media (max-width: 300px){
+  .btnRow{ grid-template-columns: 1fr; }
+}
+
 
 /* 手機觸控裝置：防桌面模式 */
 @media (hover: none) and (pointer: coarse){
