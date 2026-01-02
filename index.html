@@ -491,17 +491,27 @@
     }
     .controls > *{ min-width: 0; }
 
-    /* 提示：吃滿兩欄 */
-    .controls .footerNote{
-      grid-column: 1 / -1;
-      color: rgba(255,200,0,0.55); /* 你指定的提示色 */
-      font-size: calc(12px * var(--ui-scale));
-      text-align:left;
-      padding: 2px 0 0;
-      line-height: 1.35;
-      overflow-wrap: anywhere;
-      word-break: break-word;
-    }
+/* 提示：桌機放在右欄、對齊 checkbox 後的文字起點 */
+.controls .footerNote{
+  grid-column: 2;                 /* ★關鍵：放右欄（「移動後自動回正面」那欄） */
+  color: rgba(255,200,0,0.55);
+  font-size: calc(12px * var(--ui-scale));
+  line-height: 1.35;
+
+  margin-top: 2px;
+  padding-left: 26px;             /* ★18px checkbox + 8px gap = 26px，對齊文字起點 */
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  text-align: left;
+}
+
+/* 手機單欄時：提示改吃滿一欄（避免右欄不存在） */
+@media (max-width: 768px){
+  .controls .footerNote{
+    grid-column: 1 / -1;          /* 單欄時吃滿 */
+  }
+}
 
     /* 出牌模式區：桌面左右、手機上下 */
     .modeBlock{
