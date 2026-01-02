@@ -329,38 +329,11 @@
   }
 }
 
-/* === Mobile layout: keep readable, avoid "vertical pillar buttons" === */
-@media (max-width: 768px){
-  /* 控制區改單欄，避免文字被擠成直排 */
+@media (hover: none) and (pointer: coarse){
   .controls{ grid-template-columns: 1fr; }
-
-  /* 出牌模式 / 提示：改上下堆疊更穩 */
   .modeRow{ grid-template-columns: 1fr; }
-
-  /* 按鈕列：維持多欄（不要變成超高直柱） */
-  .btnRow{
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-  }
-
-  /* 按鈕文字：禁止逐字換行，避免變成直立長柱 */
-  .btn, button{
-    white-space: nowrap;
-    word-break: keep-all;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
 }
 
-/* 更窄的手機：改 2 欄 */
-@media (max-width: 360px){
-  .btnRow{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
-/* 極窄：改 1 欄 */
-@media (max-width: 300px){
-  .btnRow{ grid-template-columns: 1fr; }
-}
 </style>
 </head>
 
