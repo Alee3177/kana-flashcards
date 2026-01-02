@@ -272,11 +272,25 @@
       white-space:nowrap;
     }
 
-    .btnRow{
-      display:grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap:10px;
-    }
+/* === Button rows: robust across mobile/desktop (no more vertical pillars) === */
+.btnRow{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: stretch;
+}
+
+/* 每顆按鈕：至少 110px，會自動換行成多列 */
+.btnRow > button,
+.btnRow > .btn{
+  flex: 1 1 110px;     /* grow / shrink / basis */
+  min-width: 110px;    /* 防止被壓成超窄直柱 */
+  white-space: nowrap; /* 禁止逐字換行 */
+  word-break: keep-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
     button{
       border:0;
       border-radius: 14px;
