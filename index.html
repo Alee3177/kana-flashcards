@@ -322,7 +322,8 @@
 @media (max-width: 768px){
   /* 按鈕列：最多 3 欄，且每欄允許縮小 */
   .btnRow{
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display:grid;
+    grid-template-columns: repeat(3, minmax(110px, 1fr));
     gap: 10px;
   }
 
@@ -343,7 +344,7 @@
 
 /* 更窄的手機（例如 360px 以下）：改 2 欄更穩 */
 @media (max-width: 360px){
-  .btnRow{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .btnRow{ grid-template-columns: repeat(2, minmax(110px, 1fr)); }
 }
 
 /* 極窄：改 1 欄 */
@@ -352,12 +353,43 @@
 }
 
 
-/* 手機觸控裝置：防桌面模式 */
+/* 手機觸控裝置：強制正常排版（不管直向 / 橫向 / 桌面模式） */
 @media (hover: none) and (pointer: coarse){
-  .controls{ grid-template-columns: 1fr; }
-  .modeRow{ grid-template-columns: 1fr; }
-  .actionBar, .controlsBar, .bottomControls{ flex-wrap: wrap; }
+  /* 控制區單欄，避免 label 被擠成直排 */
+  .controls{
+    grid-template-columns: 1fr;
+  }
+
+  .modeRow{
+    grid-template-columns: 1fr;
+  }
+
+  /* ❌ 不要 flex-wrap，會造成直立長條 */
+  .actionBar,
+  .controlsBar,
+  .bottomControls{
+    flex-wrap: nowrap;
+  }
+
+  /* ★ 核心修正：防止按鈕變成「柱子」 */
+  .btnRow{
+    grid-template-columns: repeat(2, minmax(110px, 1fr));
+  }
+
+  .btnRow button{
+    white-space: nowrap;
+    word-break: keep-all;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
+
+/* 手機/平板（觸控裝置）強制套用：不靠 width 判斷 */
+@media (pointer: coarse){
+  .controls{ grid-template-columns: 1fr; }   /* 控制區單欄，避免 label 被擠成直排 */
+  .btnRow{ grid-template-columns: repeat(3, minmax(110px, 1fr)); } /* 手機更穩 */
+}
+
   
     .tappable{
       cursor: pointer;
