@@ -491,27 +491,30 @@
     }
     .controls > *{ min-width: 0; }
 
-/* 提示：桌機放在右欄、對齊 checkbox 後的文字起點 */
-.controls .footerNote{
-  grid-column: 2;                 /* ★關鍵：放右欄（「移動後自動回正面」那欄） */
+
+/* 提示：固定在右欄（移動後自動回正面那欄）下面，並對齊 checkbox 文字 */
+.controls #moveNavAudioNote{
+  grid-column: 2 / 3;                 /* ★只在右欄 */
+  margin-top: -2px;                   /* 視覺更貼近上一個選項，可自行微調 */
+  padding-left: 26px;                 /* ★對齊 checkbox 後面的文字（18px 勾選框 + 8px gap） */
   color: rgba(255,200,0,0.55);
   font-size: calc(12px * var(--ui-scale));
   line-height: 1.35;
-
-  margin-top: 2px;
-  padding-left: 26px;             /* ★18px checkbox + 8px gap = 26px，對齊文字起點 */
-
+  text-align: left;
   overflow-wrap: anywhere;
   word-break: break-word;
-  text-align: left;
 }
 
-/* 手機單欄時：提示改吃滿一欄（避免右欄不存在） */
-@media (max-width: 768px){
-  .controls .footerNote{
-    grid-column: 1 / -1;          /* 單欄時吃滿 */
+/* 若某些極窄情況你把 controls 變成 1 欄，提示就回到同欄並維持縮排對齊 */
+@media (max-width: 360px){
+  .controls #moveNavAudioNote{
+    grid-column: 1 / -1;
+    padding-left: 26px;
+    margin-top: 6px;
   }
 }
+}
+
 
     /* 出牌模式區：桌面左右、手機上下 */
     .modeBlock{
@@ -814,7 +817,9 @@ label{
   <label><input type="checkbox" id="optSound" />音效（可靜音）</label>
   <label><input type="checkbox" id="optAutoFront" />移動後自動回正面</label>
 
-  <div class="modeRow">
+  
+    <div class="footerNote warning" id="moveNavAudioNote">提示：未勾選「移動後自動回正面」且停在片假名面時，按「上一張 / 下一張」會自動發音。</div>
+<div class="modeRow">
     <div class="modeLeft">
       <label class="orderModeLabel">
       <span class="modeTitle">出牌模式</span>
@@ -836,7 +841,6 @@ label{
       </select>
     </label>
     </div>
-    <div class="footerNote warning" id="moveNavAudioNote">提示：未勾選「移動後自動回正面」且停在片假名面時，按「上一張 / 下一張」會自動發音。</div>
   </div>
 </div>
 
