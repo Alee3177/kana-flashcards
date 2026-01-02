@@ -297,6 +297,7 @@
     .dont{ background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.30); }
 
 .footerNote{
+  color: rgba(255,200,0,0.55);
   font-size: calc(12px * var(--ui-scale));
   text-align:left;
   padding: 2px 0 0;
@@ -306,99 +307,46 @@
   color: rgba(255,200,0,0.55);
 }
 
-    @media (prefers-reduced-motion: reduce){
-      .inner{ transition:none; }
-      button:active{ transform:none; }
-    }
-/* 小螢幕字體縮放（用高度判斷） */
-@media (max-height: 700px){
+/* === Responsive font scaling for small screens === */
+@media (max-width: 420px), (max-height: 700px){
   :root{
-    --kana-scale: 1.5;
-    --ui-scale: 1.15;
+    --kana-scale: 1.5; /* 小螢幕：Kana + Romaji 縮回 1.5x */
+    --ui-scale: 1.15;  /* 小螢幕：UI 縮回 15% */
   }
 }
 
-/* ===== Fix mobile: prevent "vertical pillar buttons" ===== */
+/* === Mobile layout: keep readable, avoid "vertical pillar buttons" === */
 @media (max-width: 768px){
-  /* 按鈕列：最多 3 欄，且每欄允許縮小 */
+  /* 控制區改單欄，避免文字被擠成直排 */
+  .controls{ grid-template-columns: 1fr; }
+
+  /* 出牌模式 / 提示：改上下堆疊更穩 */
+  .modeRow{ grid-template-columns: 1fr; }
+
+  /* 按鈕列：維持多欄（不要變成超高直柱） */
   .btnRow{
-    display:grid;
-    grid-template-columns: repeat(3, minmax(110px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
   }
 
-  /* 按鈕：禁止逐字換行，避免變成直立長柱 */
+  /* 按鈕文字：禁止逐字換行，避免變成直立長柱 */
   .btn, button{
     white-space: nowrap;
     word-break: keep-all;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-
-  /* 手機上按鈕字稍微縮一點，減少擠爆 */
-  .btn, button{
-    font-size: calc(14px * var(--ui-scale));
-    padding: calc(10px * var(--ui-scale)) calc(10px * var(--ui-scale));
-  }
 }
 
-/* 更窄的手機（例如 360px 以下）：改 2 欄更穩 */
+/* 更窄的手機：改 2 欄 */
 @media (max-width: 360px){
-  .btnRow{ grid-template-columns: repeat(2, minmax(110px, 1fr)); }
+  .btnRow{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* 極窄：改 1 欄 */
 @media (max-width: 300px){
   .btnRow{ grid-template-columns: 1fr; }
 }
-
-
-/* 手機觸控裝置：強制正常排版（不管直向 / 橫向 / 桌面模式） */
-@media (hover: none) and (pointer: coarse){
-  /* 控制區單欄，避免 label 被擠成直排 */
-  .controls{
-    grid-template-columns: 1fr;
-  }
-
-  .modeRow{
-    grid-template-columns: 1fr;
-  }
-
-  /* ❌ 不要 flex-wrap，會造成直立長條 */
-  .actionBar,
-  .controlsBar,
-  .bottomControls{
-    flex-wrap: nowrap;
-  }
-
-  /* ★ 核心修正：防止按鈕變成「柱子」 */
-  .btnRow{
-    grid-template-columns: repeat(2, minmax(110px, 1fr));
-  }
-
-  .btnRow button{
-    white-space: nowrap;
-    word-break: keep-all;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-}
-
-/* 手機/平板（觸控裝置）強制套用：不靠 width 判斷 */
-@media (pointer: coarse){
-  .controls{ grid-template-columns: 1fr; }   /* 控制區單欄，避免 label 被擠成直排 */
-  .btnRow{ grid-template-columns: repeat(3, minmax(110px, 1fr)); } /* 手機更穩 */
-}
-
-  
-    .tappable{
-      cursor: pointer;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .tappable:active{
-      transform: scale(0.99);
-    }
 </style>
 </head>
 
