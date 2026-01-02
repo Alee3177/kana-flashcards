@@ -761,6 +761,32 @@ label{
   .modeBlock{ grid-template-columns: 1fr; }
 }
 
+
+
+/* ===========================
+   FINAL OVERRIDES (mobile 2-col controls)
+   Goal: phone portrait still shows 2x2 checkboxes (left/right), and mode+note stays L/R.
+   Only collapse to 1-col on very narrow devices.
+   =========================== */
+@media (max-width: 768px){
+  /* force back to 2 columns (overrides any earlier 1-col rules) */
+  .controls{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* keep mode + note in two columns as well */
+  .modeRow{
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+  }
+}
+
+/* Very narrow phones: then stack */
+@media (max-width: 360px){
+  .controls{ grid-template-columns: 1fr; }
+  .modeRow{ grid-template-columns: 1fr; }
+  /* the note should sit under the mode selects */
+  .controls .footerNote{ margin-top: 6px; }
+}
+
 </style>
 </head>
 
