@@ -360,6 +360,36 @@
   .controls #moveNavAudioNote{ grid-column:1; grid-row:auto; margin-left:0; }
 }
 
+
+/* ===========================
+   PROTECTED UI BLOCK: NOTES + CONTROLS GRID
+   Do not edit unless you intend to redesign the Controls layout.
+   =========================== */
+
+/* Base style: "提示 / 溫馨提醒" 視覺層級一致（不搶戲） */
+.footerNote.warning{
+  color: rgba(255,200,0,0.52);
+  font-size: calc(12px * var(--ui-scale));
+  line-height: 1.35;
+  opacity: .9;
+}
+
+/* 右欄提示：固定放在第 2 欄，並縮排到與 checkbox 文字對齊 */
+.controls #moveNavAudioNote{
+  grid-column: 2;
+  padding-left: calc(26px * var(--ui-scale)); /* ≈ checkbox(18px) + gap(8px) */
+  margin-top: -2px;
+}
+
+/* 手機 1 欄時：提示改成全寬，不縮排 */
+@media (max-width: 768px){
+  .controls #moveNavAudioNote{
+    grid-column: 1 / -1;
+    padding-left: 0;
+    margin-top: 0;
+  }
+}
+
 </style>
 </head>
 
