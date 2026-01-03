@@ -21,12 +21,14 @@
 
   /* 出牌模式 + 提示：左右並排 */
 .modeRow{
-  grid-column: 1 / -1;                 /* 仍然吃滿 controls 兩欄 */
-  display: grid;
-  grid-template-columns: minmax(0,1fr) minmax(0,1fr);  /* ★關鍵：允許欄位縮 */
-  gap: 12px;
-  align-items: start;
+  grid-column: 1;          /* 左欄：對齊「音效」checkbox 的下方 */
+  grid-row: 3;             /* 與右欄提示同一列，避免互相擠壓 */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
   margin-top: 8px;
+  min-width: 0;
 }
 
 /* ★關鍵：Grid item 允許縮小，避免長文字撐爆欄寬 */
@@ -345,12 +347,12 @@
 
 /* Hint: right column, directly under "移動後自動回正面" checkbox */
 .controls #moveNavAudioNote{
-  grid-column:2;
-  grid-row:3;
-  align-self:start;
-  /* align text to the checkbox label text (checkbox 18px + gap 8px) */
-  margin-left:26px;
-  margin-top: 2px;
+  grid-column: 2;   /* 右欄：在「移動後自動回正面」下面 */
+  grid-row: 3;      /* 與 modeRow 同一列，但不重疊（modeRow 現在只佔左欄） */
+  align-self: start;
+  /* 對齊到 checkbox 文字起點（checkbox 18px + gap 8px） */
+  margin-left: 26px;
+  margin-top: 8px;  /* 與左欄 modeRow 上緣視覺對齊 */
 }
 
 /* If the screen is truly too narrow, fall back to 1 column (optional safety) */
