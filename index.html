@@ -6,45 +6,28 @@
   <link rel="icon" href="data:,">
   <title>日文50音 Flash Card（平假名⇄片假名 + Romaji）</title>
   <style>
-.modeTitle{
-  display: block;
-  margin-bottom: 6px;   /* 控制「出牌模式」與副標的距離 */
-  font-weight: 600;
-}
-
-.modeSub{
-  display: block;
-  opacity: .85;
-  font-size: 0.95em;
-  margin-bottom: 6px;   /* 控制副標與 select 的距離 */
-}
-
   /* 出牌模式 + 提示：左右並排 */
-.modeRow{
-  grid-column: 1;          /* 左欄：對齊「音效」checkbox 的下方 */
-  grid-row: 3;             /* 與右欄提示同一列，避免互相擠壓 */
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: stretch;
-  margin-top: 8px;
-  min-width: 0;
-}
+	.modeRow{
+      grid-column: 1 / -1;   /* ★ 關鍵：吃滿 controls 兩欄 */
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: start;
+    }
 
-/* ★關鍵：Grid item 允許縮小，避免長文字撐爆欄寬 */
-.modeRow > *{
-  min-width: 0;
-}
-
-/* 讓提示文字在右欄內「乖乖換行」，不去擠左欄 */
-.footerNote{
-  overflow-wrap: anywhere;   /* 長字串也能斷行 */
-  word-break: break-word;
-  line-height: 1.35;
-}
+/* 出牌模式那一塊別被 label 預設樣式影響太大 */
+    .orderModeLabel{
+     display: block;
+     line-height: 1.3;
+    }
 
 /* 小螢幕改為上下堆疊，避免擠爆 */
-
+@media (max-width: 520px){
+    .modeRow{
+      grid-template-columns: 1fr;
+    }
+    }
+  
     :root{
       --bg:#0b0f14;
       --text:#eaf1ff;
@@ -292,9 +275,8 @@
     .know{ background: rgba(95,225,176,.16); border-color: rgba(95,225,176,.35); }
     .dont{ background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.30); }
 
-    .footerNote.warning{
-      color: rgba(255,200,0,0.55);
-    }
+    .footerNote{
+      color: var(--muted);
       font-size: calc(12px * var(--ui-scale));
       text-align:left;
       padding: 2px 0 0;
@@ -305,6 +287,15 @@
       button:active{ transform:none; }
     }
 	/* === Responsive font scaling for small screens ＆ 依「高度」也一起判斷（極小裝置）=== */
+
+/* Small screen: reduce checkbox wrap height (keeps 出牌模式 from being pushed down) */
+@media (max-width: 420px){
+  .controls label{
+    line-height: 1.2;
+    font-size: calc(12px * var(--ui-scale));
+  }
+}
+
 @media (max-width: 420px), (max-height: 700px){
   :root{
     --kana-scale: 1.5; /* 小螢幕：Kana + Romaji 縮回 1.5x */
@@ -321,77 +312,6 @@
     .tappable:active{
       transform: scale(0.99);
     }
-
-/* ===== Controls layout: "不可能再炸" ===== */
-/* Keep controls in 2 columns on mobile (portrait included) */
-.controls{
-  grid-template-columns: minmax(0,1fr) minmax(0,1fr) !important;
-}
-.controls > *{ min-width:0; }
-
-/* Place the 4 checkboxes in a stable 2x2 grid */
-.controls .opt-dakuten{ grid-column:1; grid-row:1; }
-.controls .opt-yoon{ grid-column:2; grid-row:1; }
-.controls .opt-sound{ grid-column:1; grid-row:2; }
-.controls .opt-autofront{ grid-column:2; grid-row:2; }
-
-/* Modes: left column, directly under "音效" checkbox */
-.controls .modeRow{
-  grid-column:1;
-  grid-row:3;
-  display:flex !important;
-  flex-direction:column;
-  gap:12px;
-  align-items:stretch;
-}
-
-/* Hint: right column, directly under "移動後自動回正面" checkbox */
-.controls #moveNavAudioNote{
-  grid-column: 2;   /* 右欄：在「移動後自動回正面」下面 */
-  grid-row: 3;      /* 與 modeRow 同一列，但不重疊（modeRow 現在只佔左欄） */
-  align-self: start;
-  /* 對齊到 checkbox 文字起點（checkbox 18px + gap 8px） */
-  margin-left: 26px;
-  margin-top: 8px;  /* 與左欄 modeRow 上緣視覺對齊 */
-}
-
-/* If the screen is truly too narrow, fall back to 1 column (optional safety) */
-@media (max-width: 340px){
-  .controls{ grid-template-columns: 1fr !important; }
-  .controls .modeRow{ grid-column:1; grid-row:auto; }
-  .controls #moveNavAudioNote{ grid-column:1; grid-row:auto; margin-left:0; }
-}
-
-
-/* ===========================
-   PROTECTED UI BLOCK: NOTES + CONTROLS GRID
-   Do not edit unless you intend to redesign the Controls layout.
-   =========================== */
-
-/* Base style: "提示 / 溫馨提醒" 視覺層級一致（不搶戲） */
-.footerNote.warning{
-  color: rgba(255,200,0,0.52);
-  font-size: calc(12px * var(--ui-scale));
-  line-height: 1.35;
-  opacity: .9;
-}
-
-/* 右欄提示：固定放在第 2 欄，並縮排到與 checkbox 文字對齊 */
-.controls #moveNavAudioNote{
-  grid-column: 2;
-  padding-left: calc(26px * var(--ui-scale)); /* ≈ checkbox(18px) + gap(8px) */
-  margin-top: -2px;
-}
-
-/* 手機 1 欄時：提示改成全寬，不縮排 */
-@media (max-width: 768px){
-  .controls #moveNavAudioNote{
-    grid-column: 1 / -1;
-    padding-left: 0;
-    margin-top: 0;
-  }
-}
-
 </style>
 </head>
 
@@ -404,17 +324,15 @@
       </div>
 
 <div class="controls" aria-label="Deck options">
-  <label class="opt opt-dakuten"><input type="checkbox" id="optDakuten" />加入濁音・半濁音（が/ぱ等）</label>
-  <label class="opt opt-yoon"><input type="checkbox" id="optYoon" />加入拗音（きゃ/しゃ等）</label>
-  <label class="opt opt-sound"><input type="checkbox" id="optSound" />音效（可靜音）</label>
-  <label class="opt opt-autofront"><input type="checkbox" id="optAutoFront" />移動後自動回正面</label>
+  <label><input type="checkbox" id="optDakuten" />加入濁音・半濁音（が/ぱ等）</label>
+  <label><input type="checkbox" id="optYoon" />加入拗音（きゃ/しゃ等）</label>
+  <label><input type="checkbox" id="optSound" />音效（可靜音）</label>
+  <label><input type="checkbox" id="optAutoFront" />移動後自動回正面</label>
 
-  <!-- 出牌模式 + 行內/段內隨機（左欄：往上對齊在「音效」下方） -->
-  <div class="modeRow" aria-label="Modes">
+  <div class="modeRow">
     <label class="orderModeLabel">
-      <span class="modeTitle">出牌模式</span>
-      <span class="modeSub">（行/段/交錯）</span>
-      <select id="optOrderMode" aria-label="出牌順序模式">
+      出牌模式<br>（行/段/交錯）
+      <select id="optOrderMode" aria-label="Order mode">
         <option value="random">隨機（原本）</option>
         <option value="row">行唸法（あいうえお）</option>
         <option value="col">段唸法（あかさたな）</option>
@@ -422,20 +340,20 @@
       </select>
     </label>
 
-    <label class="innerModeLabel">
-      <span class="modeTitle">行內/段內隨機</span>
-      <select id="optInnerMode" aria-label="Inner random mode">
-        <option value="none">不隨機</option>
-        <option value="row">行內隨機</option>
-        <option value="col">段內隨機</option>
-      </select>
-    </label>
+    <div class="footerNote" id="moveNavAudioNote">
+      提示：未勾選「移動後自動回正面」且停在片假名面時，按「上一張 / 下一張」<br>
+      會自動發音。
+    </div>
   </div>
 
-  <!-- 提示：右欄，對齊「移動後自動回正面」文字起點 -->
-  <div class="footerNote warning" id="moveNavAudioNote">
-    提示：未勾選「移動後自動回正面」且停在片假名面時，按「上一張 / 下一張」會自動發音。
-  </div>
+  <label>
+    行內/段內隨機
+    <select id="optInnerMode" aria-label="Inner random mode">
+      <option value="none">不隨機</option>
+      <option value="row">行內隨機</option>
+      <option value="col">段內隨機</option>
+    </select>
+  </label>
 </div>
 
     </header>
@@ -483,8 +401,8 @@
       <button id="btnStatsClear">清除會 / 不會紀錄</button>
     </div>
 
-    <div class="footerNote warning">
-      溫馨提醒：翻到背面或顯示答案後，才能按「會 / 不會」
+    <div class="footerNote">
+      教學模式（寬鬆）：翻到背面或顯示答案後，才能按「會 / 不會」
     </div>
   </div>
 
