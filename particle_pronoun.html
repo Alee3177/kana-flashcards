@@ -1,0 +1,829 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Japanese Pronoun & Particle Combination Trainer</title>
+  <style>
+    :root{
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --ok:#16a34a;
+      --warn:#d97706;
+      --bad:#dc2626;
+      --accent:#2563eb;
+      --accent-2:#0f172a;
+      --chip:#eef2ff;
+      --shadow:0 10px 28px rgba(15,23,42,.08);
+      --radius:20px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+      background:linear-gradient(180deg,#f8fbff 0%,#f4f7fb 100%);
+      color:var(--text);
+    }
+    .wrap{max-width:1100px;margin:0 auto;padding:20px}
+    .hero{
+      background:linear-gradient(135deg,#ffffff 0%,#eef5ff 100%);
+      border:1px solid #dbeafe;
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      padding:22px;
+      margin-bottom:18px;
+    }
+    .title{font-size:32px;font-weight:800;letter-spacing:.5px;margin:0 0 8px}
+    .sub{color:var(--muted);font-size:15px;line-height:1.7}
+    .grid{
+      display:grid;
+      grid-template-columns:1.2fr .95fr;
+      gap:18px;
+    }
+    @media (max-width:900px){
+      .grid{grid-template-columns:1fr}
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
+    }
+    .card h2{
+      margin:0 0 12px;
+      font-size:20px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:50%;background:var(--accent);
+      display:inline-block;
+    }
+    .mode-row,.controls,.quiz-options,.action-row,.mini-row{
+      display:flex;flex-wrap:wrap;gap:10px;
+    }
+    .mode-btn,.btn,.option-btn{
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:700;
+      transition:.18s ease;
+    }
+    .mode-btn:hover,.btn:hover,.option-btn:hover{transform:translateY(-1px)}
+    .mode-btn.active{
+      background:var(--accent-2);
+      color:#fff;
+      border-color:var(--accent-2);
+    }
+    .btn.primary{
+      background:var(--accent);
+      color:#fff;
+      border-color:var(--accent);
+    }
+    .btn.good{
+      background:var(--ok);
+      color:#fff;
+      border-color:var(--ok);
+    }
+    .btn.warn{
+      background:var(--warn);
+      color:#fff;
+      border-color:var(--warn);
+    }
+    .btn.ghost{
+      background:#f8fafc;
+    }
+    .wheel-box{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+    @media (max-width:700px){
+      .wheel-box{grid-template-columns:1fr}
+    }
+    .wheel{
+      border:1px dashed #cbd5e1;
+      border-radius:18px;
+      background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
+      padding:16px;
+      min-height:180px;
+      position:relative;
+      overflow:hidden;
+    }
+    .wheel .label{
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:8px;
+      font-weight:700;
+    }
+    .wheel-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-top:6px;
+    }
+    .pill{
+      border-radius:999px;
+      padding:10px 14px;
+      background:#fff;
+      border:1px solid var(--line);
+      font-weight:700;
+    }
+    .pill.active{
+      background:#ecfeff;
+      border-color:#67e8f9;
+      box-shadow:inset 0 0 0 1px #67e8f9;
+    }
+    .result{
+      margin-top:14px;
+      border:1px solid #dbeafe;
+      background:linear-gradient(180deg,#ffffff 0%,#eff6ff 100%);
+      border-radius:20px;
+      padding:18px;
+    }
+    .jp{
+      font-size:42px;
+      font-weight:900;
+      line-height:1.2;
+      letter-spacing:1px;
+      margin-bottom:6px;
+    }
+    .kana{
+      font-size:18px;
+      color:var(--accent-2);
+      margin-bottom:4px;
+      font-weight:700;
+    }
+    .roma{
+      font-size:16px;
+      color:var(--muted);
+      margin-bottom:10px;
+    }
+    .meaning{
+      font-size:18px;
+      font-weight:800;
+    }
+    .helper{
+      margin-top:10px;
+      color:var(--muted);
+      line-height:1.75;
+      font-size:14px;
+    }
+    .legend{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:10px;
+    }
+    @media (max-width:900px){
+      .legend{grid-template-columns:repeat(2,1fr)}
+    }
+    .legend .item{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      background:#fff;
+    }
+    .legend .item strong{display:block;margin-bottom:6px}
+    .quiz-box{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+      background:#fbfdff;
+    }
+    .prompt{
+      font-size:28px;
+      font-weight:900;
+      margin-bottom:12px;
+      line-height:1.4;
+    }
+    .feedback{
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:14px;
+      font-weight:800;
+      display:none;
+    }
+    .feedback.ok{display:block;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+    .feedback.bad{display:block;background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:12px;
+      font-size:14px;
+    }
+    th,td{
+      border-bottom:1px solid var(--line);
+      padding:10px 8px;
+      text-align:left;
+      vertical-align:top;
+    }
+    th{background:#f8fafc}
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin-top:10px;
+    }
+    @media (max-width:700px){
+      .stats{grid-template-columns:repeat(2,1fr)}
+    }
+    .stat{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      background:#fff;
+    }
+    .stat .k{font-size:12px;color:var(--muted);margin-bottom:6px}
+    .stat .v{font-size:24px;font-weight:900}
+    .small{
+      font-size:12px;color:var(--muted)
+    }
+    .footer{
+      margin-top:16px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.7;
+    }
+    .tag{
+      display:inline-block;
+      background:var(--chip);
+      color:#3730a3;
+      border:1px solid #c7d2fe;
+      border-radius:999px;
+      padding:4px 10px;
+      font-size:12px;
+      font-weight:800;
+      margin-right:6px;
+      margin-bottom:6px;
+    }
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="title">日文人稱代名詞＋助詞の組合練習</div>
+      <div class="sub">
+        主軸：<span class="tag">人稱不變，只換助詞</span>
+        <span class="tag">は = 主詞</span>
+        <span class="tag">の = 所有</span>
+        <span class="tag">に = 對象</span>
+        <span class="tag">のもの = 所有物</span>
+        <br>
+        可直接丟到 GitHub Pages 使用。單檔、無外部依賴、支援手機。
+      </div>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <h2><span class="dot"></span>模式切換</h2>
+        <div class="mode-row">
+          <button class="mode-btn active" data-mode="learning">Learning 學習模式</button>
+          <button class="mode-btn" data-mode="quiz">Quiz 測驗模式</button>
+          <button class="mode-btn" data-mode="sentence">Sentence 句子模式</button>
+        </div>
+
+        <div id="panel-learning" class="panel">
+          <div class="controls" style="margin-top:14px">
+            <button id="spinPronoun" class="btn primary">抽人稱</button>
+            <button id="spinParticle" class="btn primary">抽助詞</button>
+            <button id="spinBoth" class="btn good">一起抽</button>
+            <button id="playAudio" class="btn ghost">朗讀結果</button>
+            <button id="copyResult" class="btn ghost">複製結果</button>
+            <button id="resetLearning" class="btn warn">重設</button>
+          </div>
+
+          <div class="wheel-box" style="margin-top:14px">
+            <div class="wheel">
+              <div class="label">第一輪：人稱代名詞</div>
+              <div id="pronounList" class="wheel-list"></div>
+            </div>
+            <div class="wheel">
+              <div class="label">第二輪：助詞 / 所有物</div>
+              <div id="particleList" class="wheel-list"></div>
+            </div>
+          </div>
+
+          <div class="result">
+            <div class="jp" id="jpOut">わたしは</div>
+            <div class="kana" id="kanaOut">わたし は</div>
+            <div class="roma" id="romaOut">watashi wa</div>
+            <div class="meaning" id="meaningOut">我 / I</div>
+            <div class="helper" id="helperOut">
+              結構公式：<span class="mono">人稱 + 助詞</span>。例如：<span class="mono">わたし + の → わたしの</span>
+            </div>
+          </div>
+
+          <div style="margin-top:16px" class="legend">
+            <div class="item"><strong>は（wa）</strong>主詞：我／你／他／她</div>
+            <div class="item"><strong>の（no）</strong>所有：我的／你的／他的／她的</div>
+            <div class="item"><strong>に（ni）</strong>對象：給我／給你／給他／給她</div>
+            <div class="item"><strong>のもの</strong>所有物：我的東西／你的東西／他的東西／她的東西</div>
+          </div>
+        </div>
+
+        <div id="panel-quiz" class="panel" style="display:none">
+          <div class="controls" style="margin-top:14px">
+            <button id="newQuiz" class="btn primary">出題</button>
+            <button id="speakQuiz" class="btn ghost">朗讀題目</button>
+            <button id="resetQuiz" class="btn warn">清空紀錄</button>
+          </div>
+          <div class="quiz-box" style="margin-top:14px">
+            <div class="small">題型會在「中文 / 英文提示 → 選日文」與「日文 → 選中文」之間隨機切換。</div>
+            <div id="quizPrompt" class="prompt">按「出題」開始</div>
+            <div id="quizOptions" class="quiz-options"></div>
+            <div id="quizFeedback" class="feedback"></div>
+          </div>
+
+          <div class="stats">
+            <div class="stat"><div class="k">總題數</div><div class="v" id="statTotal">0</div></div>
+            <div class="stat"><div class="k">答對</div><div class="v" id="statCorrect">0</div></div>
+            <div class="stat"><div class="k">答錯</div><div class="v" id="statWrong">0</div></div>
+            <div class="stat"><div class="k">正確率</div><div class="v" id="statRate">0%</div></div>
+          </div>
+        </div>
+
+        <div id="panel-sentence" class="panel" style="display:none">
+          <div class="controls" style="margin-top:14px">
+            <button id="newSentence" class="btn primary">抽句型</button>
+            <button id="speakSentence" class="btn ghost">朗讀句子</button>
+          </div>
+          <div class="result" style="margin-top:14px">
+            <div class="small">句子模式：顯示助詞實際用法，幫你從「單字記憶」進入「句子反射」。</div>
+            <div class="jp" id="sentenceJp">わたしは がいこくじんです。</div>
+            <div class="kana" id="sentenceKana">わたし は がいこくじん です。</div>
+            <div class="roma" id="sentenceRoma">watashi wa gaikokujin desu.</div>
+            <div class="meaning" id="sentenceZh">我是外國人。</div>
+            <div class="helper" id="sentenceNote">此句重點：<strong>は</strong> 用來標記主題／主詞。</div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>日文</th>
+                <th>平假名 / 羅馬拼音</th>
+                <th>中文 / 英文</th>
+              </tr>
+            </thead>
+            <tbody id="sentenceTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside class="card">
+        <h2><span class="dot"></span>完整對照表</h2>
+        <div class="small">符合你要的學習核心：所有人稱都套同一組助詞邏輯。</div>
+        <table>
+          <thead>
+            <tr>
+              <th>日文</th>
+              <th>平假名 / 羅馬拼音</th>
+              <th>中文 / 英文</th>
+            </tr>
+          </thead>
+          <tbody id="masterTable"></tbody>
+        </table>
+
+        <div class="footer">
+          建議部署方式：把這個檔名保持為 <span class="mono">index_jp_learning.html</span>，
+          上傳到 GitHub repo 後，直接用 Pages 開啟即可。<br>
+          如要變成首頁，可再改名成 <span class="mono">index.html</span>。
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const pronouns = [
+      {
+        key: "watashi",
+        jp: "わたし",
+        kana: "わたし",
+        romaji: "watashi",
+        zh: "我",
+        en: "I / me / my / mine"
+      },
+      {
+        key: "anata",
+        jp: "あなた",
+        kana: "あなた",
+        romaji: "anata",
+        zh: "你",
+        en: "you / your / yours"
+      },
+      {
+        key: "kare",
+        jp: "かれ",
+        kana: "かれ",
+        romaji: "kare",
+        zh: "他",
+        en: "he / him / his"
+      },
+      {
+        key: "kanojo",
+        jp: "かのじょ",
+        kana: "かのじょ",
+        romaji: "kanojo",
+        zh: "她",
+        en: "she / her / hers"
+      }
+    ];
+
+    const particles = [
+      {
+        key: "wa",
+        jp: "は",
+        kana: "は",
+        romaji: "wa",
+        zh: "主詞",
+        en: "subject marker",
+        meaningMap: {
+          watashi: "我 / I",
+          anata: "你 / You",
+          kare: "他 / He",
+          kanojo: "她 / She"
+        },
+        note: "は：標記主題／主詞。"
+      },
+      {
+        key: "no",
+        jp: "の",
+        kana: "の",
+        romaji: "no",
+        zh: "所有",
+        en: "possession",
+        meaningMap: {
+          watashi: "我的 / my",
+          anata: "你的 / your",
+          kare: "他的 / his",
+          kanojo: "她的 / her"
+        },
+        note: "の：表示『誰的』。"
+      },
+      {
+        key: "ni",
+        jp: "に",
+        kana: "に",
+        romaji: "ni",
+        zh: "對象",
+        en: "to / for",
+        meaningMap: {
+          watashi: "給我 / to me",
+          anata: "給你 / to you",
+          kare: "給他 / to him",
+          kanojo: "給她 / to her"
+        },
+        note: "に：表示動作到達的對象。"
+      },
+      {
+        key: "nomono",
+        jp: "のもの",
+        kana: "の もの",
+        romaji: "no mono",
+        zh: "所有物",
+        en: "belonging / mine",
+        meaningMap: {
+          watashi: "我的東西 / mine",
+          anata: "你的東西 / yours",
+          kare: "他的東西 / his",
+          kanojo: "她的東西 / hers"
+        },
+        note: "のもの：表示『誰的東西』。"
+      }
+    ];
+
+    const sentenceTemplates = [
+      {
+        particle: "wa",
+        make: p => ({
+          jp: `${p.jp}は がいこくじんです。`,
+          kana: `${p.kana} は がいこくじん です。`,
+          romaji: `${p.romaji} wa gaikokujin desu.`,
+          zh: `${p.zh}是外國人。`,
+          note: "重點：は 用來標記主詞／主題。"
+        })
+      },
+      {
+        particle: "no",
+        make: p => ({
+          jp: `${p.jp}の なまえです。`,
+          kana: `${p.kana} の なまえ です。`,
+          romaji: `${p.romaji} no namae desu.`,
+          zh: `${p.zh}的名字。`,
+          note: "重點：の 表示所有。"
+        })
+      },
+      {
+        particle: "ni",
+        make: p => ({
+          jp: `${p.jp}に あげます。`,
+          kana: `${p.kana} に あげます。`,
+          romaji: `${p.romaji} ni agemasu.`,
+          zh: `給${p.zh}。`,
+          note: "重點：に 表示給誰。"
+        })
+      },
+      {
+        particle: "nomono",
+        make: p => ({
+          jp: `これは ${p.jp}のものです。`,
+          kana: `これ は ${p.kana} の もの です。`,
+          romaji: `kore wa ${p.romaji} no mono desu.`,
+          zh: `這是${p.zh}的東西。`,
+          note: "重點：のもの 表示所有物。"
+        })
+      }
+    ];
+
+    const state = {
+      mode: "learning",
+      currentPronoun: pronouns[0],
+      currentParticle: particles[0],
+      quiz: null,
+      stats: { total: 0, correct: 0, wrong: 0 }
+    };
+
+    const els = {
+      pronounList: document.getElementById("pronounList"),
+      particleList: document.getElementById("particleList"),
+      jpOut: document.getElementById("jpOut"),
+      kanaOut: document.getElementById("kanaOut"),
+      romaOut: document.getElementById("romaOut"),
+      meaningOut: document.getElementById("meaningOut"),
+      helperOut: document.getElementById("helperOut"),
+      masterTable: document.getElementById("masterTable"),
+      sentenceTable: document.getElementById("sentenceTable"),
+      sentenceJp: document.getElementById("sentenceJp"),
+      sentenceKana: document.getElementById("sentenceKana"),
+      sentenceRoma: document.getElementById("sentenceRoma"),
+      sentenceZh: document.getElementById("sentenceZh"),
+      sentenceNote: document.getElementById("sentenceNote"),
+      quizPrompt: document.getElementById("quizPrompt"),
+      quizOptions: document.getElementById("quizOptions"),
+      quizFeedback: document.getElementById("quizFeedback"),
+      statTotal: document.getElementById("statTotal"),
+      statCorrect: document.getElementById("statCorrect"),
+      statWrong: document.getElementById("statWrong"),
+      statRate: document.getElementById("statRate"),
+      panels: {
+        learning: document.getElementById("panel-learning"),
+        quiz: document.getElementById("panel-quiz"),
+        sentence: document.getElementById("panel-sentence")
+      }
+    };
+
+    function rnd(arr){
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function renderLists(){
+      els.pronounList.innerHTML = pronouns.map(p => `
+        <div class="pill ${state.currentPronoun.key === p.key ? 'active' : ''}">
+          ${p.jp} ｜ ${p.kana} ｜ ${p.romaji} ｜ ${p.zh}
+        </div>
+      `).join("");
+
+      els.particleList.innerHTML = particles.map(p => `
+        <div class="pill ${state.currentParticle.key === p.key ? 'active' : ''}">
+          ${p.jp} ｜ ${p.kana} ｜ ${p.romaji} ｜ ${p.zh}
+        </div>
+      `).join("");
+    }
+
+    function buildExpression(pronoun, particle){
+      return {
+        jp: pronoun.jp + particle.jp,
+        kana: `${pronoun.kana} ${particle.kana}`,
+        romaji: `${pronoun.romaji} ${particle.romaji}`,
+        meaning: particle.meaningMap[pronoun.key],
+        note: `${particle.note} 結構：${pronoun.jp} + ${particle.jp} → ${pronoun.jp + particle.jp}`
+      };
+    }
+
+    function updateLearningResult(){
+      const res = buildExpression(state.currentPronoun, state.currentParticle);
+      els.jpOut.textContent = res.jp;
+      els.kanaOut.textContent = res.kana;
+      els.romaOut.textContent = res.romaji;
+      els.meaningOut.textContent = res.meaning;
+      els.helperOut.textContent = res.note;
+      renderLists();
+    }
+
+    function animatePick(type){
+      const source = type === "pronoun" ? pronouns : particles;
+      let i = 0;
+      const loops = 12 + Math.floor(Math.random() * 6);
+      const timer = setInterval(() => {
+        if(type === "pronoun"){
+          state.currentPronoun = source[i % source.length];
+        } else {
+          state.currentParticle = source[i % source.length];
+        }
+        renderLists();
+        i++;
+        if(i >= loops){
+          clearInterval(timer);
+          if(type === "pronoun"){
+            state.currentPronoun = rnd(pronouns);
+          } else {
+            state.currentParticle = rnd(particles);
+          }
+          updateLearningResult();
+        }
+      }, 70);
+    }
+
+    function speak(text, lang="ja-JP"){
+      if(!("speechSynthesis" in window)) return;
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = lang;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    }
+
+    function renderMasterTable(){
+      const rows = [];
+      for(const p of pronouns){
+        for(const pt of particles){
+          const exp = buildExpression(p, pt);
+          rows.push(`
+            <tr>
+              <td>${exp.jp}</td>
+              <td>${exp.kana} / ${exp.romaji}</td>
+              <td>${exp.meaning}</td>
+            </tr>
+          `);
+        }
+      }
+      els.masterTable.innerHTML = rows.join("");
+    }
+
+    function setMode(mode){
+      state.mode = mode;
+      document.querySelectorAll(".mode-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.mode === mode);
+      });
+      Object.keys(els.panels).forEach(key => {
+        els.panels[key].style.display = key === mode ? "" : "none";
+      });
+    }
+
+    function makeQuizItem(){
+      const p = rnd(pronouns);
+      const pt = rnd(particles);
+      const correct = buildExpression(p, pt);
+      const direction = Math.random() < 0.5 ? "zh-to-jp" : "jp-to-zh";
+      let prompt = "";
+      let correctLabel = "";
+      let options = [];
+
+      if(direction === "zh-to-jp"){
+        prompt = `${correct.meaning} = ?`;
+        correctLabel = correct.jp;
+        const pool = [];
+        pronouns.forEach(pp => particles.forEach(ptt => pool.push(buildExpression(pp, ptt).jp)));
+        options = [...new Set([correctLabel, ...shuffle(pool.filter(x => x !== correctLabel)).slice(0,3)])];
+      } else {
+        prompt = `${correct.jp} = ?`;
+        correctLabel = correct.meaning;
+        const pool = [];
+        pronouns.forEach(pp => particles.forEach(ptt => pool.push(buildExpression(pp, ptt).meaning)));
+        options = [...new Set([correctLabel, ...shuffle(pool.filter(x => x !== correctLabel)).slice(0,3)])];
+      }
+
+      options = shuffle(options);
+      return { prompt, correctLabel, options, direction, p, pt };
+    }
+
+    function shuffle(arr){
+      const a = arr.slice();
+      for(let i = a.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function renderQuiz(item){
+      state.quiz = item;
+      els.quizPrompt.textContent = item.prompt;
+      els.quizOptions.innerHTML = item.options.map(opt => `
+        <button class="option-btn">${opt}</button>
+      `).join("");
+      els.quizFeedback.className = "feedback";
+      els.quizFeedback.textContent = "";
+
+      [...els.quizOptions.querySelectorAll(".option-btn")].forEach(btn => {
+        btn.addEventListener("click", () => {
+          const chosen = btn.textContent;
+          state.stats.total++;
+          if(chosen === item.correctLabel){
+            state.stats.correct++;
+            els.quizFeedback.className = "feedback ok";
+            els.quizFeedback.textContent = `答對：${item.correctLabel}`;
+            speak("せいかい");
+          } else {
+            state.stats.wrong++;
+            els.quizFeedback.className = "feedback bad";
+            els.quizFeedback.textContent = `答錯。正解：${item.correctLabel}`;
+            speak("ざんねん");
+          }
+          updateStats();
+        }, { once:true });
+      });
+    }
+
+    function updateStats(){
+      els.statTotal.textContent = state.stats.total;
+      els.statCorrect.textContent = state.stats.correct;
+      els.statWrong.textContent = state.stats.wrong;
+      const rate = state.stats.total ? Math.round((state.stats.correct / state.stats.total) * 100) : 0;
+      els.statRate.textContent = `${rate}%`;
+    }
+
+    function resetStats(){
+      state.stats = { total:0, correct:0, wrong:0 };
+      updateStats();
+      els.quizPrompt.textContent = "按「出題」開始";
+      els.quizOptions.innerHTML = "";
+      els.quizFeedback.className = "feedback";
+      els.quizFeedback.textContent = "";
+    }
+
+    function newSentence(){
+      const p = rnd(pronouns);
+      const t = rnd(sentenceTemplates);
+      const s = t.make(p);
+      els.sentenceJp.textContent = s.jp;
+      els.sentenceKana.textContent = s.kana;
+      els.sentenceRoma.textContent = s.romaji;
+      els.sentenceZh.textContent = s.zh;
+      els.sentenceNote.innerHTML = s.note;
+
+      const rows = [
+        { jp: p.jp, kana: `${p.kana} / ${p.romaji}`, zh: `${p.zh}` },
+        { jp: particles.find(x => x.key === t.particle).jp, kana: `${particles.find(x => x.key === t.particle).kana} / ${particles.find(x => x.key === t.particle).romaji}`, zh: particles.find(x => x.key === t.particle).zh },
+        { jp: s.jp, kana: `${s.kana} / ${s.romaji}`, zh: s.zh }
+      ];
+      els.sentenceTable.innerHTML = rows.map(r => `
+        <tr>
+          <td>${r.jp}</td>
+          <td>${r.kana}</td>
+          <td>${r.zh}</td>
+        </tr>
+      `).join("");
+    }
+
+    document.getElementById("spinPronoun").addEventListener("click", () => animatePick("pronoun"));
+    document.getElementById("spinParticle").addEventListener("click", () => animatePick("particle"));
+    document.getElementById("spinBoth").addEventListener("click", () => {
+      animatePick("pronoun");
+      setTimeout(() => animatePick("particle"), 280);
+    });
+    document.getElementById("playAudio").addEventListener("click", () => {
+      speak(`${state.currentPronoun.jp}${state.currentParticle.jp}`);
+    });
+    document.getElementById("copyResult").addEventListener("click", async () => {
+      const text = `${els.jpOut.textContent}\n${els.kanaOut.textContent}\n${els.romaOut.textContent}\n${els.meaningOut.textContent}`;
+      try{
+        await navigator.clipboard.writeText(text);
+        alert("已複製結果");
+      }catch(e){
+        alert("無法複製，請手動選取");
+      }
+    });
+    document.getElementById("resetLearning").addEventListener("click", () => {
+      state.currentPronoun = pronouns[0];
+      state.currentParticle = particles[0];
+      updateLearningResult();
+    });
+
+    document.getElementById("newQuiz").addEventListener("click", () => renderQuiz(makeQuizItem()));
+    document.getElementById("speakQuiz").addEventListener("click", () => {
+      if(state.quiz) speak(state.quiz.prompt);
+    });
+    document.getElementById("resetQuiz").addEventListener("click", resetStats);
+
+    document.getElementById("newSentence").addEventListener("click", newSentence);
+    document.getElementById("speakSentence").addEventListener("click", () => speak(els.sentenceJp.textContent));
+
+    document.querySelectorAll(".mode-btn").forEach(btn => {
+      btn.addEventListener("click", () => setMode(btn.dataset.mode));
+    });
+
+    renderMasterTable();
+    updateLearningResult();
+    updateStats();
+    newSentence();
+  </script>
+</body>
+</html>
