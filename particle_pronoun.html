@@ -270,7 +270,7 @@
 <body>
   <div class="wrap">
     <section class="hero">
-      <div class="title">日文;人稱代名詞＋助詞の組合練習</div>
+      <div class="title">日文人稱代名詞＋助詞組合練習</div>
       <div class="sub">
         主軸：<span class="tag">人稱不變，只換助詞</span>
         <span class="tag">は = 主詞</span>
@@ -299,6 +299,20 @@
             <button id="playAudio" class="btn ghost">朗讀結果</button>
             <button id="copyResult" class="btn ghost">複製結果</button>
             <button id="resetLearning" class="btn warn">重設</button>
+          </div>
+
+          <div id="lineAudioTip" style="display:none; margin-top:12px; text-align:center;">
+            <a id="openExternalBtn" href="#" style="
+              display:inline-block;
+              padding:12px 18px;
+              background:#16a34a;
+              color:#fff;
+              border-radius:10px;
+              text-decoration:none;
+              font-weight:bold;
+            ">
+              請改用瀏覽器開啟（LINE 內朗讀可能無聲）
+            </a>
           </div>
 
           <div class="wheel-box" style="margin-top:14px">
@@ -642,12 +656,90 @@
       }, 70);
     }
 
+    let voices = [];
+    let voicesReady = false;
+    let audioUnlocked = false;
+
+    function loadVoices() {
+      voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        voicesReady = true;
+      }
+    }
+
+    if ("speechSynthesis" in window) {
+      loadVoices();
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    function getJapaneseVoice() {
+      if (!voices.length) loadVoices();
+
+      return voices.find(v => v.lang === "ja-JP") ||
+             voices.find(v => v.lang && v.lang.startsWith("ja")) ||
+             null;
+    }
+
+    function isLineBrowser() {
+      return /Line\//i.test(navigator.userAgent) || /LIFF/i.test(navigator.userAgent);
+    }
+
+    function buildExternalUrl() {
+      const url = new URL(window.location.href);
+      if (!url.searchParams.has("openExternalBrowser")) {
+        url.searchParams.set("openExternalBrowser", "1");
+      }
+      return url.toString();
+    }
+
+    function unlockAudio() {
+      if (audioUnlocked) return;
+      if (!("speechSynthesis" in window)) return;
+
+      try {
+        const u = new SpeechSynthesisUtterance("");
+        u.volume = 0;
+        u.lang = "ja-JP";
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(u);
+        audioUnlocked = true;
+      } catch (e) {
+        console.warn("unlockAudio failed:", e);
+      }
+    }
+
     function speak(text, lang="ja-JP"){
-      if(!("speechSynthesis" in window)) return;
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = lang;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(u);
+      if(!("speechSynthesis" in window)) {
+        alert("此裝置不支援語音朗讀");
+        return;
+      }
+
+      try{
+        unlockAudio();
+        window.speechSynthesis.cancel();
+
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = lang;
+        u.rate = 0.95;
+        u.pitch = 1;
+        u.volume = 1;
+
+        const voice = getJapaneseVoice();
+        if (voice) {
+          u.voice = voice;
+        }
+
+        setTimeout(() => {
+          window.speechSynthesis.speak(u);
+        }, 80);
+
+      }catch(e){
+        console.warn("speak error:", e);
+
+        if (isLineBrowser()) {
+          alert("LINE 內建瀏覽器可能無法播放朗讀，請改用外部瀏覽器開啟。");
+        }
+      }
     }
 
     function renderMasterTable(){
@@ -818,6 +910,22 @@
 
     document.querySelectorAll(".mode-btn").forEach(btn => {
       btn.addEventListener("click", () => setMode(btn.dataset.mode));
+    });
+
+    document.addEventListener("click", () => {
+      unlockAudio();
+    }, { once: true });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      if (isLineBrowser()) {
+        const tip = document.getElementById("lineAudioTip");
+        const btn = document.getElementById("openExternalBtn");
+
+        if (tip && btn) {
+          tip.style.display = "block";
+          btn.href = buildExternalUrl();
+        }
+      }
     });
 
     renderMasterTable();
