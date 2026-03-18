@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Pronoun Trainer｜代名詞學習工具</title>
+<meta name="description" content="英文代名詞學習工具：主格、受格、所有格形容詞、名詞型所有格。">
+<link rel="icon" href='data:image/svg+xml;utf8,
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="22" fill="%234f46e5"/>
+  <text x="50" y="63" font-size="56" text-anchor="middle" fill="white" font-family="Arial, sans-serif">P</text>
+</svg>'/>
+<style>
+  :root{
+    --bg:#f5f7fb;
+    --card:#ffffff;
+    --ink:#1f2937;
+    --muted:#6b7280;
+    --primary:#4f46e5;
+    --primary-2:#6366f1;
+    --line:#e5e7eb;
+    --soft:#eef2ff;
+    --ok:#ecfeff;
+    --ok-line:#a5f3fc;
+    --shadow:0 10px 24px rgba(15,23,42,.08);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    background:linear-gradient(180deg,#f8faff 0%,#f3f6fb 100%);
+    color:var(--ink);
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 16px 40px}
+  .hero{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:22px;
+    box-shadow:var(--shadow);
+    padding:20px 20px 16px;
+    margin-bottom:18px;
+  }
+  h1{margin:0 0 8px;font-size:30px;line-height:1.2}
+  .sub{color:var(--muted);font-size:14px;line-height:1.6}
+  .toolbar{
+    display:flex;flex-wrap:wrap;gap:10px;margin-top:16px
+  }
+  button{
+    appearance:none;border:none;cursor:pointer;
+    background:var(--primary);color:#fff;
+    padding:11px 16px;border-radius:14px;
+    font-size:15px;font-weight:700;
+    box-shadow:0 6px 16px rgba(79,70,229,.18);
+  }
+  button:hover{background:var(--primary-2)}
+  button.secondary{
+    background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:none;
+  }
+  button.secondary:hover{background:#f9fafb}
+  .wheel-box{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    margin:18px 0;
+  }
+  .wheel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:20px;
+    box-shadow:var(--shadow);
+    padding:14px;
+  }
+  .label{
+    font-weight:800;
+    font-size:16px;
+    margin-bottom:12px;
+  }
+  .wheel-list{
+    display:grid;
+    gap:8px;
+    min-height:236px;
+  }
+  .item{
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:10px 12px;
+    background:#fafafa;
+    color:#374151;
+    transition:.16s ease;
+  }
+  .item.active{
+    border-color:var(--primary);
+    background:var(--soft);
+    box-shadow:0 0 0 3px rgba(79,70,229,.10) inset;
+    transform:translateY(-1px);
+    font-weight:700;
+  }
+  .result{
+    margin-top:8px;
+    padding:20px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:22px;
+    box-shadow:var(--shadow);
+  }
+  .kana,.roma,.meaning,.helper{text-align:center}
+  .kana{
+    color:#475569;
+    font-size:15px;
+    margin-bottom:8px;
+    line-height:1.5;
+  }
+  .jp{
+    font-size:52px;
+    font-weight:900;
+    text-align:center;
+    letter-spacing:.5px;
+    line-height:1.15;
+    margin:4px 0 10px;
+  }
+  .roma{
+    color:#4338ca;
+    font-size:18px;
+    font-weight:800;
+    margin-bottom:6px;
+  }
+  .meaning{
+    color:#334155;
+    font-size:17px;
+    margin-bottom:12px;
+  }
+  .helper{
+    color:var(--muted);
+    font-size:14px;
+    line-height:1.6;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    margin-top:18px;
+  }
+  .card{
+    border:1.5px solid var(--line);
+    border-radius:18px;
+    background:#fff;
+    padding:14px 12px;
+    text-align:center;
+    transition:.18s ease;
+  }
+  .card .tag{
+    font-size:13px;
+    color:#64748b;
+    margin-bottom:8px;
+    font-weight:700;
+  }
+  .card .word{
+    font-size:28px;
+    font-weight:900;
+    margin-bottom:8px;
+  }
+  .card .zh{
+    font-size:14px;
+    color:#475569;
+  }
+  .card.active{
+    border-color:var(--primary);
+    background:linear-gradient(180deg,#eef2ff 0%,#ffffff 100%);
+    box-shadow:0 0 0 3px rgba(79,70,229,.12), 0 10px 20px rgba(79,70,229,.12);
+    transform:translateY(-2px);
+  }
+  .card.active .tag{color:#4338ca}
+  .hintbox{
+    margin-top:14px;
+    background:#f8fafc;
+    border:1px dashed #cbd5e1;
+    border-radius:16px;
+    padding:12px 14px;
+    color:#475569;
+    font-size:14px;
+    line-height:1.7;
+  }
+  .footer-note{
+    margin-top:16px;
+    color:#64748b;
+    font-size:13px;
+    text-align:center;
+  }
+  @media (max-width:900px){
+    .grid{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:720px){
+    .wheel-box{grid-template-columns:1fr}
+    .jp{font-size:42px}
+  }
+  @media (max-width:520px){
+    .grid{grid-template-columns:1fr}
+    .jp{font-size:36px}
+    button{width:100%}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <h1>Pronoun Trainer</h1>
+    <div class="sub">
+      英文代名詞學習工具：抽「人稱」＋抽「欄位」，並同步顯示整組 <b>Subject / Object / Possessive Adjective / Possessive Pronoun</b>，
+      目前答案會高亮，不再被後續結果覆蓋。
+    </div>
+    <div class="toolbar">
+      <button id="spinPronoun">抽人稱</button>
+      <button id="spinParticle">抽欄位</button>
+      <button id="spinBoth">一起抽</button>
+      <button id="copyResult" class="secondary">複製結果</button>
+      <button id="toggleVoice" class="secondary">自動朗讀：開</button>
+    </div>
+  </section>
+
+  <div class="wheel-box">
+    <div class="wheel">
+      <div class="label">第一輪：人稱代名詞</div>
+      <div id="pronounList" class="wheel-list"></div>
+    </div>
+    <div class="wheel">
+      <div class="label">第二輪：欄位</div>
+      <div id="particleList" class="wheel-list"></div>
+    </div>
+  </div>
+
+  <div class="result">
+    <div class="kana" id="resultMeta">本次抽取：我 × 主格 → I</div>
+    <div class="jp" id="resultMain">I</div>
+    <div class="roma" id="resultType">Subject Pronoun（主格）</div>
+    <div class="meaning" id="resultMeaning">我（主詞）</div>
+    <div class="helper" id="resultHint">最終結果 = 第一輪人稱 × 第二輪欄位</div>
+
+    <div class="grid" id="allFormsGrid"></div>
+
+    <div class="hintbox" id="formulaBox">
+      公式：<b>中文人稱 + 英文欄位 → 最終答案</b><br>
+      例如：<b>他們 + 受格 → them</b>
+    </div>
+  </div>
+
+  <div class="footer-note">檔名建議：pronoun-trainer.html</div>
+</div>
+
+<script>
+const pronouns = [
+  { zh:"我", subject:"I",    object:"me",   possAdj:"my",    possPro:"mine",   meaningBase:"我" },
+  { zh:"你", subject:"you",  object:"you",  possAdj:"your",  possPro:"yours",  meaningBase:"你" },
+  { zh:"他", subject:"he",   object:"him",  possAdj:"his",   possPro:"his",    meaningBase:"他" },
+  { zh:"她", subject:"she",  object:"her",  possAdj:"her",   possPro:"hers",   meaningBase:"她" },
+  { zh:"我們", subject:"we", object:"us",   possAdj:"our",   possPro:"ours",   meaningBase:"我們" },
+  { zh:"他們", subject:"they", object:"them", possAdj:"their", possPro:"theirs", meaningBase:"他們" }
+];
+
+const forms = [
+  { key:"subject", labelZh:"主格", labelEn:"Subject Pronoun", meaningSuffix:"主詞" },
+  { key:"object",  labelZh:"受格", labelEn:"Object Pronoun", meaningSuffix:"受詞" },
+  { key:"possAdj", labelZh:"所有格形容詞", labelEn:"Possessive Adjective", meaningSuffix:"所有格形容詞" },
+  { key:"possPro", labelZh:"名詞型所有格", labelEn:"Possessive Pronoun", meaningSuffix:"名詞型所有格" }
+];
+
+const state = {
+  currentPronoun: pronouns[0],
+  currentParticle: forms[0],
+  autoPlay: true,
+  isSpinningBoth: false
+};
+
+const els = {
+  pronounList: document.getElementById("pronounList"),
+  particleList: document.getElementById("particleList"),
+  resultMeta: document.getElementById("resultMeta"),
+  resultMain: document.getElementById("resultMain"),
+  resultType: document.getElementById("resultType"),
+  resultMeaning: document.getElementById("resultMeaning"),
+  resultHint: document.getElementById("resultHint"),
+  allFormsGrid: document.getElementById("allFormsGrid"),
+  formulaBox: document.getElementById("formulaBox"),
+  toggleVoice: document.getElementById("toggleVoice")
+};
+
+function rnd(arr){
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function speak(text){
+  if (!("speechSynthesis" in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "en-US";
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+}
+
+function renderLists(){
+  els.pronounList.innerHTML = pronouns.map(p => `
+    <div class="item ${state.currentPronoun === p ? 'active' : ''}">
+      ${p.zh}
+    </div>
+  `).join("");
+
+  els.particleList.innerHTML = forms.map(f => `
+    <div class="item ${state.currentParticle === f ? 'active' : ''}">
+      ${f.labelZh} ｜ ${f.labelEn}
+    </div>
+  `).join("");
+}
+
+function renderAllForms(){
+  const p = state.currentPronoun;
+  const currentKey = state.currentParticle.key;
+
+  els.allFormsGrid.innerHTML = forms.map(f => {
+    const word = p[f.key];
+    const active = f.key === currentKey ? "active" : "";
+    return `
+      <div class="card ${active}">
+        <div class="tag">${f.labelEn}<br>${f.labelZh}</div>
+        <div class="word">${word}</div>
+        <div class="zh">${p.zh}｜${f.labelZh}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function updateLearningResult(shouldAutoPlay = true){
+  const p = state.currentPronoun;
+  const f = state.currentParticle;
+  const result = p[f.key];
+
+  els.resultMeta.textContent = `本次抽取：${p.zh} × ${f.labelZh} → ${result}`;
+  els.resultMain.textContent = result;
+  els.resultType.textContent = `${f.labelEn}（${f.labelZh}）`;
+  els.resultMeaning.textContent = `${p.meaningBase}（${f.meaningSuffix}）`;
+  els.resultHint.textContent = "最終結果 = 第一輪人稱 × 第二輪欄位";
+  els.formulaBox.innerHTML = `公式：<b>中文人稱 + 英文欄位 → 最終答案</b><br>例如：<b>${p.zh} + ${f.labelZh} → ${result}</b>`;
+
+  renderLists();
+  renderAllForms();
+
+if (shouldAutoPlay && state.autoPlay) {
+
+  const pronunciationFix = {
+    "our": "hour",
+    "ours": "hours",
+    "your": "your",
+    "yours": "yours",
+    "their": "their",
+    "theirs": "theirs"
+  };
+
+  const speakText = pronunciationFix[result] || result;
+
+  // 🔥 強制英文語音
+  setTimeout(() => speak(speakText, "en-US"), 120);
+}
+}
+
+function animatePick(type, options = {}){
+  const { finalUpdate = true, shouldAutoPlay = true, onDone = null } = options;
+  const source = type === "pronoun" ? pronouns : forms;
+  let i = 0;
+  const loops = 12 + Math.floor(Math.random() * 6);
+
+  const timer = setInterval(() => {
+    if (type === "pronoun") {
+      state.currentPronoun = source[i % source.length];
+    } else {
+      state.currentParticle = source[i % source.length];
+    }
+    renderLists();
+    renderAllForms();
+    i++;
+
+    if (i >= loops) {
+      clearInterval(timer);
+
+      if (type === "pronoun") {
+        state.currentPronoun = rnd(pronouns);
+      } else {
+        state.currentParticle = rnd(forms);
+      }
+
+      renderLists();
+      renderAllForms();
+
+      if (finalUpdate) {
+        updateLearningResult(shouldAutoPlay);
+      }
+
+      if (typeof onDone === "function") onDone();
+    }
+  }, 70);
+}
+
+document.getElementById("spinPronoun").addEventListener("click", () => {
+  animatePick("pronoun", { finalUpdate: true, shouldAutoPlay: true });
+});
+
+document.getElementById("spinParticle").addEventListener("click", () => {
+  animatePick("particle", { finalUpdate: true, shouldAutoPlay: true });
+});
+
+document.getElementById("spinBoth").addEventListener("click", () => {
+  state.isSpinningBoth = true;
+
+  animatePick("pronoun", { finalUpdate: false, shouldAutoPlay: false });
+
+  setTimeout(() => {
+    animatePick("particle", {
+      finalUpdate: true,
+      shouldAutoPlay: true,
+      onDone: () => {
+        state.isSpinningBoth = false;
+      }
+    });
+  }, 280);
+});
+
+document.getElementById("copyResult").addEventListener("click", async () => {
+  const text = [
+    els.resultMeta.textContent,
+    els.resultMain.textContent,
+    els.resultType.textContent,
+    els.resultMeaning.textContent
+  ].join("\n");
+
+  try{
+    await navigator.clipboard.writeText(text);
+    alert("已複製結果");
+  }catch(e){
+    alert("無法複製，請手動選取");
+  }
+});
+
+els.toggleVoice.addEventListener("click", () => {
+  state.autoPlay = !state.autoPlay;
+  els.toggleVoice.textContent = `自動朗讀：${state.autoPlay ? "開" : "關"}`;
+});
+
+updateLearningResult(false);
+</script>
+</body>
+</html>
