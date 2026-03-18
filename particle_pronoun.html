@@ -270,15 +270,13 @@
 <body>
   <div class="wrap">
     <section class="hero">
-      <div class="title">日文人稱代名詞＋助詞組合練習</div>
+      <div class="title">日文;人稱代名詞＋助詞の組合練習</div>
       <div class="sub">
         主軸：<span class="tag">人稱不變，只換助詞</span>
         <span class="tag">は = 主詞</span>
         <span class="tag">の = 所有</span>
         <span class="tag">に = 對象</span>
         <span class="tag">のもの = 所有物</span>
-        <br>
-        可直接丟到 GitHub Pages 使用。單檔、無外部依賴、支援手機。
       </div>
     </section>
 
@@ -299,6 +297,10 @@
             <button id="playAudio" class="btn ghost">朗讀結果</button>
             <button id="copyResult" class="btn ghost">複製結果</button>
             <button id="resetLearning" class="btn warn">重設</button>
+            <label class="btn ghost" style="display:inline-flex; align-items:center; gap:8px; cursor:pointer;">
+              <input type="checkbox" id="autoPlayToggle" checked />
+              自動朗讀
+            </label>
           </div>
 
           <div id="lineAudioTip" style="display:none; margin-top:12px; text-align:center;">
@@ -394,7 +396,6 @@
 
       <aside class="card">
         <h2><span class="dot"></span>完整對照表</h2>
-        <div class="small">符合你要的學習核心：所有人稱都套同一組助詞邏輯。</div>
         <table>
           <thead>
             <tr>
@@ -405,12 +406,6 @@
           </thead>
           <tbody id="masterTable"></tbody>
         </table>
-
-        <div class="footer">
-          建議部署方式：把這個檔名保持為 <span class="mono">index_jp_learning.html</span>，
-          上傳到 GitHub repo 後，直接用 Pages 開啟即可。<br>
-          如要變成首頁，可再改名成 <span class="mono">index.html</span>。
-        </div>
       </aside>
     </div>
   </div>
@@ -562,6 +557,7 @@
       currentPronoun: pronouns[0],
       currentParticle: particles[0],
       quiz: null,
+      autoPlay: true,
       stats: { total: 0, correct: 0, wrong: 0 }
     };
 
@@ -587,6 +583,7 @@
       statCorrect: document.getElementById("statCorrect"),
       statWrong: document.getElementById("statWrong"),
       statRate: document.getElementById("statRate"),
+      autoPlayToggle: document.getElementById("autoPlayToggle"),
       panels: {
         learning: document.getElementById("panel-learning"),
         quiz: document.getElementById("panel-quiz"),
@@ -622,7 +619,7 @@
       };
     }
 
-    function updateLearningResult(){
+    function updateLearningResult(shouldAutoPlay = true){
       const res = buildExpression(state.currentPronoun, state.currentParticle);
       els.jpOut.textContent = res.jp;
       els.kanaOut.textContent = res.kana;
@@ -630,6 +627,10 @@
       els.meaningOut.textContent = res.meaning;
       els.helperOut.textContent = res.note;
       renderLists();
+
+      if (shouldAutoPlay && state.autoPlay) {
+        setTimeout(() => speak(res.jp), 120);
+      }
     }
 
     function animatePick(type){
@@ -896,7 +897,11 @@
     document.getElementById("resetLearning").addEventListener("click", () => {
       state.currentPronoun = pronouns[0];
       state.currentParticle = particles[0];
-      updateLearningResult();
+      updateLearningResult(false);
+    });
+
+    els.autoPlayToggle.addEventListener("change", (e) => {
+      state.autoPlay = e.target.checked;
     });
 
     document.getElementById("newQuiz").addEventListener("click", () => renderQuiz(makeQuizItem()));
@@ -929,7 +934,8 @@
     });
 
     renderMasterTable();
-    updateLearningResult();
+    els.autoPlayToggle.checked = true;
+    updateLearningResult(false);
     updateStats();
     newSentence();
   </script>
