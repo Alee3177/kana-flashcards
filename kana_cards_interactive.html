@@ -57,6 +57,17 @@
     button.active{background:#f4ead8;border-color:#d7c09b;color:#5a4527;font-weight:700}
     .primary{background:#202020;color:#fff;border-color:#202020}
     .ghost{background:transparent}
+	#autoPlayBtn{
+  color:#dc2626;
+  font-weight:700;
+  border-color:#f3c7c7;
+}
+
+#autoPlayBtn.active{
+  color:#dc2626;
+  border-color:#dc2626;
+  background:#fff5f5;
+}
     .stat{font-size:13px;color:var(--muted)}
     .status-error{color:var(--danger)!important}
     .grid{
@@ -319,46 +330,80 @@ function getWordSegmentAudioSrc(card, index){
       }
     }
 
-    async function autoPlayCards(){
-      const list = currentCards();
-      if (!list.length || state.playing) return;
-      state.playing = true;
-      playAllBtn.disabled = true;
-      autoPlayBtn.disabled = true;
-      try {
-for (const card of list) {
-  setStatus(`自動播放中：${card.kana}（${state.audioMode === 'kana' ? '單音' : '單字'}）`);
+async function autoPlayCards(){
+  const list = currentCards();
+  if (!list.length || state.playing) return;
 
-  const cardEls = [...grid.querySelectorAll('.card')];
-  cardEls.forEach(el => el.classList.remove('active'));
+  state.playing = true;
+  playAllBtn.disabled = true;
+  autoPlayBtn.disabled = false;
 
-  const target = cardEls.find(el => el.dataset.kana === card.kana);
+  try {
+    for (const card of list) {
 
-  if (target) {
-    target.classList.add('active');
+      // ✅ 一旦關閉，立即停止
+      if (!state.autoPlay) {
+        setStatus('自動播放已停止');
+        break;
+      }
 
-    if (!target.classList.contains('is-flipped')) {
-      target.classList.add('is-flipped');
+      setStatus(`自動播放中：${card.kana}（${state.audioMode === 'kana' ? '單音' : '單字'}）`);
+
+      const cardEls = [...grid.querySelectorAll('.card')];
+      const target = cardEls.find(el => el.dataset.kana === card.kana);
+
+      if (target && !target.classList.contains('is-flipped')) {
+        target.classList.add('is-flipped');
+      }
+
+      await playCard(card, state.audioMode);
+
+      // ✅ 播放完再檢查一次，避免繼續等 700ms
+      if (!state.autoPlay) {
+        setStatus('自動播放已停止');
+        break;
+      }
+
+      await sleep(700);
     }
 
-    target.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center'
-    });
+    if (state.autoPlay) {
+      setStatus('自動播放完成');
+      state.autoPlay = false;
+      autoPlayBtn.textContent = '自動播放：關';
+      autoPlayBtn.classList.remove('active');
+    }
+
+  } catch (err) {
+    setStatus(`自動播放失敗：${err.message}`, true);
+    state.autoPlay = false;
+    autoPlayBtn.textContent = '自動播放：關';
+    autoPlayBtn.classList.remove('active');
+  } finally {
+    state.playing = false;
+    playAllBtn.disabled = false;
+    autoPlayBtn.disabled = false;
+  }
+}
+
+autoPlayBtn.onclick = async () => {
+  // 如果目前是開著，按一下就直接停
+  if (state.autoPlay) {
+    state.autoPlay = false;
+    autoPlayBtn.textContent = '自動播放：關';
+    autoPlayBtn.classList.remove('active');
+    setStatus('自動播放已停止');
+    return;
   }
 
-  await playCard(card, state.audioMode);
-  await sleep(700);
-}
-        setStatus('自動播放完成');
-      } catch (err) {
-        setStatus(`自動播放失敗：${err.message}`, true);
-      } finally {
-        state.playing = false;
-        playAllBtn.disabled = false;
-        autoPlayBtn.disabled = false;
-      }
-    }
+  // 如果目前是關，按一下就開始
+  state.autoPlay = true;
+  autoPlayBtn.textContent = '自動播放：開';
+  autoPlayBtn.classList.add('active');
+  setStatus('已切換為：自動播放開啟');
+
+  await autoPlayCards();
+};
 
     function currentCards(){
       const q = state.q.trim().toLowerCase();
