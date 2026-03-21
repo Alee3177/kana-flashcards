@@ -87,16 +87,25 @@
       grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
       gap:16px;
     }
-    .card-wrap{perspective:1200px;min-height:420px}
-    .card{
-      position:relative;width:100%;height:420px;transform-style:preserve-3d;
-      transition:transform .55s cubic-bezier(.2,.8,.2,1);
-      cursor:pointer;
-    }
+.card-wrap{perspective:1200px;min-height:320px}
+.card{
+  position:relative;width:100%;height:320px;transform-style:preserve-3d;
+  transition:transform .55s cubic-bezier(.2,.8,.2,1);
+  cursor:pointer;
+}
 	.card.active {
       outline: 3px solid #dc2626;
       outline-offset: 2px;
     }
+	.card.playing {
+  animation: cardPulse 1s ease-in-out infinite;
+}
+
+@keyframes cardPulse {
+  0%   { transform: scale(1); box-shadow: var(--shadow); }
+  50%  { transform: scale(1.02); box-shadow: 0 0 0 4px rgba(220,38,38,.12), 0 12px 30px rgba(220,38,38,.18); }
+  100% { transform: scale(1); box-shadow: var(--shadow); }
+}
     .card.is-flipped{transform:rotateY(180deg)}
     .face{
       position:absolute;inset:0;backface-visibility:hidden;
@@ -120,10 +129,11 @@
       border:1px solid rgba(179,146,95,.18);
       padding:6px 10px;border-radius:999px;
     }
-    .art{
-      flex:1;display:flex;align-items:center;justify-content:center;position:relative;
-      color:#c6aa7f;font-size:58px;font-weight:700;letter-spacing:.02em;
-    }
+.art{
+  flex:1;display:flex;align-items:center;justify-content:center;position:relative;
+  color:#c6aa7f;font-size:58px;font-weight:700;letter-spacing:.02em;
+  min-height:180px;
+}
     .art::before{
       content:"";position:absolute;width:132px;height:132px;border-radius:50%;
       background:radial-gradient(circle, rgba(179,146,95,.16) 0%, rgba(179,146,95,.04) 60%, transparent 72%);
@@ -138,7 +148,6 @@
     .motif.water,.motif.sky{font-size:20px}
     .kana{position:relative;font-size:86px;line-height:1;font-weight:700;color:#231b17}
     .roman{font-size:16px;color:var(--muted);text-align:center;margin-top:10px;letter-spacing:.08em}
-    .hint{font-size:12px;color:var(--muted);text-align:center}
     .back{transform:rotateY(180deg);padding:14px;background:#fffdfa;overflow:auto}
     .mini{font-size:13px;color:var(--muted);margin:0 0 8px;line-height:1.6}
     table{width:100%;border-collapse:collapse;font-size:12px;background:#fff}
@@ -151,11 +160,11 @@
     }
     .footer-note{margin-top:18px;font-size:12px;color:var(--muted);text-align:center}
     code{background:#f6efe5;padding:1px 4px;border-radius:6px}
-    @media (max-width:640px){
-      h1{font-size:24px}
-      .card-wrap,.card{min-height:470px;height:470px}
-      .kana{font-size:74px}
-    }
+@media (max-width:640px){
+  h1{font-size:24px}
+  .card-wrap,.card{min-height:300px;height:300px}
+  .kana{font-size:74px}
+}
   </style>
 </head>
 <body>
@@ -208,23 +217,23 @@
 
   <script>
     const cards = [
-      {row:'A-row', kana:'あ', romaji:'a', wordCount:2, art:'晨光', hint:'開始感', icon:'☀︎', motif:'sun', items:[['あ','あ / a','啊 / a'],['あい','あい / ai','愛 / love'],['あお','あお / ao','藍色 / blue']]},
-      {row:'A-row', kana:'い', romaji:'i', wordCount:2, art:'絲線', hint:'細長線條', icon:'〰', motif:'thread', items:[['い','い / i','衣 / i'],['いえ','いえ / ie','家 / house'],['いいえ','いいえ / iie','不 / no']]},
-      {row:'A-row', kana:'う', romaji:'u', wordCount:1, art:'海浪', hint:'圓弧呼氣', icon:'≈', motif:'wave', items:[['う','う / u','嗚 / u'],['うえ','うえ / ue','上面 / up']]},
-      {row:'A-row', kana:'え', romaji:'e', wordCount:3, art:'枝葉', hint:'轉折線條', icon:'❦', motif:'leaf', items:[['え','え / e','欸 / e'],['絵','え / e','繪畫 / picture'],['映画','えいが / eiga','電影 / movie']]},
-      {row:'A-row', kana:'お', romaji:'o', wordCount:1, art:'圓月', hint:'圓形構圖', icon:'◯', motif:'moon', items:[['お','お / o','喔 / o'],['あお','あお / ao','藍色 / blue']]},
+      {row:'A-row', kana:'あ', romaji:'a', wordCount:2, icon:'☀︎', motif:'sun', items:[['あ','あ / a','啊 / a'],['あい','あい / ai','愛 / love'],['あお','あお / ao','藍色 / blue']]},
+      {row:'A-row', kana:'い', romaji:'i', wordCount:2, icon:'〰', motif:'thread', items:[['い','い / i','衣 / i'],['いえ','いえ / ie','家 / house'],['いいえ','いいえ / iie','不 / no']]},
+      {row:'A-row', kana:'う', romaji:'u', wordCount:1, icon:'≈', motif:'wave', items:[['う','う / u','嗚 / u'],['うえ','うえ / ue','上面 / up']]},
+      {row:'A-row', kana:'え', romaji:'e', wordCount:3, icon:'❦', motif:'leaf', items:[['え','え / e','欸 / e'],['絵','え / e','繪畫 / picture'],['映画','えいが / eiga','電影 / movie']]},
+      {row:'A-row', kana:'お', romaji:'o', wordCount:1, icon:'◯', motif:'moon', items:[['お','お / o','喔 / o'],['あお','あお / ao','藍色 / blue']]},
 
-      {row:'KA-row', kana:'か', romaji:'ka', wordCount:3, art:'花', hint:'柔曲線', icon:'✿', motif:'flower', items:[['か','か / ka','卡 / ka'],['かい','かい / kai','貝 / shell'],['かお','かお / kao','臉 / face'],['かき','かき / kaki','柿子 / persimmon']]},
-      {row:'KA-row', kana:'き', romaji:'ki', wordCount:1, art:'樹', hint:'木紋線條', icon:'✦', motif:'tree', items:[['き','き / ki','樹 / tree'],['きく','きく / kiku','菊花 / chrysanthemum']]},
-      {row:'KA-row', kana:'く', romaji:'ku', wordCount:2, art:'彎月', hint:'柔和曲線', icon:'☾', motif:'crescent', items:[['く','く / ku','庫 / ku'],['いか','いか / ika','魷魚 / squid'],['くち','くち / kuchi','嘴巴 / mouth']]},
-      {row:'KA-row', kana:'け', romaji:'ke', wordCount:1, art:'羽毛', hint:'流動筆觸', icon:'❦', motif:'feather', items:[['け','け / ke','客 / ke'],['いけ','いけ / ike','池 / pond']]},
-      {row:'KA-row', kana:'こ', romaji:'ko', wordCount:1, art:'器皿', hint:'方框 / 容器感', icon:'⬒', motif:'vessel', items:[['こ','こ / ko','口 / ko'],['こい','こい / koi','鯉魚 / carp']]},
+      {row:'KA-row', kana:'か', romaji:'ka', wordCount:3, icon:'✿', motif:'flower', items:[['か','か / ka','卡 / ka'],['かい','かい / kai','貝 / shell'],['かお','かお / kao','臉 / face'],['かき','かき / kaki','柿子 / persimmon']]},
+      {row:'KA-row', kana:'き', romaji:'ki', wordCount:1, icon:'✦', motif:'tree', items:[['き','き / ki','樹 / tree'],['きく','きく / kiku','菊花 / chrysanthemum']]},
+      {row:'KA-row', kana:'く', romaji:'ku', wordCount:2, icon:'☾', motif:'crescent', items:[['く','く / ku','庫 / ku'],['いか','いか / ika','魷魚 / squid'],['くち','くち / kuchi','嘴巴 / mouth']]},
+      {row:'KA-row', kana:'け', romaji:'ke', wordCount:1, icon:'❦', motif:'feather', items:[['け','け / ke','客 / ke'],['いけ','いけ / ike','池 / pond']]},
+      {row:'KA-row', kana:'こ', romaji:'ko', wordCount:1, icon:'⬒', motif:'vessel', items:[['こ','こ / ko','口 / ko'],['こい','こい / koi','鯉魚 / carp']]},
 
-      {row:'SA-row', kana:'さ', romaji:'sa', wordCount:3, art:'櫻花', hint:'柔軟紗感', icon:'❀', motif:'sakura', items:[['さ','さ / sa','沙 / sa'],['あさ','あさ / asa','早上 / morning'],['かさ','かさ / kasa','雨傘 / umbrella'],['さけ','さけ / sake','酒 / salmon']]},
-      {row:'SA-row', kana:'し', romaji:'shi', wordCount:3, art:'流水', hint:'流線詩感', icon:'∿', motif:'stream', items:[['し','し / shi','西 / shi'],['いし','いし / ishi','石頭 / stone'],['うし','うし / ushi','牛 / cow'],['しか','しか / shika','鹿 / deer']]},
-      {row:'SA-row', kana:'す', romaji:'su', wordCount:2, art:'清水', hint:'清透感', icon:'💧', motif:'water', items:[['す','す / su','蘇 / su'],['すし','すし / sushi','壽司 / sushi'],['いす','いす / isu','椅子 / chair']]},
-      {row:'SA-row', kana:'せ', romaji:'se', wordCount:2, art:'星', hint:'世界結構', icon:'✧', motif:'star', items:[['せ','せ / se','色 / se'],['せかい','せかい / sekai','世界 / world'],['あせ','あせ / ase','汗 / sweat']]},
-      {row:'SA-row', kana:'そ', romaji:'so', wordCount:1, art:'天空', hint:'風與留白', icon:'☁︎', motif:'sky', items:[['そ','そ / so','所 / so'],['うそ','うそ / uso','謊言 / lie']]}
+      {row:'SA-row', kana:'さ', romaji:'sa', wordCount:3, icon:'❀', motif:'sakura', items:[['さ','さ / sa','沙 / sa'],['あさ','あさ / asa','早上 / morning'],['かさ','かさ / kasa','雨傘 / umbrella'],['さけ','さけ / sake','酒 / salmon']]},
+      {row:'SA-row', kana:'し', romaji:'shi', wordCount:3, icon:'∿', motif:'stream', items:[['し','し / shi','西 / shi'],['いし','いし / ishi','石頭 / stone'],['うし','うし / ushi','牛 / cow'],['しか','しか / shika','鹿 / deer']]},
+      {row:'SA-row', kana:'す', romaji:'su', wordCount:2, icon:'💧', motif:'water', items:[['す','す / su','蘇 / su'],['すし','すし / sushi','壽司 / sushi'],['いす','いす / isu','椅子 / chair']]},
+      {row:'SA-row', kana:'せ', romaji:'se', wordCount:2, icon:'✧', motif:'star', items:[['せ','せ / se','色 / se'],['せかい','せかい / sekai','世界 / world'],['あせ','あせ / ase','汗 / sweat']]},
+      {row:'SA-row', kana:'そ', romaji:'so', wordCount:1, icon:'☁︎', motif:'sky', items:[['そ','そ / so','所 / so'],['うそ','うそ / uso','謊言 / lie']]}
     ];
 
 let state = {
@@ -289,46 +298,125 @@ function getWordSegmentAudioSrc(card, index){
 }
 function playAudio(src){
   return new Promise((resolve, reject) => {
+    let finished = false;
+    let interval = null;
+
+    const cleanup = () => {
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
+      audioPlayer.onended = null;
+      audioPlayer.onerror = null;
+    };
+
+    const safeResolve = (value) => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      resolve(value);
+    };
+
+    const safeReject = (err) => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      reject(err);
+    };
+
+    // 先停舊音
     audioPlayer.pause();
     audioPlayer.currentTime = 0;
     audioPlayer.src = src;
 
-    let stopped = false;
-
-    const interval = setInterval(() => {
-      if (state.stopRequested) {
-        stopped = true;
-        clearInterval(interval);
-        audioPlayer.pause();
-        audioPlayer.currentTime = 0;
-        resolve(false);
-      }
-    }, 50);
-
     audioPlayer.onended = () => {
-      clearInterval(interval);
-      if (!stopped) resolve(true);
+      safeResolve(true);
     };
 
     audioPlayer.onerror = () => {
-      clearInterval(interval);
-      reject(new Error(src));
+      safeReject(new Error(src));
     };
 
-    audioPlayer.play().catch(err => {
-      clearInterval(interval);
-      reject(err);
-    });
+    interval = setInterval(() => {
+      if (state.stopRequested) {
+        audioPlayer.pause();
+        audioPlayer.currentTime = 0;
+        safeResolve(false);
+      }
+    }, 50);
+
+    const playPromise = audioPlayer.play();
+
+    if (playPromise && typeof playPromise.then === 'function') {
+      playPromise.catch(err => {
+        // 如果是我們自己 stop / pause 造成，就不要當錯誤
+        if (state.stopRequested || audioPlayer.paused) {
+          safeResolve(false);
+          return;
+        }
+        safeReject(err);
+      });
+    }
   });
 }
 
     function sleep(ms){
       return new Promise(resolve => setTimeout(resolve, ms));
     }
+	
+	function clearCardEffects(){
+  [...grid.querySelectorAll('.card')].forEach(el => {
+    el.classList.remove('active');
+    el.classList.remove('playing');
+  });
+}
 
-    async function playSingleCard(card){
-      await playAudio(getSingleAudioSrc(card));
-    }
+function setPlayingCard(card){
+  const cardEls = [...grid.querySelectorAll('.card')];
+
+  clearCardEffects();
+
+  const target = cardEls.find(el => el.dataset.kana === card.kana);
+  if (!target) return;
+
+  target.classList.add('active');
+  target.classList.add('playing');
+
+  if (!target.classList.contains('is-flipped')) {
+    target.classList.add('is-flipped');
+  }
+
+  target.scrollIntoView({
+    behavior: 'smooth',
+    block: 'center'
+  });
+}
+
+async function playSingleCard(card){
+
+  // 🔴 設為播放中（避免多重觸發）
+  state.playing = true;
+  state.stopRequested = false;
+
+  try {
+    setStatus(`播放中：${card.kana}（單音）`);
+
+    // 🔴 卡片高亮 + 閃爍
+    setPlayingCard(card);
+
+    await playAudio(getSingleAudioSrc(card));
+
+  } catch (err) {
+    setStatus(`播放失敗：${err.message}`, true);
+  } finally {
+
+    // 🔴 播完清除效果
+    clearCardEffects();
+
+    state.playing = false;
+    state.stopRequested = false;
+  }
+}
 
 async function playWordSegments(card){
   const count = card.wordCount || 0;
@@ -358,6 +446,7 @@ async function playWordSegments(card){
       if (mode === 'kana') {
         await playSingleCard(card);
       } else {
+        setPlayingCard(card);
         await playWordSegments(card);
       }
     }
@@ -372,48 +461,50 @@ async function playSequential(list, mode='kana', startIndex=0){
   playAllBtn.disabled = false;
   autoPlayBtn.disabled = false;
 
-  try {
-    for (let i = startIndex; i < list.length; i++) {
-      const card = list[i];
+try {
+  for (let i = startIndex; i < list.length; i++) {
+    const card = list[i];
 
-      // ✅ 記住目前播到哪張
-      state.playIndex = i + 1;
+    // ✅ 記住下一次要從哪張開始
+    state.playIndex = i + 1;
+
+    if (state.stopRequested) {
+      setStatus(`播放已停止（下次將從第 ${state.playIndex} 張繼續）`);
+      break;
+    }
+
+    try {
+      setStatus(`播放中：${card.kana}（${mode === 'kana' ? '單音' : '單字'}）`);
+      setPlayingCard(card);
+      await playCard(card, mode);
 
       if (state.stopRequested) {
-        setStatus(`播放已停止（下次將從第 ${i + 1} 張繼續）`);
+        setStatus(`播放已停止（下次將從第 ${state.playIndex} 張繼續）`);
         break;
       }
 
-      try {
-        setStatus(`播放中：${card.kana}（${mode === 'kana' ? '單音' : '單字'}）`);
-        await playCard(card, mode);
+      await sleep(500);
 
-        if (state.stopRequested) {
-          setStatus(`播放已停止（下次將從第 ${i + 1} 張繼續）`);
-          break;
-        }
-
-        await sleep(500);
-
-      } catch (err) {
-        setStatus(`找不到音檔：${err.message}，請確認 audio 資料夾與檔名。`, true);
-        break;
-      }
+    } catch (err) {
+      setStatus(`找不到音檔：${err.message}，請確認 audio 資料夾與檔名。`, true);
+      break;
     }
-
-    // ✅ 如果完整播完，才重置
-    if (!state.stopRequested && state.playIndex >= list.length - 1) {
-      state.playIndex = 0;
-      setStatus('播放完成');
-    }
-
-  } finally {
-    state.playing = false;
-    state.stopRequested = false;
-    playAllBtn.textContent = '播放目前卡片 mp3';
-    playAllBtn.classList.remove('active');
-    autoPlayBtn.disabled = false;
   }
+
+  // ✅ 如果完整播完，才重置
+  if (!state.stopRequested && state.playIndex >= list.length) {
+    state.playIndex = 0;
+    setStatus('播放完成');
+  }
+
+} finally {
+  state.playing = false;
+  state.stopRequested = false;
+  playAllBtn.textContent = '播放目前卡片 mp3';
+  playAllBtn.classList.remove('active');
+  autoPlayBtn.disabled = false;
+  clearCardEffects();
+}
 }
 
 async function autoPlayCards(){
@@ -431,40 +522,25 @@ async function autoPlayCards(){
     for (let i = state.autoPlayIndex; i < list.length; i++) {
       const card = list[i];
 
-      // ✅ 記住目前播到哪張
+      // ✅ 記住下一次要從哪張開始
       state.autoPlayIndex = i + 1;
 
       if (!state.autoPlay || state.stopRequested) {
-        [...grid.querySelectorAll('.card')].forEach(el => el.classList.remove('active'));
-        setStatus(`自動播放已停止（下次將從第 ${i + 1} 張繼續）`);
+        clearCardEffects();
+        setStatus(`自動播放已停止（下次將從第 ${state.autoPlayIndex} 張繼續）`);
         break;
       }
 
       setStatus(`自動播放中：${card.kana}（${state.audioMode === 'kana' ? '單音' : '單字'}）`);
 
-      const cardEls = [...grid.querySelectorAll('.card')];
-      cardEls.forEach(el => el.classList.remove('active'));
-
-      const target = cardEls.find(el => el.dataset.kana === card.kana);
-
-      if (target) {
-        target.classList.add('active');
-
-        if (!target.classList.contains('is-flipped')) {
-          target.classList.add('is-flipped');
-        }
-
-        target.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
-        });
-      }
+      // ✅ 用統一函式處理紅框 + 閃爍 + 捲動
+      setPlayingCard(card);
 
       await playCard(card, state.audioMode);
 
       if (!state.autoPlay || state.stopRequested) {
-        [...grid.querySelectorAll('.card')].forEach(el => el.classList.remove('active'));
-        setStatus(`自動播放已停止（下次將從第 ${i + 1} 張繼續）`);
+        clearCardEffects();
+        setStatus(`自動播放已停止（下次將從第 ${state.autoPlayIndex} 張繼續）`);
         break;
       }
 
@@ -472,8 +548,8 @@ async function autoPlayCards(){
     }
 
     // ✅ 如果完整播完，才重置
-    if (state.autoPlay && state.autoPlayIndex >= list.length - 1) {
-      [...grid.querySelectorAll('.card')].forEach(el => el.classList.remove('active'));
+    if (state.autoPlay && state.autoPlayIndex >= list.length) {
+      clearCardEffects();
       setStatus('自動播放完成');
       state.autoPlay = false;
       state.autoPlayIndex = 0;
@@ -482,6 +558,7 @@ async function autoPlayCards(){
     }
 
   } catch (err) {
+    clearCardEffects();
     setStatus(`自動播放失敗：${err.message}`, true);
     state.autoPlay = false;
     autoPlayBtn.textContent = '自動播放：關';
@@ -498,7 +575,7 @@ async function autoPlayCards(){
       const q = state.q.trim().toLowerCase();
       return cards.filter(card => {
         const byRow = state.filter === 'ALL' || card.row === state.filter;
-        const text = [card.row, card.kana, card.romaji, card.art, card.hint, ...card.items.flat()].join(' ').toLowerCase();
+        const text = [card.row, card.kana, card.romaji, ...card.items.flat()].join(' ').toLowerCase();
         return byRow && (!q || text.includes(q));
       });
     }
@@ -552,16 +629,13 @@ function renderFilters(){
             <div class="card ${state.flippedAll ? 'is-flipped' : ''}" data-kana="${escapeHtml(card.kana)}" tabindex="0" role="button" aria-label="${escapeHtml(card.kana)} 卡片，點擊翻面">
               <section class="face front">
                 <div class="tag">${escapeHtml(card.row)}</div>
-                <div class="art" aria-hidden="true">
-                  <div class="motif ${escapeHtml(card.motif)}" title="${escapeHtml(card.art)}">${escapeHtml(card.icon)}</div>
-                  <div>
-                    <div class="kana">${escapeHtml(card.kana)}</div>
-                    <div class="roman">${escapeHtml(card.romaji)}</div>
-                  </div>
-                </div>
-                <div>
-                  <div class="hint">主圖：${escapeHtml(card.art)} · ${escapeHtml(card.hint)}</div>
-                </div>
+<div class="art" aria-hidden="true">
+  <div class="motif ${escapeHtml(card.motif)}">${escapeHtml(card.icon)}</div>
+  <div>
+    <div class="kana">${escapeHtml(card.kana)}</div>
+    <div class="roman">${escapeHtml(card.romaji)}</div>
+  </div>
+</div>
               </section>
               <section class="face back">
                 <div class="tag">${escapeHtml(card.row)}</div>
@@ -604,8 +678,15 @@ function renderFilters(){
     const card = list.find(c => c.romaji === btn.dataset.romaji);
     if (card) {
       setStatus(`播放中：${card.kana}（單音）`);
-      try { await playCard(card, 'kana'); }
-      catch (err) { setStatus(`找不到音檔：${err.message}，請確認 audio 資料夾與檔名。`, true); }
+      setPlayingCard(card);
+
+      try {
+        await playCard(card, 'kana');
+      } catch (err) {
+        setStatus(`找不到音檔：${err.message}`, true);
+      } finally {
+        clearCardEffects();
+      }
     }
   };
 });
@@ -616,12 +697,18 @@ function renderFilters(){
     const card = list.find(c => c.romaji === btn.dataset.romaji);
     if (card) {
       setStatus(`播放中：${card.kana}（單字）`);
-      try { await playCard(card, 'words'); }
-      catch (err) { setStatus(`找不到音檔：${err.message}，請確認 audio 資料夾與檔名。`, true); }
+      setPlayingCard(card);
+
+      try {
+        await playCard(card, 'words');
+      } catch (err) {
+        setStatus(`找不到音檔：${err.message}`, true);
+      } finally {
+        clearCardEffects();
+      }
     }
   };
 });
-    }
 
     function shuffle(){
       for (let i = cards.length - 1; i > 0; i--) {
@@ -654,7 +741,7 @@ playAllBtn.onclick = async () => {
     audioPlayer.currentTime = 0;
     playAllBtn.textContent = '播放目前卡片 mp3';
     playAllBtn.classList.remove('active');
-    setStatus(`播放已停止（下次將從第 ${state.playIndex + 1} 張繼續）`);
+    setStatus(`播放已停止（下次將從第 ${state.playIndex} 張繼續）`);
     return;
   }
 
@@ -672,7 +759,7 @@ playAllBtn.onclick = async () => {
 
   playAllBtn.textContent = '停止播放';
   playAllBtn.classList.add('active');
-  setStatus(`播放目前卡片：${state.audioMode === 'kana' ? '單音' : '單字'} 模式（從第 ${state.playIndex + 1} 張開始）`);
+  setStatus(`播放目前卡片：${state.audioMode === 'kana' ? '單音' : '單字'} 模式（從第 ${state.playIndex || 1} 張開始）`);
 
   await playSequential(list, state.audioMode, state.playIndex);
 };
@@ -697,7 +784,7 @@ autoPlayBtn.onclick = async () => {
 
     autoPlayBtn.textContent = '自動播放：關';
     autoPlayBtn.classList.remove('active');
-    setStatus(`自動播放已停止（下次將從第 ${state.autoPlayIndex + 1} 張繼續）`);
+    setStatus(`自動播放已停止（下次將從第 ${state.autoPlayIndex} 張繼續）`);
     return;
   }
 
@@ -717,7 +804,7 @@ autoPlayBtn.onclick = async () => {
   state.stopRequested = false;
   autoPlayBtn.textContent = '自動播放：開';
   autoPlayBtn.classList.add('active');
-  setStatus(`已切換為：自動播放開啟（從第 ${state.autoPlayIndex + 1} 張開始）`);
+  setStatus(`已切換為：自動播放開啟（從第 ${state.autoPlayIndex} 張開始）`);
 
   await autoPlayCards();
 };
