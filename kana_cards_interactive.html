@@ -70,6 +70,10 @@
       transition:transform .55s cubic-bezier(.2,.8,.2,1);
       cursor:pointer;
     }
+	.card.active {
+      outline: 3px solid #dc2626;
+      outline-offset: 2px;
+    }
     .card.is-flipped{transform:rotateY(180deg)}
     .face{
       position:absolute;inset:0;backface-visibility:hidden;
@@ -136,7 +140,7 @@
     <section class="hero">
       <div class="eyebrow">ORIWISH · KANA CARD</div>
       <h1>平假名互動圖卡｜あ行・か行・さ行</h1>
-      <p class="sub">點一下卡片可翻面；按按鈕可播放 mp3。單字模式採分段音檔＋0.5 秒停頓，並每個單字播放兩次。支援男聲 Keita / 女聲 Nanami 切換。</p>
+<p class="sub" style="color:#dc2626;">點一下卡片可翻面；按按鈕可播放 mp3。單字模式採分段音檔播放，單字之間停頓 0.5 秒，並各播放兩次。</p>
     </section>
 
     <section class="toolbar" aria-label="控制列">
@@ -149,15 +153,10 @@
         <label class="stat">播放模式：
           <select id="audioMode">
             <option value="kana">單音</option>
-            <option value="words">單字（老師語氣）</option>
+            <option value="words">單字</option>
           </select>
         </label>
-        <label class="stat">語音：
-          <select id="voiceMode">
-            <option value="m">男聲（Keita）</option>
-            <option value="f">女聲（Nanami）</option>
-          </select>
-        </label>
+
         <label class="stat">搜尋：
           <input id="searchInput" type="search" placeholder="輸入 kana / romaji / 中文" />
         </label>
@@ -212,7 +211,6 @@
       audioMode: 'kana',
       playing: false,
       autoPlay: false,
-      voiceMode: 'm'
     };
 
     const grid = document.getElementById('grid');
@@ -221,7 +219,6 @@
     const audioStatus = document.getElementById('audioStatus');
     const searchInput = document.getElementById('searchInput');
     const audioMode = document.getElementById('audioMode');
-    const voiceMode = document.getElementById('voiceMode');
     const playAllBtn = document.getElementById('playAllBtn');
     const shuffleBtn = document.getElementById('shuffleBtn');
     const flipAllBtn = document.getElementById('flipAllBtn');
@@ -251,16 +248,15 @@
         .replace(/^_+|_+$/g, '');
     }
 
-    function getSingleAudioSrc(card){
-      const key = normalizeRomaji(card.romaji);
-      return `audio/${key}_${state.voiceMode}.mp3`;
-    }
+function getSingleAudioSrc(card){
+  const key = normalizeRomaji(card.romaji);
+  return `audio/${key}.mp3`;
+}
 
-    function getWordSegmentAudioSrc(card, index){
-      const key = normalizeRomaji(card.romaji);
-      return `audio/${key}_words_${index}_${state.voiceMode}.mp3`;
-    }
-
+function getWordSegmentAudioSrc(card, index){
+  const key = normalizeRomaji(card.romaji);
+  return `audio/${key}_words_${index}.mp3`;
+}
     function playAudio(src){
       return new Promise((resolve, reject) => {
         audioPlayer.pause();
@@ -308,7 +304,7 @@
       try {
         for (const card of list) {
           try {
-            setStatus(`播放中：${card.kana}（${mode === 'kana' ? '單音' : '單字'}，${state.voiceMode === 'm' ? '男聲' : '女聲'}）`);
+            setStatus(`播放中：${card.kana}（${mode === 'kana' ? '單音' : '單字'}）`);
             await playCard(card, mode);
             await sleep(500);
           } catch (err) {
@@ -330,14 +326,30 @@
       playAllBtn.disabled = true;
       autoPlayBtn.disabled = true;
       try {
-        for (const card of list) {
-          setStatus(`自動播放中：${card.kana}（${state.audioMode === 'kana' ? '單音' : '單字'}，${state.voiceMode === 'm' ? '男聲' : '女聲'}）`);
-          const cardEls = [...grid.querySelectorAll('.card')];
-          const target = cardEls.find(el => el.dataset.kana === card.kana);
-          if (target && !target.classList.contains('is-flipped')) target.classList.add('is-flipped');
-          await playCard(card, state.audioMode);
-          await sleep(700);
-        }
+for (const card of list) {
+  setStatus(`自動播放中：${card.kana}（${state.audioMode === 'kana' ? '單音' : '單字'}）`);
+
+  const cardEls = [...grid.querySelectorAll('.card')];
+  cardEls.forEach(el => el.classList.remove('active'));
+
+  const target = cardEls.find(el => el.dataset.kana === card.kana);
+
+  if (target) {
+    target.classList.add('active');
+
+    if (!target.classList.contains('is-flipped')) {
+      target.classList.add('is-flipped');
+    }
+
+    target.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    });
+  }
+
+  await playCard(card, state.audioMode);
+  await sleep(700);
+}
         setStatus('自動播放完成');
       } catch (err) {
         setStatus(`自動播放失敗：${err.message}`, true);
@@ -404,9 +416,8 @@
                 <div class="tag">${escapeHtml(card.row)}</div>
                 <p class="mini" style="font-size:18px;color:var(--ink);font-weight:700;">
                   ${escapeHtml(card.kana)}｜${escapeHtml(card.romaji)}
-                  <span style="color:#dc2626;font-weight:600;">（每個單字播放兩次）</span>
                 </p>
-                <p class="mini">目前語音：${state.voiceMode === 'm' ? '男聲（Keita）' : '女聲（Nanami）'}</p>
+
                 <table>
                   <thead>
                     <tr><th>日文</th><th>平假名 / 羅馬拼音</th><th>中文 / English</th></tr>
@@ -436,29 +447,29 @@
         });
       });
 
-      [...grid.querySelectorAll('.play-one')].forEach(btn => {
-        btn.onclick = async (e) => {
-          e.stopPropagation();
-          const card = list.find(c => c.romaji === btn.dataset.romaji);
-          if (card) {
-            setStatus(`播放中：${card.kana}（單音，${state.voiceMode === 'm' ? '男聲' : '女聲'}）`);
-            try { await playCard(card, 'kana'); }
-            catch (err) { setStatus(`找不到音檔：${err.message}，請確認 audio 資料夾與檔名。`, true); }
-          }
-        };
-      });
+[...grid.querySelectorAll('.play-one')].forEach(btn => {
+  btn.onclick = async (e) => {
+    e.stopPropagation();
+    const card = list.find(c => c.romaji === btn.dataset.romaji);
+    if (card) {
+      setStatus(`播放中：${card.kana}（單音）`);
+      try { await playCard(card, 'kana'); }
+      catch (err) { setStatus(`找不到音檔：${err.message}，請確認 audio 資料夾與檔名。`, true); }
+    }
+  };
+});
 
-      [...grid.querySelectorAll('.play-words')].forEach(btn => {
-        btn.onclick = async (e) => {
-          e.stopPropagation();
-          const card = list.find(c => c.romaji === btn.dataset.romaji);
-          if (card) {
-            setStatus(`播放中：${card.kana}（單字，老師語氣，${state.voiceMode === 'm' ? '男聲' : '女聲'}）`);
-            try { await playCard(card, 'words'); }
-            catch (err) { setStatus(`找不到音檔：${err.message}，請確認 audio 資料夾與檔名。`, true); }
-          }
-        };
-      });
+[...grid.querySelectorAll('.play-words')].forEach(btn => {
+  btn.onclick = async (e) => {
+    e.stopPropagation();
+    const card = list.find(c => c.romaji === btn.dataset.romaji);
+    if (card) {
+      setStatus(`播放中：${card.kana}（單字）`);
+      try { await playCard(card, 'words'); }
+      catch (err) { setStatus(`找不到音檔：${err.message}，請確認 audio 資料夾與檔名。`, true); }
+    }
+  };
+});
     }
 
     function shuffle(){
@@ -485,7 +496,7 @@
     }
 
     playAllBtn.onclick = async () => {
-      setStatus(`播放目前卡片：${state.audioMode === 'kana' ? '單音' : '單字（老師語氣）'}，${state.voiceMode === 'm' ? '男聲' : '女聲'} 模式`);
+setStatus(`播放目前卡片：${state.audioMode === 'kana' ? '單音' : '單字'}`);
       await playSequential(currentCards(), state.audioMode);
     };
 
@@ -512,13 +523,7 @@
 
     audioMode.onchange = () => {
       state.audioMode = audioMode.value;
-      setStatus(`已切換為：${state.audioMode === 'kana' ? '單音' : '單字（老師語氣）'} 模式`);
-    };
-
-    voiceMode.onchange = () => {
-      state.voiceMode = voiceMode.value;
-      setStatus(`已切換為：${state.voiceMode === 'm' ? '男聲 Keita' : '女聲 Nanami'}`);
-      renderCards();
+      setStatus(`已切換為：${state.audioMode === 'kana' ? '單音' : '單字'} 模式`);
     };
 
     initLineTip();
