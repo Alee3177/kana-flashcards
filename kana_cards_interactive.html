@@ -57,18 +57,30 @@
     button.active{background:#f4ead8;border-color:#d7c09b;color:#5a4527;font-weight:700}
     .primary{background:#202020;color:#fff;border-color:#202020}
     .ghost{background:transparent}
-	#autoPlayBtn{
+#autoPlayBtn,
+#playAllBtn{
   color:#dc2626;
   font-weight:700;
   border-color:#f3c7c7;
 }
 
-#autoPlayBtn.active{
-  color:#dc2626;
-  border-color:#dc2626;
+#playAllBtn{
   background:#fff5f5;
 }
-    .stat{font-size:13px;color:var(--muted)}
+
+/* 🔴 覆蓋 button.active */
+#playAllBtn.active{
+  color:#dc2626 !important;
+  border-color:#dc2626 !important;
+  background:#fff0f0 !important;
+}
+
+#autoPlayBtn.active{
+  color:#dc2626 !important;
+  border-color:#dc2626 !important;
+  background:#fff5f5 !important;
+}
+  .stat{font-size:13px;color:var(--muted)}
     .status-error{color:var(--danger)!important}
     .grid{
       display:grid;
@@ -427,9 +439,13 @@ if (target) {
       await sleep(700);
     }
 
-    if (state.autoPlay) {
-      setStatus('自動播放完成');
-      state.autoPlay = false;
+if (state.autoPlay) {
+
+  // 🔴 清紅框
+  [...grid.querySelectorAll('.card')].forEach(el => el.classList.remove('active'));
+
+  setStatus('自動播放完成');
+  state.autoPlay = false;
       autoPlayBtn.textContent = '自動播放：關';
       autoPlayBtn.classList.remove('active');
     }
@@ -588,14 +604,17 @@ playAllBtn.onclick = async () => {
     audioPlayer.pause();
     audioPlayer.currentTime = 0;
     playAllBtn.textContent = '播放目前卡片 mp3';
+	playAllBtn.classList.remove('active');
     setStatus('播放已停止');
     return;
   }
 
   // 開始播放
   playAllBtn.textContent = '停止播放';
+  playAllBtn.classList.add('active');
   setStatus(`播放目前卡片：${state.audioMode === 'kana' ? '單音' : '單字'} 模式`);
   await playSequential(currentCards(), state.audioMode);
+  playAllBtn.classList.remove('active');
 };
 
     shuffleBtn.onclick = shuffle;
@@ -605,20 +624,25 @@ playAllBtn.onclick = async () => {
       flipAllBtn.textContent = state.flippedAll ? '全部翻回正面' : '全部翻到背面';
       renderCards();
     };
-
-autoPlayBtn.onclick = async () => {
+	
+	autoPlayBtn.onclick = async () => {
   // 如果自動播放中，按一下就停止
   if (state.autoPlay) {
     state.autoPlay = false;
     state.stopRequested = true;
     audioPlayer.pause();
     audioPlayer.currentTime = 0;
+
+    // 清掉紅框
+    [...grid.querySelectorAll('.card')].forEach(el => el.classList.remove('active'));
+
     autoPlayBtn.textContent = '自動播放：關';
     autoPlayBtn.classList.remove('active');
     setStatus('自動播放已停止');
     return;
   }
 
+  // 開始自動播放
   state.autoPlay = true;
   state.stopRequested = false;
   autoPlayBtn.textContent = '自動播放：開';
