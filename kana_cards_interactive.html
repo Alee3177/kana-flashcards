@@ -14,8 +14,7 @@
       --gold:#b3925f;
       --shadow:0 10px 28px rgba(42,27,15,.08);
       --radius:20px;
-      --success:#16a34a;
-      --danger:#b91c1c;
+      --danger:#b42318;
     }
     *{box-sizing:border-box}
     body{
@@ -37,15 +36,10 @@
     h1{margin:8px 0 8px;font-size:28px;line-height:1.2}
     .sub{margin:0;color:var(--muted);font-size:14px;line-height:1.7}
     .toolbar{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:12px;
-      margin:16px 0 20px;
+      display:grid;grid-template-columns:1fr;gap:12px;margin:16px 0 20px;
       background:rgba(255,253,248,.78);
       border:1px solid var(--line);
-      border-radius:22px;
-      padding:14px;
-      box-shadow:var(--shadow);
+      border-radius:22px;padding:14px;box-shadow:var(--shadow);
     }
     .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
     .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -57,52 +51,32 @@
       border-radius:999px;
       padding:10px 14px;
     }
-    button{cursor:pointer;transition:.2s transform,.2s background,.2s border-color,.2s opacity}
+    button{cursor:pointer;transition:.2s transform,.2s background,.2s border-color}
     button:hover{transform:translateY(-1px)}
-    button:disabled{opacity:.6;cursor:not-allowed;transform:none}
+    button:disabled{opacity:.55;cursor:not-allowed;transform:none}
     button.active{background:#f4ead8;border-color:#d7c09b;color:#5a4527;font-weight:700}
     .primary{background:#202020;color:#fff;border-color:#202020}
     .ghost{background:transparent}
     .stat{font-size:13px;color:var(--muted)}
-    .status{
-      display:none;
-      margin-top:2px;
-      padding:10px 12px;
-      border-radius:12px;
-      font-size:13px;
-      line-height:1.6;
-      border:1px solid var(--line);
-      background:#fff;
-    }
-    .status.show{display:block}
-    .status.error{color:var(--danger);border-color:#fecaca;background:#fff7f7}
-    .status.ok{color:#166534;border-color:#bbf7d0;background:#f7fff8}
+    .status-error{color:var(--danger)!important}
     .grid{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
       gap:16px;
     }
-    .card-wrap{perspective:1200px;min-height:300px}
+    .card-wrap{perspective:1200px;min-height:420px}
     .card{
-      position:relative;
-      width:100%;
-      height:300px;
-      transform-style:preserve-3d;
+      position:relative;width:100%;height:420px;transform-style:preserve-3d;
       transition:transform .55s cubic-bezier(.2,.8,.2,1);
       cursor:pointer;
     }
     .card.is-flipped{transform:rotateY(180deg)}
     .face{
-      position:absolute;
-      inset:0;
-      backface-visibility:hidden;
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      overflow:hidden;
+      position:absolute;inset:0;backface-visibility:hidden;
+      border:1px solid var(--line);border-radius:var(--radius);
+      box-shadow:var(--shadow);overflow:hidden;
       background:var(--card);
-      display:flex;
-      flex-direction:column;
+      display:flex;flex-direction:column;
     }
     .front{
       justify-content:space-between;
@@ -114,73 +88,45 @@
     .front .tag,
     .back .tag{
       align-self:flex-start;
-      font-size:11px;
-      font-weight:700;
-      letter-spacing:.12em;
-      color:var(--gold);
-      background:rgba(179,146,95,.08);
+      font-size:11px;font-weight:700;letter-spacing:.12em;
+      color:var(--gold);background:rgba(179,146,95,.08);
       border:1px solid rgba(179,146,95,.18);
-      padding:6px 10px;
-      border-radius:999px;
+      padding:6px 10px;border-radius:999px;
     }
     .art{
-      flex:1;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      position:relative;
-      color:#c6aa7f;
-      font-size:58px;
-      font-weight:700;
-      letter-spacing:.02em;
+      flex:1;display:flex;align-items:center;justify-content:center;position:relative;
+      color:#c6aa7f;font-size:58px;font-weight:700;letter-spacing:.02em;
     }
     .art::before{
-      content:"";
-      position:absolute;
-      width:132px;
-      height:132px;
-      border-radius:50%;
+      content:"";position:absolute;width:132px;height:132px;border-radius:50%;
       background:radial-gradient(circle, rgba(179,146,95,.16) 0%, rgba(179,146,95,.04) 60%, transparent 72%);
     }
     .motif{
-      position:absolute;
-      top:18px;
-      right:18px;
-      width:42px;
-      height:42px;
-      border-radius:12px;
-      border:1px solid rgba(179,146,95,.2);
-      background:rgba(255,250,242,.92);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:#b3925f;
-      font-size:22px;
-      box-shadow:0 4px 14px rgba(42,27,15,.06);
+      position:absolute;top:18px;right:18px;width:42px;height:42px;
+      border-radius:12px;border:1px solid rgba(179,146,95,.2);
+      background:rgba(255,250,242,.92);display:flex;align-items:center;justify-content:center;
+      color:#b3925f;font-size:22px;box-shadow:0 4px 14px rgba(42,27,15,.06);
     }
     .motif.vessel{font-size:18px}
     .motif.water,.motif.sky{font-size:20px}
     .kana{position:relative;font-size:86px;line-height:1;font-weight:700;color:#231b17}
     .roman{font-size:16px;color:var(--muted);text-align:center;margin-top:10px;letter-spacing:.08em}
     .hint{font-size:12px;color:var(--muted);text-align:center}
-    .back{transform:rotateY(180deg);padding:14px;background:#fffdfa}
-    .back h3{margin:12px 0 8px;font-size:18px}
-    .mini{font-size:13px;color:var(--muted);margin:0 0 10px;line-height:1.6}
+    .back{transform:rotateY(180deg);padding:14px;background:#fffdfa;overflow:auto}
+    .mini{font-size:13px;color:var(--muted);margin:0 0 8px;line-height:1.6}
     table{width:100%;border-collapse:collapse;font-size:12px;background:#fff}
     th,td{border:1px solid var(--line);padding:6px 6px;text-align:left;vertical-align:top}
     th{background:#faf4eb}
-    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-    .footer-note{margin-top:18px;font-size:12px;color:var(--muted);text-align:center}
-    code{
-      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-      background:#f6f1e7;
-      border:1px solid #eadfcf;
-      padding:1px 5px;
-      border-radius:6px;
+    .actions{
+      display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding:8px 0 4px;
+      position:sticky;bottom:0;
+      background:linear-gradient(180deg, rgba(255,253,250,0), rgba(255,253,250,.94) 30%, rgba(255,253,250,1) 100%);
     }
+    .footer-note{margin-top:18px;font-size:12px;color:var(--muted);text-align:center}
+    code{background:#f6efe5;padding:1px 4px;border-radius:6px}
     @media (max-width:640px){
       h1{font-size:24px}
-      .card-wrap,.card{min-height:280px;height:280px}
+      .card-wrap,.card{min-height:470px;height:470px}
       .kana{font-size:74px}
     }
   </style>
@@ -190,7 +136,7 @@
     <section class="hero">
       <div class="eyebrow">ORIWISH · KANA CARD</div>
       <h1>平假名互動圖卡｜あ行・か行・さ行</h1>
-      <p class="sub">點一下卡片可翻面；按按鈕可播放 mp3。支援 15 張卡：單音、組合音、單字三層學習。適合手機與 GitHub Pages。</p>
+      <p class="sub">點一下卡片可翻面；按按鈕可播放 mp3。單字模式採分段音檔＋0.5 秒停頓，並每個單字播放兩次。支援男聲 Keita / 女聲 Nanami 切換。</p>
     </section>
 
     <section class="toolbar" aria-label="控制列">
@@ -199,10 +145,17 @@
         <button id="playAllBtn" class="primary">播放目前卡片 mp3</button>
         <button id="shuffleBtn" class="ghost">隨機排序</button>
         <button id="flipAllBtn" class="ghost">全部翻到背面</button>
+        <button id="autoPlayBtn" class="ghost">自動播放：關</button>
         <label class="stat">播放模式：
           <select id="audioMode">
             <option value="kana">單音</option>
-            <option value="words">單字</option>
+            <option value="words">單字（老師語氣）</option>
+          </select>
+        </label>
+        <label class="stat">語音：
+          <select id="voiceMode">
+            <option value="m">男聲（Keita）</option>
+            <option value="f">女聲（Nanami）</option>
           </select>
         </label>
         <label class="stat">搜尋：
@@ -210,7 +163,7 @@
         </label>
       </div>
       <div class="stat" id="resultStat">目前顯示 15 張卡</div>
-      <div id="statusMsg" class="status" aria-live="polite"></div>
+      <div class="stat" id="audioStatus">音檔播放模式已啟用</div>
     </section>
 
     <section class="grid" id="grid" aria-live="polite"></section>
@@ -229,49 +182,50 @@
       </a>
     </div>
 
-    <p class="footer-note">請把 mp3 放進 <code>audio/</code> 資料夾。檔名範例：<code>audio/a.mp3</code>、<code>audio/a_words.mp3</code>、<code>audio/ka.mp3</code>、<code>audio/ka_words.mp3</code>。這一版已改成 HTML5 Audio，不再依賴瀏覽器內建語音。</p>
   </div>
 
   <script>
     const cards = [
-      {row:'A-row', kana:'あ', romaji:'a', art:'晨光', hint:'開始感', icon:'☀︎', motif:'sun', items:[['あ','あ / a','啊 / a'],['あい','あい / ai','愛 / love'],['あお','あお / ao','藍色 / blue']]},
-      {row:'A-row', kana:'い', romaji:'i', art:'絲線', hint:'細長線條', icon:'〰', motif:'thread', items:[['い','い / i','好、好的 / yes'],['い','い / i','胃 / stomach'],['いえ','いえ / ie','房子、家 / house'],['いいえ','いいえ / iie','不、不是 / no']]},
-      {row:'A-row', kana:'う', romaji:'u', art:'海浪', hint:'圓弧呼氣', icon:'≈', motif:'wave', items:[['う','う / u','嗯（思考聲） / hmm'],['うえ','うえ / ue','上面 / above']]},
-      {row:'A-row', kana:'え', romaji:'e', art:'枝葉', hint:'轉折線條', icon:'❦', motif:'leaf', items:[['え','え / e','咦？ / huh'],['え','え / e','圖畫 / picture']]},
-      {row:'A-row', kana:'お', romaji:'o', art:'圓月', hint:'圓形構圖', icon:'◯', motif:'moon', items:[['お','お / o','哦 / oh'],['あお','あお / ao','藍色 / blue']]},
+      {row:'A-row', kana:'あ', romaji:'a', wordCount:2, art:'晨光', hint:'開始感', icon:'☀︎', motif:'sun', items:[['あ','あ / a','啊 / a'],['あい','あい / ai','愛 / love'],['あお','あお / ao','藍色 / blue']]},
+      {row:'A-row', kana:'い', romaji:'i', wordCount:2, art:'絲線', hint:'細長線條', icon:'〰', motif:'thread', items:[['い','い / i','衣 / i'],['いえ','いえ / ie','家 / house'],['いいえ','いいえ / iie','不 / no']]},
+      {row:'A-row', kana:'う', romaji:'u', wordCount:1, art:'海浪', hint:'圓弧呼氣', icon:'≈', motif:'wave', items:[['う','う / u','嗚 / u'],['うえ','うえ / ue','上面 / up']]},
+      {row:'A-row', kana:'え', romaji:'e', wordCount:3, art:'枝葉', hint:'轉折線條', icon:'❦', motif:'leaf', items:[['え','え / e','欸 / e'],['絵','え / e','繪畫 / picture'],['映画','えいが / eiga','電影 / movie']]},
+      {row:'A-row', kana:'お', romaji:'o', wordCount:1, art:'圓月', hint:'圓形構圖', icon:'◯', motif:'moon', items:[['お','お / o','喔 / o'],['あお','あお / ao','藍色 / blue']]},
 
-      {row:'KA-row', kana:'か', romaji:'ka', art:'花', hint:'柔曲線', icon:'✿', motif:'flower', items:[['か','か / ka','蚊子 / mosquito'],['かい','かい / kai','貝殼 / shell'],['かお','かお / kao','臉 / face'],['かき','かき / kaki','柿子 / persimmon'],['かき','かき / kaki','牡蠣 / oyster']]},
-      {row:'KA-row', kana:'き', romaji:'ki', art:'樹', hint:'木紋線條', icon:'✦', motif:'tree', items:[['き','き / ki','樹 / tree'],['きく','きく / kiku','菊花 / chrysanthemum']]},
-      {row:'KA-row', kana:'く', romaji:'ku', art:'彎月', hint:'柔和曲線', icon:'☾', motif:'crescent', items:[['く','く / ku','九 / nine'],['いか','いか / ika','魷魚 / squid'],['くち','くち / kuchi','嘴巴 / mouth']]},
-      {row:'KA-row', kana:'け', romaji:'ke', art:'羽毛', hint:'流動筆觸', icon:'❦', motif:'feather', items:[['け','け / ke','毛 / hair'],['いけ','いけ / ike','池塘 / pond']]},
-      {row:'KA-row', kana:'こ', romaji:'ko', art:'器皿', hint:'方框 / 容器感', icon:'⬒', motif:'vessel', items:[['こ','こ / ko','孩子 / child'],['こい','こい / koi','鯉魚 / carp']]},
+      {row:'KA-row', kana:'か', romaji:'ka', wordCount:3, art:'花', hint:'柔曲線', icon:'✿', motif:'flower', items:[['か','か / ka','卡 / ka'],['かい','かい / kai','貝 / shell'],['かお','かお / kao','臉 / face'],['かき','かき / kaki','柿子 / persimmon']]},
+      {row:'KA-row', kana:'き', romaji:'ki', wordCount:1, art:'樹', hint:'木紋線條', icon:'✦', motif:'tree', items:[['き','き / ki','樹 / tree'],['きく','きく / kiku','菊花 / chrysanthemum']]},
+      {row:'KA-row', kana:'く', romaji:'ku', wordCount:2, art:'彎月', hint:'柔和曲線', icon:'☾', motif:'crescent', items:[['く','く / ku','庫 / ku'],['いか','いか / ika','魷魚 / squid'],['くち','くち / kuchi','嘴巴 / mouth']]},
+      {row:'KA-row', kana:'け', romaji:'ke', wordCount:1, art:'羽毛', hint:'流動筆觸', icon:'❦', motif:'feather', items:[['け','け / ke','客 / ke'],['いけ','いけ / ike','池 / pond']]},
+      {row:'KA-row', kana:'こ', romaji:'ko', wordCount:1, art:'器皿', hint:'方框 / 容器感', icon:'⬒', motif:'vessel', items:[['こ','こ / ko','口 / ko'],['こい','こい / koi','鯉魚 / carp']]},
 
-      {row:'SA-row', kana:'さ', romaji:'sa', art:'櫻花', hint:'柔軟紗感', icon:'❀', motif:'sakura', items:[['さ','さ / sa','sa 音'],['あさ','あさ / asa','早上 / morning'],['かさ','かさ / kasa','雨傘 / umbrella'],['さけ','さけ / sake','酒 / alcohol'],['さけ','さけ / sake','鮭魚 / salmon']]},
-      {row:'SA-row', kana:'し', romaji:'shi', art:'流水', hint:'流線詩感', icon:'∿', motif:'stream', items:[['し','し / shi','shi 音'],['し','し / shi','死、四（依語境） / death / four'],['いし','いし / ishi','石頭 / stone'],['うし','うし / ushi','牛 / cow'],['しか','しか / shika','鹿 / deer']]},
-      {row:'SA-row', kana:'す', romaji:'su', art:'清水', hint:'清透感', icon:'💧', motif:'water', items:[['す','す / su','su 音'],['す','す / su','醋 / vinegar'],['すし','すし / sushi','壽司 / sushi'],['いす','いす / isu','椅子 / chair']]},
-      {row:'SA-row', kana:'せ', romaji:'se', art:'星', hint:'世界結構', icon:'✧', motif:'star', items:[['せ','せ / se','se 音'],['せかい','せかい / sekai','世界 / world'],['あせ','あせ / ase','汗 / sweat']]},
-      {row:'SA-row', kana:'そ', romaji:'so', art:'天空', hint:'風與留白', icon:'☁︎', motif:'sky', items:[['そ','そ / so','so 音'],['うそ','うそ / uso','謊話 / lie']]}
+      {row:'SA-row', kana:'さ', romaji:'sa', wordCount:3, art:'櫻花', hint:'柔軟紗感', icon:'❀', motif:'sakura', items:[['さ','さ / sa','沙 / sa'],['あさ','あさ / asa','早上 / morning'],['かさ','かさ / kasa','雨傘 / umbrella'],['さけ','さけ / sake','酒 / salmon']]},
+      {row:'SA-row', kana:'し', romaji:'shi', wordCount:3, art:'流水', hint:'流線詩感', icon:'∿', motif:'stream', items:[['し','し / shi','西 / shi'],['いし','いし / ishi','石頭 / stone'],['うし','うし / ushi','牛 / cow'],['しか','しか / shika','鹿 / deer']]},
+      {row:'SA-row', kana:'す', romaji:'su', wordCount:2, art:'清水', hint:'清透感', icon:'💧', motif:'water', items:[['す','す / su','蘇 / su'],['すし','すし / sushi','壽司 / sushi'],['いす','いす / isu','椅子 / chair']]},
+      {row:'SA-row', kana:'せ', romaji:'se', wordCount:2, art:'星', hint:'世界結構', icon:'✧', motif:'star', items:[['せ','せ / se','色 / se'],['せかい','せかい / sekai','世界 / world'],['あせ','あせ / ase','汗 / sweat']]},
+      {row:'SA-row', kana:'そ', romaji:'so', wordCount:1, art:'天空', hint:'風與留白', icon:'☁︎', motif:'sky', items:[['そ','そ / so','所 / so'],['うそ','うそ / uso','謊言 / lie']]}
     ];
 
-    const state = {
+    let state = {
       filter: 'ALL',
       flippedAll: false,
       q: '',
       audioMode: 'kana',
-      playing: false
+      playing: false,
+      autoPlay: false,
+      voiceMode: 'm'
     };
 
     const grid = document.getElementById('grid');
     const rowFilters = document.getElementById('rowFilters');
     const resultStat = document.getElementById('resultStat');
-    const statusMsg = document.getElementById('statusMsg');
+    const audioStatus = document.getElementById('audioStatus');
     const searchInput = document.getElementById('searchInput');
     const audioMode = document.getElementById('audioMode');
+    const voiceMode = document.getElementById('voiceMode');
     const playAllBtn = document.getElementById('playAllBtn');
     const shuffleBtn = document.getElementById('shuffleBtn');
     const flipAllBtn = document.getElementById('flipAllBtn');
-    const lineAudioTip = document.getElementById('lineAudioTip');
-    const openExternalBtn = document.getElementById('openExternalBtn');
+    const autoPlayBtn = document.getElementById('autoPlayBtn');
     const audioPlayer = new Audio();
     audioPlayer.preload = 'auto';
 
@@ -284,26 +238,27 @@
         .replace(/'/g,'&#39;');
     }
 
-    function showStatus(message, type = 'ok'){
-      if (!message) {
-        statusMsg.className = 'status';
-        statusMsg.textContent = '';
-        return;
-      }
-      statusMsg.className = `status show ${type}`;
-      statusMsg.textContent = message;
+    function setStatus(message, isError = false){
+      if (!audioStatus) return;
+      audioStatus.textContent = message;
+      audioStatus.classList.toggle('status-error', !!isError);
     }
 
     function normalizeRomaji(str){
       return String(str || '')
         .toLowerCase()
-        .replace(/[^a-z0-9]+/g,'_')
-        .replace(/^_+|_+$/g,'');
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
     }
 
-    function getAudioSrc(card, mode='kana'){
+    function getSingleAudioSrc(card){
       const key = normalizeRomaji(card.romaji);
-      return mode === 'words' ? `audio/${key}_words.mp3` : `audio/${key}.mp3`;
+      return `audio/${key}_${state.voiceMode}.mp3`;
+    }
+
+    function getWordSegmentAudioSrc(card, index){
+      const key = normalizeRomaji(card.romaji);
+      return `audio/${key}_words_${index}_${state.voiceMode}.mp3`;
     }
 
     function playAudio(src){
@@ -312,21 +267,36 @@
         audioPlayer.currentTime = 0;
         audioPlayer.src = src;
         audioPlayer.onended = () => resolve(true);
-        audioPlayer.onerror = () => reject(new Error(`音檔不存在：${src}`));
-        audioPlayer.play().then(() => true).catch(reject);
+        audioPlayer.onerror = () => reject(new Error(src));
+        audioPlayer.play().catch(reject);
       });
     }
 
-    async function playCard(card, mode='kana'){
-      const src = getAudioSrc(card, mode);
-      try {
-        showStatus(`播放中：${card.kana}（${mode === 'words' ? '單字' : '單音'}）`, 'ok');
+    function sleep(ms){
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function playSingleCard(card){
+      await playAudio(getSingleAudioSrc(card));
+    }
+
+    async function playWordSegments(card){
+      const count = card.wordCount || 0;
+      if (!count) throw new Error(`缺少 wordCount：${card.romaji}`);
+      for (let i = 1; i <= count; i++) {
+        const src = getWordSegmentAudioSrc(card, i);
         await playAudio(src);
-        showStatus(`播放完成：${card.kana}`, 'ok');
-        return true;
-      } catch (err) {
-        showStatus(`${err.message}，請確認已放入對應 mp3。`, 'error');
-        return false;
+        await sleep(500);
+        await playAudio(src);
+        if (i < count) await sleep(500);
+      }
+    }
+
+    async function playCard(card, mode='kana'){
+      if (mode === 'kana') {
+        await playSingleCard(card);
+      } else {
+        await playWordSegments(card);
       }
     }
 
@@ -334,14 +304,47 @@
       if (!list.length || state.playing) return;
       state.playing = true;
       playAllBtn.disabled = true;
+      autoPlayBtn.disabled = true;
       try {
         for (const card of list) {
-          const ok = await playCard(card, mode);
-          if (!ok) break;
+          try {
+            setStatus(`播放中：${card.kana}（${mode === 'kana' ? '單音' : '單字'}，${state.voiceMode === 'm' ? '男聲' : '女聲'}）`);
+            await playCard(card, mode);
+            await sleep(500);
+          } catch (err) {
+            setStatus(`找不到音檔：${err.message}，請確認 audio 資料夾與檔名。`, true);
+            break;
+          }
         }
       } finally {
         state.playing = false;
         playAllBtn.disabled = false;
+        autoPlayBtn.disabled = false;
+      }
+    }
+
+    async function autoPlayCards(){
+      const list = currentCards();
+      if (!list.length || state.playing) return;
+      state.playing = true;
+      playAllBtn.disabled = true;
+      autoPlayBtn.disabled = true;
+      try {
+        for (const card of list) {
+          setStatus(`自動播放中：${card.kana}（${state.audioMode === 'kana' ? '單音' : '單字'}，${state.voiceMode === 'm' ? '男聲' : '女聲'}）`);
+          const cardEls = [...grid.querySelectorAll('.card')];
+          const target = cardEls.find(el => el.dataset.kana === card.kana);
+          if (target && !target.classList.contains('is-flipped')) target.classList.add('is-flipped');
+          await playCard(card, state.audioMode);
+          await sleep(700);
+        }
+        setStatus('自動播放完成');
+      } catch (err) {
+        setStatus(`自動播放失敗：${err.message}`, true);
+      } finally {
+        state.playing = false;
+        playAllBtn.disabled = false;
+        autoPlayBtn.disabled = false;
       }
     }
 
@@ -350,21 +353,8 @@
       return cards.filter(card => {
         const byRow = state.filter === 'ALL' || card.row === state.filter;
         const text = [card.row, card.kana, card.romaji, card.art, card.hint, ...card.items.flat()].join(' ').toLowerCase();
-        const byQ = !q || text.includes(q);
-        return byRow && byQ;
+        return byRow && (!q || text.includes(q));
       });
-    }
-
-    function isLineBrowser(){
-      return /Line\//i.test(navigator.userAgent);
-    }
-
-    function initLineTip(){
-      if (!isLineBrowser()) return;
-      lineAudioTip.style.display = 'block';
-      openExternalBtn.href = window.location.href;
-      openExternalBtn.target = '_blank';
-      openExternalBtn.rel = 'noopener noreferrer';
     }
 
     function renderFilters(){
@@ -384,6 +374,7 @@
     function renderCards(){
       const list = currentCards();
       resultStat.textContent = `目前顯示 ${list.length} 張卡`;
+
       grid.innerHTML = list.map(card => {
         const tableRows = card.items.map(row => `
           <tr>
@@ -411,8 +402,11 @@
               </section>
               <section class="face back">
                 <div class="tag">${escapeHtml(card.row)}</div>
-                <h3>${escapeHtml(card.kana)}｜${escapeHtml(card.romaji)}</h3>
-                <p class="mini">日文 / 平假名・羅馬拼音 / 中文・英文</p>
+                <p class="mini" style="font-size:18px;color:var(--ink);font-weight:700;">
+                  ${escapeHtml(card.kana)}｜${escapeHtml(card.romaji)}
+                  <span style="color:#dc2626;font-weight:600;">（每個單字播放兩次）</span>
+                </p>
+                <p class="mini">目前語音：${state.voiceMode === 'm' ? '男聲（Keita）' : '女聲（Nanami）'}</p>
                 <table>
                   <thead>
                     <tr><th>日文</th><th>平假名 / 羅馬拼音</th><th>中文 / English</th></tr>
@@ -443,18 +437,26 @@
       });
 
       [...grid.querySelectorAll('.play-one')].forEach(btn => {
-        btn.onclick = async e => {
+        btn.onclick = async (e) => {
           e.stopPropagation();
           const card = list.find(c => c.romaji === btn.dataset.romaji);
-          if (card) await playCard(card, 'kana');
+          if (card) {
+            setStatus(`播放中：${card.kana}（單音，${state.voiceMode === 'm' ? '男聲' : '女聲'}）`);
+            try { await playCard(card, 'kana'); }
+            catch (err) { setStatus(`找不到音檔：${err.message}，請確認 audio 資料夾與檔名。`, true); }
+          }
         };
       });
 
       [...grid.querySelectorAll('.play-words')].forEach(btn => {
-        btn.onclick = async e => {
+        btn.onclick = async (e) => {
           e.stopPropagation();
           const card = list.find(c => c.romaji === btn.dataset.romaji);
-          if (card) await playCard(card, 'words');
+          if (card) {
+            setStatus(`播放中：${card.kana}（單字，老師語氣，${state.voiceMode === 'm' ? '男聲' : '女聲'}）`);
+            try { await playCard(card, 'words'); }
+            catch (err) { setStatus(`找不到音檔：${err.message}，請確認 audio 資料夾與檔名。`, true); }
+          }
         };
       });
     }
@@ -465,10 +467,25 @@
         [cards[i], cards[j]] = [cards[j], cards[i]];
       }
       renderCards();
-      showStatus('已隨機排序卡片。', 'ok');
+    }
+
+    function isLineBrowser(){ return /Line\//i.test(navigator.userAgent); }
+
+    function initLineTip(){
+      if (isLineBrowser()){
+        const tip = document.getElementById('lineAudioTip');
+        const btn = document.getElementById('openExternalBtn');
+        if (tip && btn){
+          tip.style.display = 'block';
+          btn.href = window.location.href;
+          btn.target = '_blank';
+          btn.rel = 'noopener noreferrer';
+        }
+      }
     }
 
     playAllBtn.onclick = async () => {
+      setStatus(`播放目前卡片：${state.audioMode === 'kana' ? '單音' : '單字（老師語氣）'}，${state.voiceMode === 'm' ? '男聲' : '女聲'} 模式`);
       await playSequential(currentCards(), state.audioMode);
     };
 
@@ -480,6 +497,14 @@
       renderCards();
     };
 
+    autoPlayBtn.onclick = async () => {
+      state.autoPlay = !state.autoPlay;
+      autoPlayBtn.textContent = `自動播放：${state.autoPlay ? '開' : '關'}`;
+      autoPlayBtn.classList.toggle('active', state.autoPlay);
+      setStatus(`已切換為：自動播放${state.autoPlay ? '開啟' : '關閉'}`);
+      if (state.autoPlay) await autoPlayCards();
+    };
+
     searchInput.oninput = () => {
       state.q = searchInput.value;
       renderCards();
@@ -487,7 +512,13 @@
 
     audioMode.onchange = () => {
       state.audioMode = audioMode.value;
-      showStatus(`已切換播放模式：${state.audioMode === 'words' ? '單字' : '單音'}`, 'ok');
+      setStatus(`已切換為：${state.audioMode === 'kana' ? '單音' : '單字（老師語氣）'} 模式`);
+    };
+
+    voiceMode.onchange = () => {
+      state.voiceMode = voiceMode.value;
+      setStatus(`已切換為：${state.voiceMode === 'm' ? '男聲 Keita' : '女聲 Nanami'}`);
+      renderCards();
     };
 
     initLineTip();
