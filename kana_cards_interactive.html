@@ -369,17 +369,35 @@ function clearCardEffects(showFront = false){
     el.classList.remove('active');
     el.classList.remove('playing');
 
-    // ✅ 單字播完 → 翻回正面
     if (showFront) {
       el.classList.remove('is-flipped');
     }
   });
 }
 
+function setAllCardsFlipped(shouldFlip){
+  [...grid.querySelectorAll('.card')].forEach(el => {
+    if (shouldFlip) {
+      el.classList.add('is-flipped');
+    } else {
+      el.classList.remove('is-flipped');
+    }
+  });
+}
+
+function showCardFront(card){
+  const target = [...grid.querySelectorAll('.card')].find(el => el.dataset.kana === card.kana);
+  if (!target) return;
+  target.classList.remove('is-flipped');
+}
+
 function setPlayingCard(card){
   const cardEls = [...grid.querySelectorAll('.card')];
 
-  clearCardEffects();
+  [...cardEls].forEach(el => {
+    el.classList.remove('active');
+    el.classList.remove('playing');
+  });
 
   const target = cardEls.find(el => el.dataset.kana === card.kana);
   if (!target) return;
@@ -387,11 +405,10 @@ function setPlayingCard(card){
   target.classList.add('active');
   target.classList.add('playing');
 
-  // ✅ 關鍵：依模式決定正反面
   if (state.audioMode === 'words') {
-    target.classList.add('is-flipped');   // 單字 → 背面
+    target.classList.add('is-flipped');
   } else {
-    target.classList.remove('is-flipped'); // 單音 → 正面
+    target.classList.remove('is-flipped');
   }
 
   target.scrollIntoView({
@@ -463,6 +480,10 @@ try {
       setPlayingCard(card);
       await playCard(card, mode);
 
+      if (mode === 'words') {
+        showCardFront(card);
+      }
+
       if (state.stopRequested) {
         setStatus(`播放已停止（下次將從第 ${state.playIndex || 1} 張繼續）`);
         break;
@@ -518,6 +539,10 @@ async function autoPlayCards(){
       setPlayingCard(card);
 
       await playCard(card, state.audioMode);
+
+      if (state.audioMode === 'words') {
+        showCardFront(card);
+      }
 
       // ✅ 這張真的播完，才記錄下一張
       state.autoPlayIndex = i + 1;
@@ -817,9 +842,15 @@ searchInput.oninput = () => {
 audioMode.onchange = () => {
   state.audioMode = audioMode.value;
 
-  // ✅ 切模式就從頭開始
   state.playIndex = 0;
   state.autoPlayIndex = 0;
+
+  state.stopRequested = true;
+  audioPlayer.pause();
+  audioPlayer.currentTime = 0;
+
+  clearCardEffects(false);
+  setAllCardsFlipped(state.audioMode === 'words');
 
   setStatus(`已切換為：${state.audioMode === 'kana' ? '單音' : '單字'} 模式`);
 };
