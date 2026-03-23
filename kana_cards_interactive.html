@@ -532,7 +532,7 @@ async function autoPlayCards(){
     }
 
     if (state.autoPlay && state.autoPlayIndex >= list.length) {
-      clearCardEffects(state.audioMode === 'words');;
+      clearCardEffects(state.audioMode === 'words');
       setStatus('自動播放完成');
       state.autoPlay = false;
       state.autoPlayIndex = 0;
@@ -541,7 +541,7 @@ async function autoPlayCards(){
     }
 
   
-    catch (err) {
+  } catch (err) {
     clearCardEffects(state.audioMode === 'words');
     setStatus(`自動播放失敗：${err.message}`, true);
     state.autoPlay = false;
