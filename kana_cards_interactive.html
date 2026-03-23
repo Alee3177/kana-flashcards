@@ -393,29 +393,7 @@ function setPlayingCard(card){
 }
 
 async function playSingleCard(card){
-
-  // 🔴 設為播放中（避免多重觸發）
-  state.playing = true;
-  state.stopRequested = false;
-
-  try {
-    setStatus(`播放中：${card.kana}（單音）`);
-
-    // 🔴 卡片高亮 + 閃爍
-    setPlayingCard(card);
-
-    await playAudio(getSingleAudioSrc(card));
-
-  } catch (err) {
-    setStatus(`播放失敗：${err.message}`, true);
-  } finally {
-
-    // 🔴 播完清除效果
-    clearCardEffects();
-
-    state.playing = false;
-    state.stopRequested = false;
-  }
+  await playAudio(getSingleAudioSrc(card));
 }
 
 async function playWordSegments(card){
@@ -442,14 +420,13 @@ async function playWordSegments(card){
   }
 }
 
-    async function playCard(card, mode='kana'){
-      if (mode === 'kana') {
-        await playSingleCard(card);
-      } else {
-        setPlayingCard(card);
-        await playWordSegments(card);
-      }
-    }
+async function playCard(card, mode='kana'){
+  if (mode === 'kana') {
+    await playSingleCard(card);
+  } else {
+    await playWordSegments(card);
+  }
+}
 
 async function playSequential(list, mode='kana', startIndex=0){
   if (!list.length || state.playing) return;
@@ -469,7 +446,7 @@ try {
     state.playIndex = i + 1;
 
     if (state.stopRequested) {
-      setStatus(`播放已停止（下次將從第 ${state.playIndex} 張繼續）`);
+      setStatus(`播放已停止（下次將從第 ${state.playIndex || 1} 張繼續）`);
       break;
     }
 
@@ -479,7 +456,7 @@ try {
       await playCard(card, mode);
 
       if (state.stopRequested) {
-        setStatus(`播放已停止（下次將從第 ${state.playIndex} 張繼續）`);
+        setStatus(`播放已停止（下次將從第 ${state.playIndex || 1} 張繼續）`);
         break;
       }
 
@@ -522,32 +499,30 @@ async function autoPlayCards(){
     for (let i = state.autoPlayIndex; i < list.length; i++) {
       const card = list[i];
 
-      // ✅ 記住下一次要從哪張開始
-      state.autoPlayIndex = i + 1;
-
       if (!state.autoPlay || state.stopRequested) {
         clearCardEffects();
-        setStatus(`自動播放已停止（下次將從第 ${state.autoPlayIndex} 張繼續）`);
+        setStatus(`自動播放已停止（下次將從第 ${state.autoPlayIndex || 1} 張繼續）`);
         break;
       }
 
       setStatus(`自動播放中：${card.kana}（${state.audioMode === 'kana' ? '單音' : '單字'}）`);
 
-      // ✅ 用統一函式處理紅框 + 閃爍 + 捲動
       setPlayingCard(card);
 
       await playCard(card, state.audioMode);
 
+      // ✅ 這張真的播完，才記錄下一張
+      state.autoPlayIndex = i + 1;
+
       if (!state.autoPlay || state.stopRequested) {
         clearCardEffects();
-        setStatus(`自動播放已停止（下次將從第 ${state.autoPlayIndex} 張繼續）`);
+        setStatus(`自動播放已停止（下次將從第 ${state.autoPlayIndex || 1} 張繼續）`);
         break;
       }
 
       await sleep(700);
     }
 
-    // ✅ 如果完整播完，才重置
     if (state.autoPlay && state.autoPlayIndex >= list.length) {
       clearCardEffects();
       setStatus('自動播放完成');
@@ -710,6 +685,7 @@ function renderFilters(){
   };
 });
 }
+
     function shuffle(){
       for (let i = cards.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -784,7 +760,7 @@ autoPlayBtn.onclick = async () => {
 
     autoPlayBtn.textContent = '自動播放：關';
     autoPlayBtn.classList.remove('active');
-    setStatus(`自動播放已停止（下次將從第 ${state.autoPlayIndex} 張繼續）`);
+    setStatus(`自動播放已停止（下次將從第 ${state.autoPlayIndex || 1} 張繼續）`);
     return;
   }
 
@@ -804,7 +780,7 @@ autoPlayBtn.onclick = async () => {
   state.stopRequested = false;
   autoPlayBtn.textContent = '自動播放：開';
   autoPlayBtn.classList.add('active');
-  setStatus(`已切換為：自動播放開啟（從第 ${state.autoPlayIndex} 張開始）`);
+  setStatus(`已切換為：自動播放開啟（從第 ${state.autoPlayIndex || 1} 張開始）`);
 
   await autoPlayCards();
 };
