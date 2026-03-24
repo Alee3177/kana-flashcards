@@ -178,10 +178,10 @@
     <section class="toolbar" aria-label="控制列">
       <div class="row chips" id="rowFilters"></div>
       <div class="row">
-        <button id="playAllBtn" class="primary">播放目前卡片 mp3</button>
+        <button id="playAllBtn" class="primary">▶ 播放一輪</button>
         <button id="shuffleBtn" class="ghost">隨機排序</button>
         <button id="flipAllBtn" class="ghost">全部翻到背面</button>
-        <button id="autoPlayBtn" class="ghost">自動播放：關</button>
+        <button id="autoPlayBtn" class="ghost">🔁 🔁 自動播放：關</button>
         <label class="stat">播放模式：
           <select id="audioMode">
             <option value="kana">單音</option>
@@ -246,7 +246,7 @@ let state = {
   stopRequested: false,
 
   // ✅ 續播用
-  playIndex: 0,        // 播放目前卡片 mp3 的續播位置
+  playIndex: 0,        // ▶ 播放一輪 的續播位置
   autoPlayIndex: 0,    // 自動播放的續播位置
   lastPlayMode: 'kana',
   lastAutoMode: 'kana',
@@ -364,14 +364,10 @@ function playAudio(src){
       return new Promise(resolve => setTimeout(resolve, ms));
     }
 	
-function clearCardEffects(showFront = false){
+function clearCardEffects(){
   [...grid.querySelectorAll('.card')].forEach(el => {
     el.classList.remove('active');
     el.classList.remove('playing');
-
-    if (showFront) {
-      el.classList.remove('is-flipped');
-    }
   });
 }
 
@@ -385,36 +381,60 @@ function setAllCardsFlipped(shouldFlip){
   });
 }
 
-function showCardFront(card){
+function showCardFace(card, faceMode = state.audioMode){
   const target = [...grid.querySelectorAll('.card')].find(el => el.dataset.kana === card.kana);
-  if (!target) return;
-  target.classList.remove('is-flipped');
-}
+  if (!target) return null;
 
-function setPlayingCard(card){
-  const cardEls = [...grid.querySelectorAll('.card')];
-
-  [...cardEls].forEach(el => {
-    el.classList.remove('active');
-    el.classList.remove('playing');
-  });
-
-  const target = cardEls.find(el => el.dataset.kana === card.kana);
-  if (!target) return;
-
-  target.classList.add('active');
-  target.classList.add('playing');
-
-  if (state.audioMode === 'words') {
+  if (faceMode === 'words') {
     target.classList.add('is-flipped');
   } else {
     target.classList.remove('is-flipped');
   }
 
+  return target;
+}
+
+function flipCardToOpposite(card, faceMode = state.audioMode){
+  const target = [...grid.querySelectorAll('.card')].find(el => el.dataset.kana === card.kana);
+  if (!target) return null;
+
+  if (faceMode === 'words') {
+    target.classList.remove('is-flipped');
+  } else {
+    target.classList.add('is-flipped');
+  }
+
+  return target;
+}
+
+function clearPlayingState(card){
+  const target = [...grid.querySelectorAll('.card')].find(el => el.dataset.kana === card.kana);
+  if (!target) return null;
+  target.classList.remove('active');
+  target.classList.remove('playing');
+  return target;
+}
+
+function setPlayingCard(card){
+  const cardEls = [...grid.querySelectorAll('.card')];
+
+  cardEls.forEach(el => {
+    el.classList.remove('active');
+    el.classList.remove('playing');
+  });
+
+  const target = cardEls.find(el => el.dataset.kana === card.kana);
+  if (!target) return null;
+
+  target.classList.add('active');
+  target.classList.add('playing');
+
   target.scrollIntoView({
     behavior: 'smooth',
     block: 'center'
   });
+
+  return target;
 }
 
 async function playSingleCard(card){
@@ -463,54 +483,50 @@ async function playSequential(list, mode='kana', startIndex=0){
   playAllBtn.disabled = false;
   autoPlayBtn.disabled = false;
 
-try {
-  for (let i = startIndex; i < list.length; i++) {
-    const card = list[i];
+  try {
+    for (let i = startIndex; i < list.length; i++) {
+      const card = list[i];
 
-    // ✅ 記住下一次要從哪張開始
-    state.playIndex = i + 1;
-
-    if (state.stopRequested) {
-      setStatus(`播放已停止（下次將從第 ${state.playIndex || 1} 張繼續）`);
-      break;
-    }
-
-    try {
-      setStatus(`播放中：${card.kana}（${mode === 'kana' ? '單音' : '單字'}）`);
-      setPlayingCard(card);
-      await playCard(card, mode);
-
-      if (mode === 'words') {
-        showCardFront(card);
-      }
+      state.playIndex = i + 1;
 
       if (state.stopRequested) {
         setStatus(`播放已停止（下次將從第 ${state.playIndex || 1} 張繼續）`);
         break;
       }
 
-      await sleep(500);
+      try {
+        setStatus(`播放中：${card.kana}（${mode === 'kana' ? '單音' : '單字'}）`);
+        setPlayingCard(card);
+        await playCard(card, mode);
 
-    } catch (err) {
-      setStatus(`找不到音檔：${err.message}，請確認 audio 資料夾與檔名。`, true);
-      break;
+        if (state.stopRequested) {
+          setStatus(`播放已停止（下次將從第 ${state.playIndex || 1} 張繼續）`);
+          break;
+        }
+
+        clearPlayingState(card);
+        flipCardToOpposite(card, mode);
+        await sleep(500);
+
+      } catch (err) {
+        setStatus(`找不到音檔：${err.message}，請確認 audio 資料夾與檔名。`, true);
+        break;
+      }
     }
-  }
 
-  // ✅ 如果完整播完，才重置
-  if (!state.stopRequested && state.playIndex >= list.length) {
-    state.playIndex = 0;
-    setStatus('播放完成');
-  }
+    if (!state.stopRequested && state.playIndex >= list.length) {
+      state.playIndex = 0;
+      setStatus('播放完成');
+    }
 
-} finally {
-  state.playing = false;
-  state.stopRequested = false;
-  playAllBtn.textContent = '播放目前卡片 mp3';
-  playAllBtn.classList.remove('active');
-  autoPlayBtn.disabled = false;
-  clearCardEffects(mode === 'words');
-}
+  } finally {
+    state.playing = false;
+    state.stopRequested = false;
+    playAllBtn.textContent = '▶ 播放一輪';
+    playAllBtn.classList.remove('active');
+    autoPlayBtn.disabled = false;
+    clearCardEffects();
+  }
 }
 
 async function autoPlayCards(){
@@ -529,48 +545,44 @@ async function autoPlayCards(){
       const card = list[i];
 
       if (!state.autoPlay || state.stopRequested) {
-        clearCardEffects(state.audioMode === 'words');
-        setStatus(`自動播放已停止（下次將從第 ${state.autoPlayIndex || 1} 張繼續）`);
+        clearCardEffects();
+        setStatus(`🔁 自動播放已停止（下次將從第 ${state.autoPlayIndex || 1} 張繼續）`);
         break;
       }
 
-      setStatus(`自動播放中：${card.kana}（${state.audioMode === 'kana' ? '單音' : '單字'}）`);
-
+      setStatus(`🔁 自動播放中：${card.kana}（${state.audioMode === 'kana' ? '單音' : '單字'}）`);
       setPlayingCard(card);
 
       await playCard(card, state.audioMode);
 
-      if (state.audioMode === 'words') {
-        showCardFront(card);
-      }
-
-      // ✅ 這張真的播完，才記錄下一張
       state.autoPlayIndex = i + 1;
 
       if (!state.autoPlay || state.stopRequested) {
-        clearCardEffects(state.audioMode === 'words');
-        setStatus(`自動播放已停止（下次將從第 ${state.autoPlayIndex || 1} 張繼續）`);
+        clearCardEffects();
+        setStatus(`🔁 自動播放已停止（下次將從第 ${state.autoPlayIndex || 1} 張繼續）`);
         break;
       }
 
+      clearPlayingState(card);
+      flipCardToOpposite(card, state.audioMode);
       await sleep(700);
     }
 
     if (state.autoPlay && state.autoPlayIndex >= list.length) {
-      clearCardEffects(state.audioMode === 'words');
-      setStatus('自動播放完成');
+      clearCardEffects();
+      setStatus('🔁 自動播放完成');
       state.autoPlay = false;
       state.autoPlayIndex = 0;
-      autoPlayBtn.textContent = '自動播放：關';
+      autoPlayBtn.textContent = '🔁 🔁 自動播放：關';
       autoPlayBtn.classList.remove('active');
     }
 
-  
   } catch (err) {
-    clearCardEffects(state.audioMode === 'words');
+    clearCardEffects();
     setStatus(`自動播放失敗：${err.message}`, true);
     state.autoPlay = false;
-    autoPlayBtn.textContent = '自動播放：關';
+    state.autoPlayIndex = 0;
+    autoPlayBtn.textContent = '🔁 🔁 自動播放：關';
     autoPlayBtn.classList.remove('active');
   } finally {
     state.playing = false;
@@ -609,11 +621,12 @@ function renderFilters(){
       audioPlayer.pause();
       audioPlayer.currentTime = 0;
 
-      // 🔴 清掉紅框 + 閃爍，單字模式時翻回正面
-      clearCardEffects(state.audioMode === 'words');
+      // 🔴 清掉紅框
+      [...grid.querySelectorAll('.card')].forEach(el => el.classList.remove('active'));
 
       renderFilters();
       renderCards();
+      setAllCardsFlipped(state.audioMode === 'words');
 
       setStatus('已切換行別（播放已重置）');
     };
@@ -635,7 +648,7 @@ function renderFilters(){
 
         return `
           <article class="card-wrap">
-            <div class="card ${state.flippedAll ? 'is-flipped' : ''}" data-kana="${escapeHtml(card.kana)}" tabindex="0" role="button" aria-label="${escapeHtml(card.kana)} 卡片，點擊翻面">
+            <div class="card ${state.audioMode === 'words' || state.flippedAll ? 'is-flipped' : ''}" data-kana="${escapeHtml(card.kana)}" tabindex="0" role="button" aria-label="${escapeHtml(card.kana)} 卡片，點擊翻面">
               <section class="face front">
                 <div class="tag">${escapeHtml(card.row)}</div>
 <div class="art" aria-hidden="true">
@@ -687,6 +700,7 @@ function renderFilters(){
     const card = list.find(c => c.romaji === btn.dataset.romaji);
     if (card) {
       setStatus(`播放中：${card.kana}（單音）`);
+      showCardFace(card, 'kana');
       setPlayingCard(card);
 
       try {
@@ -694,7 +708,8 @@ function renderFilters(){
       } catch (err) {
         setStatus(`找不到音檔：${err.message}`, true);
       } finally {
-        clearCardEffects(false);
+        clearCardEffects();
+        showCardFace(card, 'kana');
       }
     }
   };
@@ -706,6 +721,7 @@ function renderFilters(){
     const card = list.find(c => c.romaji === btn.dataset.romaji);
     if (card) {
       setStatus(`播放中：${card.kana}（單字）`);
+      showCardFace(card, 'words');
       setPlayingCard(card);
 
       try {
@@ -713,7 +729,8 @@ function renderFilters(){
       } catch (err) {
         setStatus(`找不到音檔：${err.message}`, true);
       } finally {
-        clearCardEffects(true);
+        clearCardEffects();
+        showCardFace(card, 'words');
       }
     }
   };
@@ -744,12 +761,11 @@ function renderFilters(){
     }
 
 playAllBtn.onclick = async () => {
-  // 如果目前正在播放，按一下就停止
   if (state.playing && !state.autoPlay) {
     state.stopRequested = true;
     audioPlayer.pause();
     audioPlayer.currentTime = 0;
-    playAllBtn.textContent = '播放目前卡片 mp3';
+    playAllBtn.textContent = '▶ 播放一輪';
     playAllBtn.classList.remove('active');
     setStatus(`播放已停止（下次將從第 ${state.playIndex || 1} 張繼續）`);
     return;
@@ -757,19 +773,17 @@ playAllBtn.onclick = async () => {
 
   const list = currentCards();
 
-  // ✅ 如果模式改了，就從頭開始
   if (state.lastPlayMode !== state.audioMode) {
     state.playIndex = 0;
   }
 
-  // ✅ 如果索引超過範圍，也從頭
   if (state.playIndex >= list.length) {
     state.playIndex = 0;
   }
 
-  playAllBtn.textContent = '停止播放';
+  playAllBtn.textContent = '⏹ 停止';
   playAllBtn.classList.add('active');
-  setStatus(`播放目前卡片：${state.audioMode === 'kana' ? '單音' : '單字'} 模式（從第 ${state.playIndex || 1} 張開始）`);
+  setStatus(`▶ 播放一輪：${state.audioMode === 'kana' ? '單音' : '單字'} 模式（從第 ${state.playIndex || 1} 張開始）`);
 
   await playSequential(list, state.audioMode, state.playIndex);
 };
@@ -783,59 +797,49 @@ playAllBtn.onclick = async () => {
     };
 	
 autoPlayBtn.onclick = async () => {
-  // 如果自動播放中，按一下就停止
   if (state.autoPlay) {
     state.autoPlay = false;
     state.stopRequested = true;
     audioPlayer.pause();
     audioPlayer.currentTime = 0;
 
-    clearCardEffects(state.audioMode === 'words');
+    clearCardEffects();
 
-    autoPlayBtn.textContent = '自動播放：關';
+    autoPlayBtn.textContent = '🔁 🔁 自動播放：關';
     autoPlayBtn.classList.remove('active');
-    setStatus(`自動播放已停止（下次將從第 ${state.autoPlayIndex || 1} 張繼續）`);
+    setStatus(`🔁 自動播放已停止（下次將從第 ${state.autoPlayIndex || 1} 張繼續）`);
     return;
   }
 
   const list = currentCards();
 
-  // ✅ 如果模式改了，就從頭開始
   if (state.lastAutoMode !== state.audioMode) {
     state.autoPlayIndex = 0;
   }
 
-  // ✅ 如果索引超過範圍，也從頭
   if (state.autoPlayIndex >= list.length) {
     state.autoPlayIndex = 0;
   }
 
   state.autoPlay = true;
   state.stopRequested = false;
-  autoPlayBtn.textContent = '自動播放：開';
+  autoPlayBtn.textContent = '🔁 🔁 自動播放：開';
   autoPlayBtn.classList.add('active');
-  setStatus(`已切換為：自動播放開啟（從第 ${state.autoPlayIndex || 1} 張開始）`);
+  setStatus(`已切換為：🔁 自動播放開啟（從第 ${state.autoPlayIndex || 1} 張開始）`);
 
   await autoPlayCards();
 };
 
 searchInput.oninput = () => {
   state.q = searchInput.value;
-
-  // 🔴 重置播放位置
   state.playIndex = 0;
   state.autoPlayIndex = 0;
-
-  // 🔴 停止目前播放
   state.stopRequested = true;
   audioPlayer.pause();
   audioPlayer.currentTime = 0;
-
-  // 🔴 清掉紅框
-  clearCardEffects(state.audioMode === 'words');
-
+  clearCardEffects();
   renderCards();
-
+  setAllCardsFlipped(state.audioMode === 'words');
   setStatus('搜尋已更新（播放已重置）');
 };
 
@@ -844,12 +848,11 @@ audioMode.onchange = () => {
 
   state.playIndex = 0;
   state.autoPlayIndex = 0;
-
   state.stopRequested = true;
   audioPlayer.pause();
   audioPlayer.currentTime = 0;
 
-  clearCardEffects(false);
+  clearCardEffects();
   setAllCardsFlipped(state.audioMode === 'words');
 
   setStatus(`已切換為：${state.audioMode === 'kana' ? '單音' : '單字'} 模式`);
