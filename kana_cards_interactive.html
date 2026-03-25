@@ -181,7 +181,7 @@
         <button id="playAllBtn" class="primary">▶ 播放一輪</button>
         <button id="shuffleBtn" class="ghost">隨機排序</button>
         <button id="flipAllBtn" class="ghost">全部翻到背面</button>
-        <button id="autoPlayBtn" class="ghost">🔁 🔁 自動播放：關</button>
+        <button id="autoPlayBtn" class="ghost">🔁 自動播放：關</button>
         <label class="stat">播放模式：
           <select id="audioMode">
             <option value="kana">單音</option>
@@ -246,7 +246,7 @@ let state = {
   stopRequested: false,
 
   // ✅ 續播用
-  playIndex: 0,        // ▶ 播放一輪 的續播位置
+  playIndex: 0,        // 播放目前卡片 mp3 的續播位置
   autoPlayIndex: 0,    // 自動播放的續播位置
   lastPlayMode: 'kana',
   lastAutoMode: 'kana',
@@ -486,7 +486,6 @@ async function playSequential(list, mode='kana', startIndex=0){
   try {
     for (let i = startIndex; i < list.length; i++) {
       const card = list[i];
-
       state.playIndex = i + 1;
 
       if (state.stopRequested) {
@@ -496,6 +495,7 @@ async function playSequential(list, mode='kana', startIndex=0){
 
       try {
         setStatus(`播放中：${card.kana}（${mode === 'kana' ? '單音' : '單字'}）`);
+        showCardFace(card, mode);
         setPlayingCard(card);
         await playCard(card, mode);
 
@@ -551,8 +551,8 @@ async function autoPlayCards(){
       }
 
       setStatus(`🔁 自動播放中：${card.kana}（${state.audioMode === 'kana' ? '單音' : '單字'}）`);
+      showCardFace(card, state.audioMode);
       setPlayingCard(card);
-
       await playCard(card, state.audioMode);
 
       state.autoPlayIndex = i + 1;
@@ -573,7 +573,7 @@ async function autoPlayCards(){
       setStatus('🔁 自動播放完成');
       state.autoPlay = false;
       state.autoPlayIndex = 0;
-      autoPlayBtn.textContent = '🔁 🔁 自動播放：關';
+      autoPlayBtn.textContent = '🔁 自動播放：關';
       autoPlayBtn.classList.remove('active');
     }
 
@@ -582,7 +582,7 @@ async function autoPlayCards(){
     setStatus(`自動播放失敗：${err.message}`, true);
     state.autoPlay = false;
     state.autoPlayIndex = 0;
-    autoPlayBtn.textContent = '🔁 🔁 自動播放：關';
+    autoPlayBtn.textContent = '🔁 自動播放：關';
     autoPlayBtn.classList.remove('active');
   } finally {
     state.playing = false;
@@ -609,25 +609,16 @@ function renderFilters(){
 
   [...rowFilters.querySelectorAll('button')].forEach(btn => {
     btn.onclick = () => {
-
       state.filter = btn.dataset.filter;
-
-      // 🔴 重置播放位置（很重要）
       state.playIndex = 0;
       state.autoPlayIndex = 0;
-
-      // 🔴 如果正在播放 → 強制停止
       state.stopRequested = true;
       audioPlayer.pause();
       audioPlayer.currentTime = 0;
-
-      // 🔴 清掉紅框
-      [...grid.querySelectorAll('.card')].forEach(el => el.classList.remove('active'));
-
+      clearCardEffects();
       renderFilters();
       renderCards();
       setAllCardsFlipped(state.audioMode === 'words');
-
       setStatus('已切換行別（播放已重置）');
     };
   });
@@ -737,6 +728,8 @@ function renderFilters(){
 });
 }
 
+}
+
     function shuffle(){
       for (let i = cards.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -802,10 +795,8 @@ autoPlayBtn.onclick = async () => {
     state.stopRequested = true;
     audioPlayer.pause();
     audioPlayer.currentTime = 0;
-
     clearCardEffects();
-
-    autoPlayBtn.textContent = '🔁 🔁 自動播放：關';
+    autoPlayBtn.textContent = '🔁 自動播放：關';
     autoPlayBtn.classList.remove('active');
     setStatus(`🔁 自動播放已停止（下次將從第 ${state.autoPlayIndex || 1} 張繼續）`);
     return;
@@ -823,7 +814,7 @@ autoPlayBtn.onclick = async () => {
 
   state.autoPlay = true;
   state.stopRequested = false;
-  autoPlayBtn.textContent = '🔁 🔁 自動播放：開';
+  autoPlayBtn.textContent = '🔁 自動播放：開';
   autoPlayBtn.classList.add('active');
   setStatus(`已切換為：🔁 自動播放開啟（從第 ${state.autoPlayIndex || 1} 張開始）`);
 
@@ -845,16 +836,13 @@ searchInput.oninput = () => {
 
 audioMode.onchange = () => {
   state.audioMode = audioMode.value;
-
   state.playIndex = 0;
   state.autoPlayIndex = 0;
   state.stopRequested = true;
   audioPlayer.pause();
   audioPlayer.currentTime = 0;
-
   clearCardEffects();
   setAllCardsFlipped(state.audioMode === 'words');
-
   setStatus(`已切換為：${state.audioMode === 'kana' ? '單音' : '單字'} 模式`);
 };
 
