@@ -618,7 +618,7 @@ function renderFilters(){
       clearCardEffects();
       renderFilters();
       renderCards();
-      setAllCardsFlipped(state.audioMode === 'words');
+      setAllCardsFlipped(state.audioMode === 'words' || state.flippedAll);
       setStatus('已切換行別（播放已重置）');
     };
   });
@@ -639,7 +639,7 @@ function renderFilters(){
 
         return `
           <article class="card-wrap">
-            <div class="card ${state.audioMode === 'words' || state.flippedAll ? 'is-flipped' : ''}" data-kana="${escapeHtml(card.kana)}" tabindex="0" role="button" aria-label="${escapeHtml(card.kana)} 卡片，點擊翻面">
+            <div class="card ${state.flippedAll ? 'is-flipped' : ''}" data-kana="${escapeHtml(card.kana)}" tabindex="0" role="button" aria-label="${escapeHtml(card.kana)} 卡片，點擊翻面">
               <section class="face front">
                 <div class="tag">${escapeHtml(card.row)}</div>
 <div class="art" aria-hidden="true">
@@ -735,6 +735,7 @@ function renderFilters(){
         [cards[i], cards[j]] = [cards[j], cards[i]];
       }
       renderCards();
+      setAllCardsFlipped(state.audioMode === 'words' || state.flippedAll);
     }
 
     function isLineBrowser(){ return /Line\//i.test(navigator.userAgent); }
@@ -786,6 +787,7 @@ playAllBtn.onclick = async () => {
       state.flippedAll = !state.flippedAll;
       flipAllBtn.textContent = state.flippedAll ? '全部翻回正面' : '全部翻到背面';
       renderCards();
+      setAllCardsFlipped(state.audioMode === 'words' || state.flippedAll);
     };
 	
 autoPlayBtn.onclick = async () => {
@@ -829,7 +831,7 @@ searchInput.oninput = () => {
   audioPlayer.currentTime = 0;
   clearCardEffects();
   renderCards();
-  setAllCardsFlipped(state.audioMode === 'words');
+  setAllCardsFlipped(state.audioMode === 'words' || state.flippedAll);
   setStatus('搜尋已更新（播放已重置）');
 };
 
@@ -841,13 +843,14 @@ audioMode.onchange = () => {
   audioPlayer.pause();
   audioPlayer.currentTime = 0;
   clearCardEffects();
-  setAllCardsFlipped(state.audioMode === 'words');
+  setAllCardsFlipped(state.audioMode === 'words' || state.flippedAll);
   setStatus(`已切換為：${state.audioMode === 'kana' ? '單音' : '單字'} 模式`);
 };
 
     initLineTip();
     renderFilters();
     renderCards();
+    setAllCardsFlipped(state.audioMode === 'words' || state.flippedAll);
   </script>
 </body>
 </html>
