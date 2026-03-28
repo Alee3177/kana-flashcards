@@ -34,7 +34,7 @@
     }
     .eyebrow{font-size:12px;letter-spacing:.14em;color:var(--gold);font-weight:700}
     h1{margin:8px 0 8px;font-size:28px;line-height:1.2}
-    .sub{margin:0;color:var(--muted);font-size:14px;line-height:1.7}
+    .sub{margin:0;color:#dc2626;font-size:14px;line-height:1.7}
     .toolbar{
       display:grid;grid-template-columns:1fr;gap:12px;margin:16px 0 20px;
       background:rgba(255,253,248,.78);
@@ -44,12 +44,8 @@
     .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
     .chips{display:flex;flex-wrap:wrap;gap:8px}
     button,select,input{
-      font:inherit;
-      border:1px solid var(--line);
-      background:#fffdf9;
-      color:var(--ink);
-      border-radius:999px;
-      padding:10px 14px;
+      font:inherit;border:1px solid var(--line);background:#fffdf9;color:var(--ink);
+      border-radius:999px;padding:10px 14px;
     }
     button{cursor:pointer;transition:.2s transform,.2s background,.2s border-color}
     button:hover{transform:translateY(-1px)}
@@ -57,92 +53,55 @@
     button.active{background:#f4ead8;border-color:#d7c09b;color:#5a4527;font-weight:700}
     .primary{background:#202020;color:#fff;border-color:#202020}
     .ghost{background:transparent}
-#autoPlayBtn,
-#playAllBtn{
-  color:#dc2626;
-  font-weight:700;
-  border-color:#f3c7c7;
-}
-
-#playAllBtn{
-  background:#fff5f5;
-}
-
-/* 🔴 覆蓋 button.active */
-#playAllBtn.active{
-  color:#dc2626 !important;
-  border-color:#dc2626 !important;
-  background:#fff0f0 !important;
-}
-
-#autoPlayBtn.active{
-  color:#dc2626 !important;
-  border-color:#dc2626 !important;
-  background:#fff5f5 !important;
-}
-  .stat{font-size:13px;color:var(--muted)}
+    #autoPlayBtn,#playAllBtn{color:#dc2626;font-weight:700;border-color:#f3c7c7}
+    #playAllBtn{background:#fff5f5}
+    #playAllBtn.active{color:#dc2626 !important;border-color:#dc2626 !important;background:#fff0f0 !important}
+    #autoPlayBtn.active{color:#dc2626 !important;border-color:#dc2626 !important;background:#fff5f5 !important}
+    .stat{font-size:13px;color:var(--muted)}
     .status-error{color:var(--danger)!important}
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-      gap:16px;
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
+    .card-wrap{perspective:1200px;min-height:320px}
+    .card{
+      position:relative;width:100%;height:320px;transform-style:preserve-3d;
+      transition:transform .55s cubic-bezier(.2,.8,.2,1);cursor:pointer;
     }
-.card-wrap{perspective:1200px;min-height:320px}
-.card{
-  position:relative;width:100%;height:320px;transform-style:preserve-3d;
-  transition:transform .55s cubic-bezier(.2,.8,.2,1);
-  cursor:pointer;
-}
-	.card.active {
-      outline: 3px solid #dc2626;
-      outline-offset: 2px;
+    .card.active{outline:3px solid #dc2626;outline-offset:2px}
+    .card.playing{animation:cardPulse 1s ease-in-out infinite}
+    @keyframes cardPulse{
+      0%{transform:scale(1);box-shadow:var(--shadow)}
+      50%{transform:scale(1.02);box-shadow:0 0 0 4px rgba(220,38,38,.12),0 12px 30px rgba(220,38,38,.18)}
+      100%{transform:scale(1);box-shadow:var(--shadow)}
     }
-	.card.playing {
-  animation: cardPulse 1s ease-in-out infinite;
-}
-
-@keyframes cardPulse {
-  0%   { transform: scale(1); box-shadow: var(--shadow); }
-  50%  { transform: scale(1.02); box-shadow: 0 0 0 4px rgba(220,38,38,.12), 0 12px 30px rgba(220,38,38,.18); }
-  100% { transform: scale(1); box-shadow: var(--shadow); }
-}
     .card.is-flipped{transform:rotateY(180deg)}
     .face{
-      position:absolute;inset:0;backface-visibility:hidden;
-      border:1px solid var(--line);border-radius:var(--radius);
-      box-shadow:var(--shadow);overflow:hidden;
-      background:var(--card);
+      position:absolute;inset:0;backface-visibility:hidden;border:1px solid var(--line);
+      border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;background:var(--card);
       display:flex;flex-direction:column;
     }
     .front{
-      justify-content:space-between;
-      padding:14px;
+      justify-content:space-between;padding:14px;
       background:
         radial-gradient(circle at top right, rgba(179,146,95,.14), transparent 34%),
         linear-gradient(180deg, #fffdf9 0%, #f8f2e9 100%);
     }
-    .front .tag,
-    .back .tag{
-      align-self:flex-start;
-      font-size:11px;font-weight:700;letter-spacing:.12em;
+    .front .tag,.back .tag{
+      align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:.12em;
       color:var(--gold);background:rgba(179,146,95,.08);
-      border:1px solid rgba(179,146,95,.18);
-      padding:6px 10px;border-radius:999px;
+      border:1px solid rgba(179,146,95,.18);padding:6px 10px;border-radius:999px;
     }
-.art{
-  flex:1;display:flex;align-items:center;justify-content:center;position:relative;
-  color:#c6aa7f;font-size:58px;font-weight:700;letter-spacing:.02em;
-  min-height:180px;
-}
+    .art{
+      flex:1;display:flex;align-items:center;justify-content:center;position:relative;
+      color:#c6aa7f;font-size:58px;font-weight:700;letter-spacing:.02em;min-height:180px;
+    }
     .art::before{
       content:"";position:absolute;width:132px;height:132px;border-radius:50%;
       background:radial-gradient(circle, rgba(179,146,95,.16) 0%, rgba(179,146,95,.04) 60%, transparent 72%);
     }
     .motif{
-      position:absolute;top:18px;right:18px;width:42px;height:42px;
-      border-radius:12px;border:1px solid rgba(179,146,95,.2);
-      background:rgba(255,250,242,.92);display:flex;align-items:center;justify-content:center;
-      color:#b3925f;font-size:22px;box-shadow:0 4px 14px rgba(42,27,15,.06);
+      position:absolute;top:18px;right:18px;width:42px;height:42px;border-radius:12px;
+      border:1px solid rgba(179,146,95,.2);background:rgba(255,250,242,.92);
+      display:flex;align-items:center;justify-content:center;color:#b3925f;font-size:22px;
+      box-shadow:0 4px 14px rgba(42,27,15,.06);
     }
     .motif.vessel{font-size:18px}
     .motif.water,.motif.sky{font-size:20px}
@@ -154,17 +113,14 @@
     th,td{border:1px solid var(--line);padding:6px 6px;text-align:left;vertical-align:top}
     th{background:#faf4eb}
     .actions{
-      display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding:8px 0 4px;
-      position:sticky;bottom:0;
+      display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding:8px 0 4px;position:sticky;bottom:0;
       background:linear-gradient(180deg, rgba(255,253,250,0), rgba(255,253,250,.94) 30%, rgba(255,253,250,1) 100%);
     }
-    .footer-note{margin-top:18px;font-size:12px;color:var(--muted);text-align:center}
-    code{background:#f6efe5;padding:1px 4px;border-radius:6px}
-@media (max-width:640px){
-  h1{font-size:24px}
-  .card-wrap,.card{min-height:300px;height:300px}
-  .kana{font-size:74px}
-}
+    @media (max-width:640px){
+      h1{font-size:24px}
+      .card-wrap,.card{min-height:300px;height:300px}
+      .kana{font-size:74px}
+    }
   </style>
 </head>
 <body>
@@ -172,7 +128,7 @@
     <section class="hero">
       <div class="eyebrow">日文 · KANA CARD</div>
       <h1>平假名互動圖卡｜あ行・か行・さ行</h1>
-<p class="sub" style="color:#dc2626;">點一下卡片可翻面；按按鈕可播放 mp3。單字模式採分段音檔播放，單字之間停頓 0.5 秒，並各播放兩次。</p>
+      <p class="sub">模式切換決定全部卡片朝向；連續播放中維持當前模式那一面，播完才翻到另一面；單張按鈕播放則停留在所按的那一面。</p>
     </section>
 
     <section class="toolbar" aria-label="控制列">
@@ -188,7 +144,6 @@
             <option value="words">單字</option>
           </select>
         </label>
-
         <label class="stat">搜尋：
           <input id="searchInput" type="search" placeholder="輸入 kana / romaji / 中文" />
         </label>
@@ -201,18 +156,9 @@
 
     <div id="lineAudioTip" style="display:none; margin-top:12px; text-align:center;">
       <a id="openExternalBtn" href="#" style="
-        display:inline-block;
-        padding:12px 18px;
-        background:#16a34a;
-        color:#fff;
-        border-radius:10px;
-        text-decoration:none;
-        font-weight:bold;
-      ">
-        請改用瀏覽器開啟（LINE 內朗讀可能無聲）
-      </a>
+        display:inline-block;padding:12px 18px;background:#16a34a;color:#fff;
+        border-radius:10px;text-decoration:none;font-weight:bold;">請改用瀏覽器開啟（LINE 內朗讀可能無聲）</a>
     </div>
-
   </div>
 
   <script>
@@ -222,13 +168,11 @@
       {row:'A-row', kana:'う', romaji:'u', wordCount:1, icon:'≈', motif:'wave', items:[['う','う / u','嗚 / u'],['うえ','うえ / ue','上面 / up']]},
       {row:'A-row', kana:'え', romaji:'e', wordCount:3, icon:'❦', motif:'leaf', items:[['え','え / e','欸 / e'],['絵','え / e','繪畫 / picture'],['映画','えいが / eiga','電影 / movie']]},
       {row:'A-row', kana:'お', romaji:'o', wordCount:1, icon:'◯', motif:'moon', items:[['お','お / o','喔 / o'],['あお','あお / ao','藍色 / blue']]},
-
       {row:'KA-row', kana:'か', romaji:'ka', wordCount:3, icon:'✿', motif:'flower', items:[['か','か / ka','卡 / ka'],['かい','かい / kai','貝 / shell'],['かお','かお / kao','臉 / face'],['かき','かき / kaki','柿子 / persimmon']]},
       {row:'KA-row', kana:'き', romaji:'ki', wordCount:1, icon:'✦', motif:'tree', items:[['き','き / ki','樹 / tree'],['きく','きく / kiku','菊花 / chrysanthemum']]},
       {row:'KA-row', kana:'く', romaji:'ku', wordCount:2, icon:'☾', motif:'crescent', items:[['く','く / ku','庫 / ku'],['いか','いか / ika','魷魚 / squid'],['くち','くち / kuchi','嘴巴 / mouth']]},
       {row:'KA-row', kana:'け', romaji:'ke', wordCount:1, icon:'❦', motif:'feather', items:[['け','け / ke','客 / ke'],['いけ','いけ / ike','池 / pond']]},
       {row:'KA-row', kana:'こ', romaji:'ko', wordCount:1, icon:'⬒', motif:'vessel', items:[['こ','こ / ko','口 / ko'],['こい','こい / koi','鯉魚 / carp']]},
-
       {row:'SA-row', kana:'さ', romaji:'sa', wordCount:3, icon:'❀', motif:'sakura', items:[['さ','さ / sa','沙 / sa'],['あさ','あさ / asa','早上 / morning'],['かさ','かさ / kasa','雨傘 / umbrella'],['さけ','さけ / sake','酒 / salmon']]},
       {row:'SA-row', kana:'し', romaji:'shi', wordCount:3, icon:'∿', motif:'stream', items:[['し','し / shi','西 / shi'],['いし','いし / ishi','石頭 / stone'],['うし','うし / ushi','牛 / cow'],['しか','しか / shika','鹿 / deer']]},
       {row:'SA-row', kana:'す', romaji:'su', wordCount:2, icon:'💧', motif:'water', items:[['す','す / su','蘇 / su'],['すし','すし / sushi','壽司 / sushi'],['いす','いす / isu','椅子 / chair']]},
@@ -236,21 +180,19 @@
       {row:'SA-row', kana:'そ', romaji:'so', wordCount:1, icon:'☁︎', motif:'sky', items:[['そ','そ / so','所 / so'],['うそ','うそ / uso','謊言 / lie']]}
     ];
 
-let state = {
-  filter: 'ALL',
-  flippedAll: false,
-  q: '',
-  audioMode: 'kana',
-  playing: false,
-  autoPlay: false,
-  stopRequested: false,
-
-  // ✅ 續播用
-  playIndex: 0,        // 播放目前卡片 mp3 的續播位置
-  autoPlayIndex: 0,    // 自動播放的續播位置
-  lastPlayMode: 'kana',
-  lastAutoMode: 'kana',
-};
+    const state = {
+      filter: 'ALL',
+      q: '',
+      audioMode: 'kana',
+      playing: false,
+      autoPlay: false,
+      stopRequested: false,
+      playIndex: 0,
+      autoPlayIndex: 0,
+      lastPlayMode: 'kana',
+      lastAutoMode: 'kana',
+      flippedAll: false
+    };
 
     const grid = document.getElementById('grid');
     const rowFilters = document.getElementById('rowFilters');
@@ -266,331 +208,65 @@ let state = {
     audioPlayer.preload = 'auto';
 
     function escapeHtml(str){
-      return String(str)
-        .replace(/&/g,'&amp;')
-        .replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;')
-        .replace(/"/g,'&quot;')
-        .replace(/'/g,'&#39;');
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     }
-
     function setStatus(message, isError = false){
-      if (!audioStatus) return;
       audioStatus.textContent = message;
       audioStatus.classList.toggle('status-error', !!isError);
     }
-
     function normalizeRomaji(str){
-      return String(str || '')
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '_')
-        .replace(/^_+|_+$/g, '');
+      return String(str || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
     }
+    function getSingleAudioSrc(card){ return `audio/${normalizeRomaji(card.romaji)}.mp3`; }
+    function getWordSegmentAudioSrc(card, index){ return `audio/${normalizeRomaji(card.romaji)}_words_${index}.mp3`; }
+    function sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
 
-function getSingleAudioSrc(card){
-  const key = normalizeRomaji(card.romaji);
-  return `audio/${key}.mp3`;
-}
+    function playAudio(src){
+      return new Promise((resolve, reject) => {
+        let finished = false;
+        let interval = null;
 
-function getWordSegmentAudioSrc(card, index){
-  const key = normalizeRomaji(card.romaji);
-  return `audio/${key}_words_${index}.mp3`;
-}
-function playAudio(src){
-  return new Promise((resolve, reject) => {
-    let finished = false;
-    let interval = null;
+        const cleanup = () => {
+          if (interval) clearInterval(interval);
+          audioPlayer.onended = null;
+          audioPlayer.onerror = null;
+        };
+        const safeResolve = (value) => {
+          if (finished) return;
+          finished = true;
+          cleanup();
+          resolve(value);
+        };
+        const safeReject = (err) => {
+          if (finished) return;
+          finished = true;
+          cleanup();
+          reject(err);
+        };
 
-    const cleanup = () => {
-      if (interval) {
-        clearInterval(interval);
-        interval = null;
-      }
-      audioPlayer.onended = null;
-      audioPlayer.onerror = null;
-    };
-
-    const safeResolve = (value) => {
-      if (finished) return;
-      finished = true;
-      cleanup();
-      resolve(value);
-    };
-
-    const safeReject = (err) => {
-      if (finished) return;
-      finished = true;
-      cleanup();
-      reject(err);
-    };
-
-    // 先停舊音
-    audioPlayer.pause();
-    audioPlayer.currentTime = 0;
-    audioPlayer.src = src;
-
-    audioPlayer.onended = () => {
-      safeResolve(true);
-    };
-
-    audioPlayer.onerror = () => {
-      safeReject(new Error(src));
-    };
-
-    interval = setInterval(() => {
-      if (state.stopRequested) {
         audioPlayer.pause();
         audioPlayer.currentTime = 0;
-        safeResolve(false);
-      }
-    }, 50);
+        audioPlayer.src = src;
+        audioPlayer.onended = () => safeResolve(true);
+        audioPlayer.onerror = () => safeReject(new Error(src));
 
-    const playPromise = audioPlayer.play();
+        interval = setInterval(() => {
+          if (state.stopRequested) {
+            audioPlayer.pause();
+            audioPlayer.currentTime = 0;
+            safeResolve(false);
+          }
+        }, 50);
 
-    if (playPromise && typeof playPromise.then === 'function') {
-      playPromise.catch(err => {
-        // 如果是我們自己 stop / pause 造成，就不要當錯誤
-        if (state.stopRequested || audioPlayer.paused) {
-          safeResolve(false);
-          return;
+        const playPromise = audioPlayer.play();
+        if (playPromise && typeof playPromise.then === 'function') {
+          playPromise.catch(err => {
+            if (state.stopRequested || audioPlayer.paused) safeResolve(false);
+            else safeReject(err);
+          });
         }
-        safeReject(err);
       });
     }
-  });
-}
-
-    function sleep(ms){
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-	
-function clearCardEffects(){
-  [...grid.querySelectorAll('.card')].forEach(el => {
-    el.classList.remove('active');
-    el.classList.remove('playing');
-  });
-}
-
-function setAllCardsFlipped(shouldFlip){
-  [...grid.querySelectorAll('.card')].forEach(el => {
-    if (shouldFlip) {
-      el.classList.add('is-flipped');
-    } else {
-      el.classList.remove('is-flipped');
-    }
-  });
-}
-
-function showCardFace(card, faceMode = state.audioMode){
-  const target = [...grid.querySelectorAll('.card')].find(el => el.dataset.kana === card.kana);
-  if (!target) return null;
-
-  if (faceMode === 'words') {
-    target.classList.add('is-flipped');
-  } else {
-    target.classList.remove('is-flipped');
-  }
-
-  return target;
-}
-
-function flipCardToOpposite(card, faceMode = state.audioMode){
-  const target = [...grid.querySelectorAll('.card')].find(el => el.dataset.kana === card.kana);
-  if (!target) return null;
-
-  if (faceMode === 'words') {
-    target.classList.remove('is-flipped');
-  } else {
-    target.classList.add('is-flipped');
-  }
-
-  return target;
-}
-
-function clearPlayingState(card){
-  const target = [...grid.querySelectorAll('.card')].find(el => el.dataset.kana === card.kana);
-  if (!target) return null;
-  target.classList.remove('active');
-  target.classList.remove('playing');
-  return target;
-}
-
-function setPlayingCard(card){
-  const cardEls = [...grid.querySelectorAll('.card')];
-
-  cardEls.forEach(el => {
-    el.classList.remove('active');
-    el.classList.remove('playing');
-  });
-
-  const target = cardEls.find(el => el.dataset.kana === card.kana);
-  if (!target) return null;
-
-  target.classList.add('active');
-  target.classList.add('playing');
-
-  target.scrollIntoView({
-    behavior: 'smooth',
-    block: 'center'
-  });
-
-  return target;
-}
-
-async function playSingleCard(card){
-  await playAudio(getSingleAudioSrc(card));
-}
-
-async function playWordSegments(card){
-  const count = card.wordCount || 0;
-  if (!count) throw new Error(`缺少 wordCount：${card.romaji}`);
-
-  for (let i = 1; i <= count; i++) {
-
-    if (state.stopRequested) return;   // 🔴 加這行
-
-    const src = getWordSegmentAudioSrc(card, i);
-
-    await playAudio(src);
-
-    if (state.stopRequested) return;   // 🔴 加這行
-
-    await sleep(500);
-
-    await playAudio(src);
-
-    if (state.stopRequested) return;   // 🔴 加這行
-
-    if (i < count) await sleep(500);
-  }
-}
-
-async function playCard(card, mode='kana'){
-  if (mode === 'kana') {
-    await playSingleCard(card);
-  } else {
-    await playWordSegments(card);
-  }
-}
-
-async function playSequential(list, mode='kana', startIndex=0){
-  if (!list.length || state.playing) return;
-
-  state.playing = true;
-  state.stopRequested = false;
-  state.lastPlayMode = mode;
-
-  playAllBtn.disabled = false;
-  autoPlayBtn.disabled = false;
-
-  try {
-    for (let i = startIndex; i < list.length; i++) {
-      const card = list[i];
-      state.playIndex = i + 1;
-
-      if (state.stopRequested) {
-        setStatus(`播放已停止（下次將從第 ${state.playIndex || 1} 張繼續）`);
-        break;
-      }
-
-      try {
-        setStatus(`播放中：${card.kana}（${mode === 'kana' ? '單音' : '單字'}）`);
-        showCardFace(card, mode);
-        setPlayingCard(card);
-        await playCard(card, mode);
-
-        if (state.stopRequested) {
-          setStatus(`播放已停止（下次將從第 ${state.playIndex || 1} 張繼續）`);
-          break;
-        }
-
-        clearPlayingState(card);
-        flipCardToOpposite(card, mode);
-        await sleep(500);
-
-      } catch (err) {
-        setStatus(`找不到音檔：${err.message}，請確認 audio 資料夾與檔名。`, true);
-        break;
-      }
-    }
-
-    if (!state.stopRequested && state.playIndex >= list.length) {
-      state.playIndex = 0;
-      setStatus('播放完成');
-    }
-
-  } finally {
-    state.playing = false;
-    state.stopRequested = false;
-    playAllBtn.textContent = '▶ 播放一輪';
-    playAllBtn.classList.remove('active');
-    autoPlayBtn.disabled = false;
-    clearCardEffects();
-  }
-}
-
-async function autoPlayCards(){
-  const list = currentCards();
-  if (!list.length || state.playing) return;
-
-  state.playing = true;
-  state.stopRequested = false;
-  state.lastAutoMode = state.audioMode;
-
-  playAllBtn.disabled = true;
-  autoPlayBtn.disabled = false;
-
-  try {
-    for (let i = state.autoPlayIndex; i < list.length; i++) {
-      const card = list[i];
-
-      if (!state.autoPlay || state.stopRequested) {
-        clearCardEffects();
-        setStatus(`🔁 自動播放已停止（下次將從第 ${state.autoPlayIndex || 1} 張繼續）`);
-        break;
-      }
-
-      setStatus(`🔁 自動播放中：${card.kana}（${state.audioMode === 'kana' ? '單音' : '單字'}）`);
-      showCardFace(card, state.audioMode);
-      setPlayingCard(card);
-      await playCard(card, state.audioMode);
-
-      state.autoPlayIndex = i + 1;
-
-      if (!state.autoPlay || state.stopRequested) {
-        clearCardEffects();
-        setStatus(`🔁 自動播放已停止（下次將從第 ${state.autoPlayIndex || 1} 張繼續）`);
-        break;
-      }
-
-      clearPlayingState(card);
-      flipCardToOpposite(card, state.audioMode);
-      await sleep(700);
-    }
-
-    if (state.autoPlay && state.autoPlayIndex >= list.length) {
-      clearCardEffects();
-      setStatus('🔁 自動播放完成');
-      state.autoPlay = false;
-      state.autoPlayIndex = 0;
-      autoPlayBtn.textContent = '🔁 自動播放：關';
-      autoPlayBtn.classList.remove('active');
-    }
-
-  } catch (err) {
-    clearCardEffects();
-    setStatus(`自動播放失敗：${err.message}`, true);
-    state.autoPlay = false;
-    state.autoPlayIndex = 0;
-    autoPlayBtn.textContent = '🔁 自動播放：關';
-    autoPlayBtn.classList.remove('active');
-  } finally {
-    state.playing = false;
-    playAllBtn.disabled = false;
-    autoPlayBtn.disabled = false;
-    state.stopRequested = false;
-  }
-}
 
     function currentCards(){
       const q = state.q.trim().toLowerCase();
@@ -601,28 +277,213 @@ async function autoPlayCards(){
       });
     }
 
-function renderFilters(){
-  const defs = [['ALL','全部'],['A-row','あ行'],['KA-row','か行'],['SA-row','さ行']];
-  rowFilters.innerHTML = defs.map(([key,label]) => `
-    <button class="${state.filter===key?'active':''}" data-filter="${key}">${label}</button>
-  `).join('');
+    function getCardEl(card){
+      return [...grid.querySelectorAll('.card')].find(el => el.dataset.kana === card.kana) || null;
+    }
 
-  [...rowFilters.querySelectorAll('button')].forEach(btn => {
-    btn.onclick = () => {
-      state.filter = btn.dataset.filter;
-      state.playIndex = 0;
-      state.autoPlayIndex = 0;
-      state.stopRequested = true;
-      audioPlayer.pause();
-      audioPlayer.currentTime = 0;
+    function clearCardEffects(){
+      [...grid.querySelectorAll('.card')].forEach(el => {
+        el.classList.remove('active');
+        el.classList.remove('playing');
+      });
+    }
+
+    function clearPlayingState(card){
+      const target = getCardEl(card);
+      if (!target) return;
+      target.classList.remove('active');
+      target.classList.remove('playing');
+    }
+
+    function applyBaseFaces(){
+      [...grid.querySelectorAll('.card')].forEach(el => {
+        if (state.flippedAll) {
+          el.classList.add('is-flipped');
+          return;
+        }
+        if (state.audioMode === 'words') el.classList.add('is-flipped');
+        else el.classList.remove('is-flipped');
+      });
+    }
+
+    function showCardFace(card, faceMode){
+      const target = getCardEl(card);
+      if (!target) return;
+      if (faceMode === 'words') target.classList.add('is-flipped');
+      else target.classList.remove('is-flipped');
+    }
+
+    function flipCardToOpposite(card, faceMode){
+      const target = getCardEl(card);
+      if (!target) return;
+      if (faceMode === 'words') target.classList.remove('is-flipped');
+      else target.classList.add('is-flipped');
+    }
+
+    function setPlayingCard(card){
       clearCardEffects();
-      renderFilters();
-      renderCards();
-      setAllCardsFlipped(state.audioMode === 'words' || state.flippedAll);
-      setStatus('已切換行別（播放已重置）');
-    };
-  });
-}
+      const target = getCardEl(card);
+      if (!target) return;
+      target.classList.add('active');
+      target.classList.add('playing');
+      target.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+
+    async function playSingleCard(card){ await playAudio(getSingleAudioSrc(card)); }
+
+    async function playWordSegments(card){
+      const count = card.wordCount || 0;
+      if (!count) throw new Error(`缺少 wordCount：${card.romaji}`);
+      for (let i = 1; i <= count; i++) {
+        if (state.stopRequested) return;
+        await playAudio(getWordSegmentAudioSrc(card, i));
+        if (state.stopRequested) return;
+        await sleep(500);
+        await playAudio(getWordSegmentAudioSrc(card, i));
+        if (state.stopRequested) return;
+        if (i < count) await sleep(500);
+      }
+    }
+
+    async function playCard(card, mode){
+      if (mode === 'kana') await playSingleCard(card);
+      else await playWordSegments(card);
+    }
+
+    async function playSequential(list, mode, startIndex){
+      if (!list.length || state.playing) return;
+      state.playing = true;
+      state.stopRequested = false;
+      state.lastPlayMode = mode;
+
+      try {
+        for (let i = startIndex; i < list.length; i++) {
+          const card = list[i];
+          state.playIndex = i;
+
+          if (state.stopRequested) {
+            setStatus(`播放已停止（下次將從第 ${state.playIndex + 1} 張繼續）`);
+            break;
+          }
+
+          setPlayingCard(card);
+          setStatus(`播放中：${card.kana}（${mode === 'kana' ? '單音' : '單字'}）`);
+
+          try {
+            await playCard(card, mode);
+          } catch (err) {
+            setStatus(`找不到音檔：${err.message}，請確認 audio 資料夾與檔名。`, true);
+            break;
+          }
+
+          if (state.stopRequested) {
+            setStatus(`播放已停止（下次將從第 ${state.playIndex + 1} 張繼續）`);
+            break;
+          }
+
+          clearPlayingState(card);
+          flipCardToOpposite(card, mode);
+          state.playIndex = i + 1;
+          await sleep(500);
+        }
+
+        if (!state.stopRequested && state.playIndex >= list.length) {
+          state.playIndex = 0;
+          setStatus('播放完成');
+        }
+      } finally {
+        state.playing = false;
+        state.stopRequested = false;
+        playAllBtn.textContent = '▶ 播放一輪';
+        playAllBtn.classList.remove('active');
+        clearCardEffects();
+      }
+    }
+
+    async function autoPlayCards(){
+      const list = currentCards();
+      if (!list.length || state.playing) return;
+      state.playing = true;
+      state.stopRequested = false;
+      state.lastAutoMode = state.audioMode;
+      playAllBtn.disabled = true;
+
+      try {
+        for (let i = state.autoPlayIndex; i < list.length; i++) {
+          const card = list[i];
+          state.autoPlayIndex = i;
+
+          if (!state.autoPlay || state.stopRequested) {
+            clearCardEffects();
+            setStatus(`🔁 自動播放已停止（下次將從第 ${state.autoPlayIndex + 1} 張繼續）`);
+            break;
+          }
+
+          setPlayingCard(card);
+          setStatus(`🔁 自動播放中：${card.kana}（${state.audioMode === 'kana' ? '單音' : '單字'}）`);
+
+          try {
+            await playCard(card, state.audioMode);
+          } catch (err) {
+            clearCardEffects();
+            setStatus(`自動播放失敗：${err.message}`, true);
+            state.autoPlay = false;
+            state.autoPlayIndex = 0;
+            autoPlayBtn.textContent = '🔁 自動播放：關';
+            autoPlayBtn.classList.remove('active');
+            break;
+          }
+
+          if (!state.autoPlay || state.stopRequested) {
+            clearCardEffects();
+            setStatus(`🔁 自動播放已停止（下次將從第 ${state.autoPlayIndex + 1} 張繼續）`);
+            break;
+          }
+
+          clearPlayingState(card);
+          flipCardToOpposite(card, state.audioMode);
+          state.autoPlayIndex = i + 1;
+          await sleep(700);
+        }
+
+        if (state.autoPlay && state.autoPlayIndex >= list.length) {
+          clearCardEffects();
+          setStatus('🔁 自動播放完成');
+          state.autoPlay = false;
+          state.autoPlayIndex = 0;
+          autoPlayBtn.textContent = '🔁 自動播放：關';
+          autoPlayBtn.classList.remove('active');
+        }
+      } finally {
+        state.playing = false;
+        playAllBtn.disabled = false;
+        autoPlayBtn.disabled = false;
+        state.stopRequested = false;
+      }
+    }
+
+    function renderFilters(){
+      const defs = [['ALL','全部'],['A-row','あ行'],['KA-row','か行'],['SA-row','さ行']];
+      rowFilters.innerHTML = defs.map(([key,label]) => `
+        <button class="${state.filter===key?'active':''}" data-filter="${key}">${label}</button>
+      `).join('');
+
+      [...rowFilters.querySelectorAll('button')].forEach(btn => {
+        btn.onclick = () => {
+          state.filter = btn.dataset.filter;
+          state.playIndex = 0;
+          state.autoPlayIndex = 0;
+          state.stopRequested = true;
+          audioPlayer.pause();
+          audioPlayer.currentTime = 0;
+          clearCardEffects();
+          renderFilters();
+          renderCards();
+          applyBaseFaces();
+          setStatus('已切換行別（播放已重置）');
+        };
+      });
+    }
 
     function renderCards(){
       const list = currentCards();
@@ -634,32 +495,26 @@ function renderFilters(){
             <td>${escapeHtml(row[0])}</td>
             <td>${escapeHtml(row[1])}</td>
             <td>${escapeHtml(row[2])}</td>
-          </tr>
-        `).join('');
+          </tr>`).join('');
 
         return `
           <article class="card-wrap">
             <div class="card ${state.flippedAll ? 'is-flipped' : ''}" data-kana="${escapeHtml(card.kana)}" tabindex="0" role="button" aria-label="${escapeHtml(card.kana)} 卡片，點擊翻面">
               <section class="face front">
                 <div class="tag">${escapeHtml(card.row)}</div>
-<div class="art" aria-hidden="true">
-  <div class="motif ${escapeHtml(card.motif)}">${escapeHtml(card.icon)}</div>
-  <div>
-    <div class="kana">${escapeHtml(card.kana)}</div>
-    <div class="roman">${escapeHtml(card.romaji)}</div>
-  </div>
-</div>
+                <div class="art" aria-hidden="true">
+                  <div class="motif ${escapeHtml(card.motif)}">${escapeHtml(card.icon)}</div>
+                  <div>
+                    <div class="kana">${escapeHtml(card.kana)}</div>
+                    <div class="roman">${escapeHtml(card.romaji)}</div>
+                  </div>
+                </div>
               </section>
               <section class="face back">
                 <div class="tag">${escapeHtml(card.row)}</div>
-                <p class="mini" style="font-size:18px;color:var(--ink);font-weight:700;">
-                  ${escapeHtml(card.kana)}｜${escapeHtml(card.romaji)}
-                </p>
-
+                <p class="mini" style="font-size:18px;color:var(--ink);font-weight:700;">${escapeHtml(card.kana)}｜${escapeHtml(card.romaji)}</p>
                 <table>
-                  <thead>
-                    <tr><th>日文</th><th>平假名 / 羅馬拼音</th><th>中文 / English</th></tr>
-                  </thead>
+                  <thead><tr><th>日文</th><th>平假名 / 羅馬拼音</th><th>中文 / English</th></tr></thead>
                   <tbody>${tableRows}</tbody>
                 </table>
                 <div class="actions">
@@ -668,8 +523,7 @@ function renderFilters(){
                 </div>
               </section>
             </div>
-          </article>
-        `;
+          </article>`;
       }).join('');
 
       [...grid.querySelectorAll('.card')].forEach(el => {
@@ -685,49 +539,46 @@ function renderFilters(){
         });
       });
 
-[...grid.querySelectorAll('.play-one')].forEach(btn => {
-  btn.onclick = async (e) => {
-    e.stopPropagation();
-    const card = list.find(c => c.romaji === btn.dataset.romaji);
-    if (card) {
-      setStatus(`播放中：${card.kana}（單音）`);
-      showCardFace(card, 'kana');
-      setPlayingCard(card);
+      [...grid.querySelectorAll('.play-one')].forEach(btn => {
+        btn.onclick = async (e) => {
+          e.stopPropagation();
+          const card = list.find(c => c.romaji === btn.dataset.romaji);
+          if (!card) return;
+          showCardFace(card, 'kana');
+          setPlayingCard(card);
+          setStatus(`播放中：${card.kana}（單音）`);
+          try {
+            await playCard(card, 'kana');
+          } catch (err) {
+            setStatus(`找不到音檔：${err.message}`, true);
+          } finally {
+            clearCardEffects();
+            showCardFace(card, 'kana');
+          }
+        };
+      });
 
-      try {
-        await playCard(card, 'kana');
-      } catch (err) {
-        setStatus(`找不到音檔：${err.message}`, true);
-      } finally {
-        clearCardEffects();
-        showCardFace(card, 'kana');
-      }
+      [...grid.querySelectorAll('.play-words')].forEach(btn => {
+        btn.onclick = async (e) => {
+          e.stopPropagation();
+          const card = list.find(c => c.romaji === btn.dataset.romaji);
+          if (!card) return;
+          showCardFace(card, 'words');
+          setPlayingCard(card);
+          setStatus(`播放中：${card.kana}（單字）`);
+          try {
+            await playCard(card, 'words');
+          } catch (err) {
+            setStatus(`找不到音檔：${err.message}`, true);
+          } finally {
+            clearCardEffects();
+            showCardFace(card, 'words');
+          }
+        };
+      });
+
+      applyBaseFaces();
     }
-  };
-});
-
-[...grid.querySelectorAll('.play-words')].forEach(btn => {
-  btn.onclick = async (e) => {
-    e.stopPropagation();
-    const card = list.find(c => c.romaji === btn.dataset.romaji);
-    if (card) {
-      setStatus(`播放中：${card.kana}（單字）`);
-      showCardFace(card, 'words');
-      setPlayingCard(card);
-
-      try {
-        await playCard(card, 'words');
-      } catch (err) {
-        setStatus(`找不到音檔：${err.message}`, true);
-      } finally {
-        clearCardEffects();
-        showCardFace(card, 'words');
-      }
-    }
-  };
-});
-}
-
 
     function shuffle(){
       for (let i = cards.length - 1; i > 0; i--) {
@@ -735,11 +586,10 @@ function renderFilters(){
         [cards[i], cards[j]] = [cards[j], cards[i]];
       }
       renderCards();
-      setAllCardsFlipped(state.audioMode === 'words' || state.flippedAll);
+      applyBaseFaces();
     }
 
     function isLineBrowser(){ return /Line\//i.test(navigator.userAgent); }
-
     function initLineTip(){
       if (isLineBrowser()){
         const tip = document.getElementById('lineAudioTip');
@@ -753,33 +603,24 @@ function renderFilters(){
       }
     }
 
-playAllBtn.onclick = async () => {
-  if (state.playing && !state.autoPlay) {
-    state.stopRequested = true;
-    audioPlayer.pause();
-    audioPlayer.currentTime = 0;
-    playAllBtn.textContent = '▶ 播放一輪';
-    playAllBtn.classList.remove('active');
-    setStatus(`播放已停止（下次將從第 ${state.playIndex || 1} 張繼續）`);
-    return;
-  }
-
-  const list = currentCards();
-
-  if (state.lastPlayMode !== state.audioMode) {
-    state.playIndex = 0;
-  }
-
-  if (state.playIndex >= list.length) {
-    state.playIndex = 0;
-  }
-
-  playAllBtn.textContent = '⏹ 停止';
-  playAllBtn.classList.add('active');
-  setStatus(`▶ 播放一輪：${state.audioMode === 'kana' ? '單音' : '單字'} 模式（從第 ${state.playIndex || 1} 張開始）`);
-
-  await playSequential(list, state.audioMode, state.playIndex);
-};
+    playAllBtn.onclick = async () => {
+      if (state.playing && !state.autoPlay) {
+        state.stopRequested = true;
+        audioPlayer.pause();
+        audioPlayer.currentTime = 0;
+        playAllBtn.textContent = '▶ 播放一輪';
+        playAllBtn.classList.remove('active');
+        setStatus(`播放已停止（下次將從第 ${state.playIndex + 1} 張繼續）`);
+        return;
+      }
+      const list = currentCards();
+      if (state.lastPlayMode !== state.audioMode) state.playIndex = 0;
+      if (state.playIndex >= list.length) state.playIndex = 0;
+      playAllBtn.textContent = '⏹ 停止';
+      playAllBtn.classList.add('active');
+      setStatus(`▶ 播放一輪：${state.audioMode === 'kana' ? '單音' : '單字'} 模式（從第 ${state.playIndex + 1} 張開始）`);
+      await playSequential(list, state.audioMode, state.playIndex);
+    };
 
     shuffleBtn.onclick = shuffle;
 
@@ -787,70 +628,61 @@ playAllBtn.onclick = async () => {
       state.flippedAll = !state.flippedAll;
       flipAllBtn.textContent = state.flippedAll ? '全部翻回正面' : '全部翻到背面';
       renderCards();
-      setAllCardsFlipped(state.audioMode === 'words' || state.flippedAll);
+      applyBaseFaces();
     };
-	
-autoPlayBtn.onclick = async () => {
-  if (state.autoPlay) {
-    state.autoPlay = false;
-    state.stopRequested = true;
-    audioPlayer.pause();
-    audioPlayer.currentTime = 0;
-    clearCardEffects();
-    autoPlayBtn.textContent = '🔁 自動播放：關';
-    autoPlayBtn.classList.remove('active');
-    setStatus(`🔁 自動播放已停止（下次將從第 ${state.autoPlayIndex || 1} 張繼續）`);
-    return;
-  }
 
-  const list = currentCards();
+    autoPlayBtn.onclick = async () => {
+      if (state.autoPlay) {
+        state.autoPlay = false;
+        state.stopRequested = true;
+        audioPlayer.pause();
+        audioPlayer.currentTime = 0;
+        clearCardEffects();
+        autoPlayBtn.textContent = '🔁 自動播放：關';
+        autoPlayBtn.classList.remove('active');
+        setStatus(`🔁 自動播放已停止（下次將從第 ${state.autoPlayIndex + 1} 張繼續）`);
+        return;
+      }
+      const list = currentCards();
+      if (state.lastAutoMode !== state.audioMode) state.autoPlayIndex = 0;
+      if (state.autoPlayIndex >= list.length) state.autoPlayIndex = 0;
+      state.autoPlay = true;
+      state.stopRequested = false;
+      autoPlayBtn.textContent = '🔁 自動播放：開';
+      autoPlayBtn.classList.add('active');
+      setStatus(`已切換為：🔁 自動播放開啟（從第 ${state.autoPlayIndex + 1} 張開始）`);
+      await autoPlayCards();
+    };
 
-  if (state.lastAutoMode !== state.audioMode) {
-    state.autoPlayIndex = 0;
-  }
+    searchInput.oninput = () => {
+      state.q = searchInput.value;
+      state.playIndex = 0;
+      state.autoPlayIndex = 0;
+      state.stopRequested = true;
+      audioPlayer.pause();
+      audioPlayer.currentTime = 0;
+      clearCardEffects();
+      renderCards();
+      applyBaseFaces();
+      setStatus('搜尋已更新（播放已重置）');
+    };
 
-  if (state.autoPlayIndex >= list.length) {
-    state.autoPlayIndex = 0;
-  }
-
-  state.autoPlay = true;
-  state.stopRequested = false;
-  autoPlayBtn.textContent = '🔁 自動播放：開';
-  autoPlayBtn.classList.add('active');
-  setStatus(`已切換為：🔁 自動播放開啟（從第 ${state.autoPlayIndex || 1} 張開始）`);
-
-  await autoPlayCards();
-};
-
-searchInput.oninput = () => {
-  state.q = searchInput.value;
-  state.playIndex = 0;
-  state.autoPlayIndex = 0;
-  state.stopRequested = true;
-  audioPlayer.pause();
-  audioPlayer.currentTime = 0;
-  clearCardEffects();
-  renderCards();
-  setAllCardsFlipped(state.audioMode === 'words' || state.flippedAll);
-  setStatus('搜尋已更新（播放已重置）');
-};
-
-audioMode.onchange = () => {
-  state.audioMode = audioMode.value;
-  state.playIndex = 0;
-  state.autoPlayIndex = 0;
-  state.stopRequested = true;
-  audioPlayer.pause();
-  audioPlayer.currentTime = 0;
-  clearCardEffects();
-  setAllCardsFlipped(state.audioMode === 'words' || state.flippedAll);
-  setStatus(`已切換為：${state.audioMode === 'kana' ? '單音' : '單字'} 模式`);
-};
+    audioMode.onchange = () => {
+      state.audioMode = audioMode.value;
+      state.playIndex = 0;
+      state.autoPlayIndex = 0;
+      state.stopRequested = true;
+      audioPlayer.pause();
+      audioPlayer.currentTime = 0;
+      clearCardEffects();
+      applyBaseFaces();
+      setStatus(`已切換為：${state.audioMode === 'kana' ? '單音' : '單字'} 模式`);
+    };
 
     initLineTip();
     renderFilters();
     renderCards();
-    setAllCardsFlipped(state.audioMode === 'words' || state.flippedAll);
+    applyBaseFaces();
   </script>
 </body>
 </html>
