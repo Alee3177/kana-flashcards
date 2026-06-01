@@ -1,692 +1,463 @@
+<!--
+  kana_cards_interactive.html
+  維護版：Tab 1 平假名50音 + Tab 2 促音 + Tab 3 長音 + Tab 4 濁音・半濁音 + Tab 5 拗音
+  說明：
+  1. 單檔 HTML，可直接上傳 GitHub Pages。
+  2. 若 audio/*.mp3 不存在，會退回瀏覽器日文語音。
+  3. 播放動畫不使用 transform，避免覆蓋卡片翻面效果。
+-->
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Nihon Kana Cards</title>
-  <style>
-    :root{
-      --bg:#f7f4ee;
-      --card:#fffdf8;
-      --ink:#1f1a17;
-      --muted:#7a7068;
-      --line:#e8dfd3;
-      --gold:#b3925f;
-      --shadow:0 10px 28px rgba(42,27,15,.08);
-      --radius:20px;
-      --danger:#b42318;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans TC","Hiragino Sans","Yu Gothic",sans-serif;
-      background:linear-gradient(180deg,#faf7f2 0%, #f3eee6 100%);
-      color:var(--ink);
-    }
-    .wrap{max-width:1180px;margin:0 auto;padding:20px 16px 36px}
-    .hero{
-      background:rgba(255,253,248,.78);
-      border:1px solid var(--line);
-      border-radius:28px;
-      padding:22px 18px;
-      box-shadow:var(--shadow);
-      backdrop-filter:blur(10px);
-    }
-    .eyebrow{font-size:12px;letter-spacing:.14em;color:var(--gold);font-weight:700}
-    h1{margin:8px 0 8px;font-size:28px;line-height:1.2}
-    .sub{margin:0;color:#dc2626;font-size:14px;line-height:1.7}
-    .toolbar{
-      display:grid;grid-template-columns:1fr;gap:12px;margin:16px 0 20px;
-      background:rgba(255,253,248,.78);
-      border:1px solid var(--line);
-      border-radius:22px;padding:14px;box-shadow:var(--shadow);
-    }
-    .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-    .chips{display:flex;flex-wrap:wrap;gap:8px}
-    button,select,input{
-      font:inherit;border:1px solid var(--line);background:#fffdf9;color:var(--ink);
-      border-radius:999px;padding:10px 14px;
-    }
-    button{cursor:pointer;transition:.2s transform,.2s background,.2s border-color}
-    button:hover{transform:translateY(-1px)}
-    button:disabled{opacity:.55;cursor:not-allowed;transform:none}
-    button.active{background:#f4ead8;border-color:#d7c09b;color:#5a4527;font-weight:700}
-    .primary{background:#202020;color:#fff;border-color:#202020}
-    .ghost{background:transparent}
-    #autoPlayBtn,#playAllBtn{color:#dc2626;font-weight:700;border-color:#f3c7c7}
-    #playAllBtn{background:#fff5f5}
-    #playAllBtn.active{color:#dc2626 !important;border-color:#dc2626 !important;background:#fff0f0 !important}
-    #autoPlayBtn.active{color:#dc2626 !important;border-color:#dc2626 !important;background:#fff5f5 !important}
-    .stat{font-size:13px;color:var(--muted)}
-    .status-error{color:var(--danger)!important}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
-    .card-wrap{perspective:1200px;min-height:320px}
-    .card{
-      position:relative;width:100%;height:320px;transform-style:preserve-3d;
-      transition:transform .55s cubic-bezier(.2,.8,.2,1);cursor:pointer;
-    }
-    .card.active{outline:3px solid #dc2626;outline-offset:2px}
-.card.playing{
-  animation: cardPulse 1s ease-in-out infinite;
-  will-change: box-shadow;
-}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kana 46 + Sokuon + Choon</title>
 
-@keyframes cardPulse {
-  0%   { box-shadow: var(--shadow); }
-  50%  { box-shadow: 0 0 0 4px rgba(220,38,38,.12), 0 12px 30px rgba(220,38,38,.18); }
-  100% { box-shadow: var(--shadow); }
+<style>
+/* =========================================================
+   基礎樣式 / Layout
+   ========================================================= */
+:root{
+  --ink:#1f1a17;
+  --muted:#7a7068;
+  --line:#e8dfd3;
+  --gold:#b3925f;
+  --red:#dc2626;
+  --shadow:0 10px 28px rgba(42,27,15,.08);
+  --radius:20px}
+*{
+  box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;
+  background:linear-gradient(180deg,#faf7f2,#f3eee6);
+  color:var(--ink)}
+.wrap{
+  max-width:1180px;
+  margin:auto;
+  padding:20px 16px 36px}
+.hero,.toolbar,.lesson{
+  background:rgba(255,253,248,.86);
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:16px;
+  box-shadow:var(--shadow);
+  margin:14px 0}
+h1{
+  font-size:28px;
+  margin:8px 0}
+.sub{
+  color:var(--red);
+  line-height:1.7}
+button,select,input{
+  font:inherit;
+  border:1px solid var(--line);
+  background:#fffdf9;
+  color:var(--ink);
+  border-radius:999px;
+  padding:10px 14px}
+button{
+  cursor:pointer}
+button.active,.tab.active{
+  background:#202020;
+  color:white;
+  border-color:#202020}
+.tabs,.row,.chips{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:16px}
+.card-wrap{
+  perspective:1200px;
+  min-height:320px}
+.card{
+  position:relative;
+  width:100%;
+  height:320px;
+  transform-style:preserve-3d;
+  transition:transform .55s cubic-bezier(.2,.8,.2,1);
+  cursor:pointer}
+.card.is-flipped{
+  transform:rotateY(180deg)}
+.card.active{
+  outline:3px solid var(--red);
+  outline-offset:2px}
+.card.playing{
+  animation:cardPulse 1s ease-in-out infinite;
+  will-change:box-shadow}
+@keyframes cardPulse{
+  0%{
+  box-shadow:var(--shadow)}
+50%{
+  box-shadow:0 0 0 4px rgba(220,38,38,.12),0 12px 30px rgba(220,38,38,.18)}
+100%{
+  box-shadow:var(--shadow)}
 }
-    .card.is-flipped{transform:rotateY(180deg)}
-    .face{
-      position:absolute;inset:0;backface-visibility:hidden;border:1px solid var(--line);
-      border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;background:var(--card);
-      display:flex;flex-direction:column;
-    }
-    .front{
-      justify-content:space-between;padding:14px;
-      background:
-        radial-gradient(circle at top right, rgba(179,146,95,.14), transparent 34%),
-        linear-gradient(180deg, #fffdf9 0%, #f8f2e9 100%);
-    }
-    .front .tag,.back .tag{
-      align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:.12em;
-      color:var(--gold);background:rgba(179,146,95,.08);
-      border:1px solid rgba(179,146,95,.18);padding:6px 10px;border-radius:999px;
-    }
-    .art{
-      flex:1;display:flex;align-items:center;justify-content:center;position:relative;
-      color:#c6aa7f;font-size:58px;font-weight:700;letter-spacing:.02em;min-height:180px;
-    }
-    .art::before{
-      content:"";position:absolute;width:132px;height:132px;border-radius:50%;
-      background:radial-gradient(circle, rgba(179,146,95,.16) 0%, rgba(179,146,95,.04) 60%, transparent 72%);
-    }
-    .motif{
-      position:absolute;top:18px;right:18px;width:42px;height:42px;border-radius:12px;
-      border:1px solid rgba(179,146,95,.2);background:rgba(255,250,242,.92);
-      display:flex;align-items:center;justify-content:center;color:#b3925f;font-size:22px;
-      box-shadow:0 4px 14px rgba(42,27,15,.06);
-    }
-    .motif.vessel{font-size:18px}
-    .motif.water,.motif.sky{font-size:20px}
-    .kana{position:relative;font-size:86px;line-height:1;font-weight:700;color:#231b17}
-    .roman{font-size:16px;color:var(--muted);text-align:center;margin-top:10px;letter-spacing:.08em}
-    .back{transform:rotateY(180deg);padding:14px;background:#fffdfa;overflow:auto}
-    .mini{font-size:13px;color:var(--muted);margin:0 0 8px;line-height:1.6}
-    table{width:100%;border-collapse:collapse;font-size:12px;background:#fff}
-    th,td{border:1px solid var(--line);padding:6px 6px;text-align:left;vertical-align:top}
-    th{background:#faf4eb}
-    .actions{
-      display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding:8px 0 4px;position:sticky;bottom:0;
-      background:linear-gradient(180deg, rgba(255,253,250,0), rgba(255,253,250,.94) 30%, rgba(255,253,250,1) 100%);
-    }
-    @media (max-width:640px){
-      h1{font-size:24px}
-      .card-wrap,.card{min-height:300px;height:300px}
-      .kana{font-size:74px}
-    }
-  </style>
+.face{
+  position:absolute;
+  inset:0;
+  backface-visibility:hidden;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  background:#fffdf8;
+  display:flex;
+  flex-direction:column}
+.front{
+  justify-content:space-between;
+  padding:14px;
+  background:radial-gradient(circle at top right,rgba(179,146,95,.14),transparent 34%),linear-gradient(180deg,#fffdf9,#f8f2e9)}
+.back{
+  transform:rotateY(180deg);
+  padding:14px;
+  overflow:auto}
+.tag,.badge{
+  align-self:flex-start;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.12em;
+  color:var(--gold);
+  background:rgba(179,146,95,.08);
+  border:1px solid rgba(179,146,95,.18);
+  padding:6px 10px;
+  border-radius:999px}
+.art{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  font-size:58px;
+  font-weight:700}
+.motif{
+  position:absolute;
+  top:18px;
+  right:18px;
+  font-size:24px}
+.kana{
+  font-size:86px;
+  line-height:1;
+  font-weight:800}
+.roman,.muted{
+  color:var(--muted)}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:12px;
+  background:#fff}
+th,td{
+  border:1px solid var(--line);
+  padding:6px;
+  text-align:left}
+th{
+  background:#faf4eb}
+.actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px}
+.panel{
+  display:none}
+.panel.active{
+  display:block}
+.pairGrid,.wordGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:14px}
+.pair,.word{
+  background:#fffdf8;
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:16px;
+  box-shadow:var(--shadow)}
+.compare{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin:12px 0}
+.side{
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:12px;
+  background:white}
+.jp{
+  font-size:30px;
+  font-weight:900}
+.red{
+  color:var(--red);
+  font-weight:900}
+#playAllBtn,#autoPlayBtn{
+  color:var(--red);
+  font-weight:700;
+  border-color:#f3c7c7}
+@media(max-width:640px){
+  .compare{
+  grid-template-columns:1fr}
+.card-wrap,.card{
+  height:300px;
+  min-height:300px}
+.kana{
+  font-size:74px}
+}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <section class="hero">
-      <div class="eyebrow">日文 · KANA CARD</div>
-      <h1>平假名互動圖卡｜あ行・か行・さ行</h1>
-      <p class="sub">模式切換決定全部卡片朝向；連續播放中維持當前模式那一面，播完才翻到另一面；單張按鈕播放則停留在所按的那一面。</p>
-    </section>
+<div class="wrap">
+<section class="hero">
+<div class="badge">日文 · KANA LEARNING</div>
+<h1>平假名50音｜促音｜長音｜濁音｜拗音</h1>
+<p class="sub">Tab 1：完整46張平假名卡。Tab 2–5：可聽、可比、可跟讀；若 MP3 不存在，會自動改用瀏覽器日文語音。</p>
+</section>
 
-    <section class="toolbar" aria-label="控制列">
-      <div class="row chips" id="rowFilters"></div>
-      <div class="row">
-        <button id="playAllBtn" class="primary">▶ 播放一輪</button>
-        <button id="shuffleBtn" class="ghost">隨機排序</button>
-        <button id="flipAllBtn" class="ghost">全部翻到背面</button>
-        <button id="autoPlayBtn" class="ghost">🔁 自動播放：關</button>
-        <label class="stat">播放模式：
-          <select id="audioMode">
-            <option value="kana">單音</option>
-            <option value="words">單字</option>
-          </select>
-        </label>
-        <label class="stat">搜尋：
-          <input id="searchInput" type="search" placeholder="輸入 kana / romaji / 中文" />
-        </label>
-      </div>
-      <div class="stat" id="resultStat">目前顯示 15 張卡</div>
-      <div class="stat" id="audioStatus">音檔播放模式已啟用</div>
-    </section>
+<nav class="tabs">
+<button class="tab active" data-tab="kanaPanel">① 平假名50音</button>
+<button class="tab" data-tab="sokuonPanel">② 促音（っ）</button>
+<button class="tab" data-tab="choonPanel">③ 長音</button>
+<button class="tab" data-tab="dakuonPanel">④ 濁音・半濁音</button>
+<button class="tab" data-tab="youonPanel">⑤ 拗音</button>
+</nav>
 
-    <section class="grid" id="grid" aria-live="polite"></section>
+<!-- =========================================================
+     Tab 1：平假名50音
+     ========================================================= -->
+<section id="kanaPanel" class="panel active">
+<div class="toolbar">
+<div class="chips" id="rowFilters">
+</div>
+<div class="row">
+<button id="playAllBtn">▶ 播放一輪</button>
+<button id="shuffleBtn">隨機排序</button>
+<button id="flipAllBtn">全部翻到背面</button>
+<button id="autoPlayBtn">🔁 自動播放：關</button>
+<label>播放模式：<select id="audioMode">
+<option value="kana">單音</option>
+<option value="words">單字</option>
+</select>
+</label>
+<label>搜尋：<input id="searchInput" type="search" placeholder="kana / romaji / 中文">
+</label>
+</div>
+<div class="muted" id="resultStat">
+</div>
+<div class="muted" id="audioStatus">音檔播放模式已啟用</div>
+</div>
+<section class="grid" id="grid">
+</section>
+</section>
 
-    <div id="lineAudioTip" style="display:none; margin-top:12px; text-align:center;">
-      <a id="openExternalBtn" href="#" style="
-        display:inline-block;padding:12px 18px;background:#16a34a;color:#fff;
-        border-radius:10px;text-decoration:none;font-weight:bold;">請改用瀏覽器開啟（LINE 內朗讀可能無聲）</a>
-    </div>
-  </div>
+<!-- =========================================================
+     Tab 2：促音
+     ========================================================= -->
+<section id="sokuonPanel" class="panel">
+<div class="lesson">
+<span class="badge">促音規則</span>
+<h2>っ = 停半拍</h2>
+<p>看到小小的 <span class="red">っ</span>，中間停一下，例如：きて → き<span class="red">っ</span>て。</p>
+</div>
+<div class="pairGrid" id="sokuonPairs">
+</div>
+<div class="lesson">
+<h2>常用促音單字</h2>
+<div class="wordGrid" id="sokuonWords">
+</div>
+</div>
+</section>
 
-  <script>
-    const cards = [
-      {row:'A-row', kana:'あ', romaji:'a', wordCount:2, icon:'☀︎', motif:'sun', items:[['あ','あ / a','啊 / a'],['あい','あい / ai','愛 / love'],['あお','あお / ao','藍色 / blue']]},
-      {row:'A-row', kana:'い', romaji:'i', wordCount:2, icon:'〰', motif:'thread', items:[['い','い / i','衣 / i'],['いえ','いえ / ie','家 / house'],['いいえ','いいえ / iie','不 / no']]},
-      {row:'A-row', kana:'う', romaji:'u', wordCount:1, icon:'≈', motif:'wave', items:[['う','う / u','嗚 / u'],['うえ','うえ / ue','上面 / up']]},
-      {row:'A-row', kana:'え', romaji:'e', wordCount:3, icon:'❦', motif:'leaf', items:[['え','え / e','欸 / e'],['絵','え / e','繪畫 / picture'],['映画','えいが / eiga','電影 / movie']]},
-      {row:'A-row', kana:'お', romaji:'o', wordCount:1, icon:'◯', motif:'moon', items:[['お','お / o','喔 / o'],['あお','あお / ao','藍色 / blue']]},
-      {row:'KA-row', kana:'か', romaji:'ka', wordCount:3, icon:'✿', motif:'flower', items:[['か','か / ka','卡 / ka'],['かい','かい / kai','貝 / shell'],['かお','かお / kao','臉 / face'],['かき','かき / kaki','柿子 / persimmon']]},
-      {row:'KA-row', kana:'き', romaji:'ki', wordCount:1, icon:'✦', motif:'tree', items:[['き','き / ki','樹 / tree'],['きく','きく / kiku','菊花 / chrysanthemum']]},
-      {row:'KA-row', kana:'く', romaji:'ku', wordCount:2, icon:'☾', motif:'crescent', items:[['く','く / ku','庫 / ku'],['いか','いか / ika','魷魚 / squid'],['くち','くち / kuchi','嘴巴 / mouth']]},
-      {row:'KA-row', kana:'け', romaji:'ke', wordCount:1, icon:'❦', motif:'feather', items:[['け','け / ke','客 / ke'],['いけ','いけ / ike','池 / pond']]},
-      {row:'KA-row', kana:'こ', romaji:'ko', wordCount:1, icon:'⬒', motif:'vessel', items:[['こ','こ / ko','口 / ko'],['こい','こい / koi','鯉魚 / carp']]},
-      {row:'SA-row', kana:'さ', romaji:'sa', wordCount:3, icon:'❀', motif:'sakura', items:[['さ','さ / sa','沙 / sa'],['あさ','あさ / asa','早上 / morning'],['かさ','かさ / kasa','雨傘 / umbrella'],['さけ','さけ / sake','酒 / salmon']]},
-      {row:'SA-row', kana:'し', romaji:'shi', wordCount:3, icon:'∿', motif:'stream', items:[['し','し / shi','西 / shi'],['いし','いし / ishi','石頭 / stone'],['うし','うし / ushi','牛 / cow'],['しか','しか / shika','鹿 / deer']]},
-      {row:'SA-row', kana:'す', romaji:'su', wordCount:2, icon:'💧', motif:'water', items:[['す','す / su','蘇 / su'],['すし','すし / sushi','壽司 / sushi'],['いす','いす / isu','椅子 / chair']]},
-      {row:'SA-row', kana:'せ', romaji:'se', wordCount:2, icon:'✧', motif:'star', items:[['せ','せ / se','色 / se'],['せかい','せかい / sekai','世界 / world'],['あせ','あせ / ase','汗 / sweat']]},
-      {row:'SA-row', kana:'そ', romaji:'so', wordCount:1, icon:'☁︎', motif:'sky', items:[['そ','そ / so','所 / so'],['うそ','うそ / uso','謊言 / lie']]}
-    ];
+<!-- =========================================================
+     Tab 3：長音
+     ========================================================= -->
+<section id="choonPanel" class="panel">
+<div class="lesson">
+<span class="badge">長音規則</span>
+<h2>長音 = 拉長一拍</h2>
+<p>例如：おばさん → おば<span class="red">あ</span>さん。多一拍，意思可能完全不同。</p>
+<table>
+<tr>
+<th>型式</th>
+<th>例子</th>
+</tr>
+<tr>
+<td>あ → ああ</td>
+<td>おか<span class="red">あ</span>さん</td>
+</tr>
+<tr>
+<td>え → えい</td>
+<td>せんせ<span class="red">い</span>
+</td>
+</tr>
+<tr>
+<td>お → おう</td>
+<td>とうきょう</td>
+</tr>
+</table>
+</div>
+<div class="pairGrid" id="choonPairs">
+</div>
+<div class="lesson">
+<h2>常用長音單字</h2>
+<div class="wordGrid" id="choonWords">
+</div>
+</div>
+</section>
 
-    const state = {
-      filter: 'ALL',
-      q: '',
-      audioMode: 'kana',
-      playing: false,
-      autoPlay: false,
-      stopRequested: false,
-      playIndex: 0,
-      autoPlayIndex: 0,
-      lastPlayMode: 'kana',
-      lastAutoMode: 'kana',
-      flippedAll: false
-    };
+<!-- =========================================================
+     Tab 4：濁音・半濁音
+     ========================================================= -->
+<section id="dakuonPanel" class="panel">
+<div class="lesson">
+<span class="badge">濁音・半濁音規則</span>
+<h2>濁點「゛」與半濁點「゜」</h2>
+<p>清音加 <span class="red">゛</span> 變濁音，例如 か → が；は行加 <span class="red">゜</span> 變半濁音，例如 は → ぱ。</p>
+</div>
+<div class="pairGrid" id="dakuonPairs">
+</div>
+<div class="lesson">
+<h2>常用濁音・半濁音單字</h2>
+<div class="wordGrid" id="dakuonWords">
+</div>
+</div>
+</section>
 
-    const grid = document.getElementById('grid');
-    const rowFilters = document.getElementById('rowFilters');
-    const resultStat = document.getElementById('resultStat');
-    const audioStatus = document.getElementById('audioStatus');
-    const searchInput = document.getElementById('searchInput');
-    const audioMode = document.getElementById('audioMode');
-    const playAllBtn = document.getElementById('playAllBtn');
-    const shuffleBtn = document.getElementById('shuffleBtn');
-    const flipAllBtn = document.getElementById('flipAllBtn');
-    const autoPlayBtn = document.getElementById('autoPlayBtn');
-    const audioPlayer = new Audio();
-    audioPlayer.preload = 'auto';
+<!-- =========================================================
+     Tab 5：拗音
+     ========================================================= -->
+<section id="youonPanel" class="panel">
+<div class="lesson">
+<span class="badge">拗音規則</span>
+<h2>い段 + 小ゃ・小ゅ・小ょ</h2>
+<p>拗音是「一個大音 + 一個小音」組成，例如 き + <span class="red">ゃ</span> → き<span class="red">ゃ</span> / kya。小字要寫小一點，發音合成一拍。</p>
+</div>
+<div class="pairGrid" id="youonPairs">
+</div>
+<div class="lesson">
+<h2>常用拗音單字</h2>
+<div class="wordGrid" id="youonWords">
+</div>
+</div>
+</section>
+</div>
 
-    function escapeHtml(str){
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-    }
-    function setStatus(message, isError = false){
-      audioStatus.textContent = message;
-      audioStatus.classList.toggle('status-error', !!isError);
-    }
-    function normalizeRomaji(str){
-      return String(str || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-    }
-    function getSingleAudioSrc(card){ return `audio/${normalizeRomaji(card.romaji)}.mp3`; }
-    function getWordSegmentAudioSrc(card, index){ return `audio/${normalizeRomaji(card.romaji)}_words_${index}.mp3`; }
-    function sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
+<script>
+// =========================================================
+// 資料區：Tab 1 平假名 46 張卡
+// =========================================================
+const cards = [{"row": "A-row", "kana": "あ", "romaji": "a", "wordCount": 2, "icon": "☀︎", "motif": "sun", "items": [["あ", "あ / a", "啊 / a"], ["あい", "あい / ai", "愛 / love"], ["あお", "あお / ao", "藍色 / blue"]]}, {"row": "A-row", "kana": "い", "romaji": "i", "wordCount": 2, "icon": "〰", "motif": "thread", "items": [["い", "い / i", "衣 / i"], ["いえ", "いえ / ie", "家 / house"], ["いいえ", "いいえ / iie", "不 / no"]]}, {"row": "A-row", "kana": "う", "romaji": "u", "wordCount": 1, "icon": "≈", "motif": "wave", "items": [["う", "う / u", "嗚 / u"], ["うえ", "うえ / ue", "上面 / up"]]}, {"row": "A-row", "kana": "え", "romaji": "e", "wordCount": 2, "icon": "❦", "motif": "leaf", "items": [["え", "え / e", "欸 / e"], ["絵", "え / e", "繪畫 / picture"], ["映画", "えいが / eiga", "電影 / movie"]]}, {"row": "A-row", "kana": "お", "romaji": "o", "wordCount": 1, "icon": "◯", "motif": "moon", "items": [["お", "お / o", "喔 / o"], ["あお", "あお / ao", "藍色 / blue"]]}, {"row": "KA-row", "kana": "か", "romaji": "ka", "wordCount": 3, "icon": "✿", "motif": "flower", "items": [["か", "か / ka", "卡 / ka"], ["かい", "かい / kai", "貝 / shell"], ["かお", "かお / kao", "臉 / face"], ["かき", "かき / kaki", "柿子 / persimmon"]]}, {"row": "KA-row", "kana": "き", "romaji": "ki", "wordCount": 1, "icon": "✦", "motif": "tree", "items": [["き", "き / ki", "樹 / tree"], ["きく", "きく / kiku", "菊花 / chrysanthemum"]]}, {"row": "KA-row", "kana": "く", "romaji": "ku", "wordCount": 2, "icon": "☾", "motif": "crescent", "items": [["く", "く / ku", "庫 / ku"], ["いか", "いか / ika", "魷魚 / squid"], ["くち", "くち / kuchi", "嘴巴 / mouth"]]}, {"row": "KA-row", "kana": "け", "romaji": "ke", "wordCount": 1, "icon": "❦", "motif": "feather", "items": [["け", "け / ke", "客 / ke"], ["いけ", "いけ / ike", "池 / pond"]]}, {"row": "KA-row", "kana": "こ", "romaji": "ko", "wordCount": 1, "icon": "⬒", "motif": "vessel", "items": [["こ", "こ / ko", "口 / ko"], ["こい", "こい / koi", "鯉魚 / carp"]]}, {"row": "SA-row", "kana": "さ", "romaji": "sa", "wordCount": 3, "icon": "❀", "motif": "sakura", "items": [["さ", "さ / sa", "沙 / sa"], ["あさ", "あさ / asa", "早上 / morning"], ["かさ", "かさ / kasa", "雨傘 / umbrella"], ["さけ", "さけ / sake", "酒 / salmon"]]}, {"row": "SA-row", "kana": "し", "romaji": "shi", "wordCount": 3, "icon": "∿", "motif": "stream", "items": [["し", "し / shi", "西 / shi"], ["いし", "いし / ishi", "石頭 / stone"], ["うし", "うし / ushi", "牛 / cow"], ["しか", "しか / shika", "鹿 / deer"]]}, {"row": "SA-row", "kana": "す", "romaji": "su", "wordCount": 2, "icon": "💧", "motif": "water", "items": [["す", "す / su", "蘇 / su"], ["すし", "すし / sushi", "壽司 / sushi"], ["いす", "いす / isu", "椅子 / chair"]]}, {"row": "SA-row", "kana": "せ", "romaji": "se", "wordCount": 2, "icon": "✧", "motif": "star", "items": [["せ", "せ / se", "色 / se"], ["せかい", "せかい / sekai", "世界 / world"], ["あせ", "あせ / ase", "汗 / sweat"]]}, {"row": "SA-row", "kana": "そ", "romaji": "so", "wordCount": 1, "icon": "☁︎", "motif": "sky", "items": [["そ", "そ / so", "所 / so"], ["うそ", "うそ / uso", "謊言 / lie"]]}, {"row": "TA-row", "kana": "た", "romaji": "ta", "wordCount": 2, "icon": "🐙", "motif": "octopus", "items": [["た", "た / ta", "た音 / ta"], ["かた", "かた / kata", "肩膀 / shoulder"], ["たこ", "たこ / tako", "章魚 / octopus"]]}, {"row": "TA-row", "kana": "ち", "romaji": "chi", "wordCount": 2, "icon": "👄", "motif": "mouth", "items": [["ち", "ち / chi", "血 / blood"], ["くち", "くち / kuchi", "嘴巴 / mouth"], ["ちず", "ちず / chizu", "地圖 / map"]]}, {"row": "TA-row", "kana": "つ", "romaji": "tsu", "wordCount": 2, "icon": "👟", "motif": "shoes", "items": [["つ", "つ / tsu", "つ音 / tsu"], ["くつ", "くつ / kutsu", "鞋子 / shoes"], ["あつい", "あつい / atsui", "熱的 / hot"]]}, {"row": "TA-row", "kana": "て", "romaji": "te", "wordCount": 2, "icon": "✋", "motif": "hand", "items": [["て", "て / te", "手 / hand"], ["てがみ", "てがみ / tegami", "信 / letter"], ["てつ", "てつ / tetsu", "鐵 / iron"]]}, {"row": "TA-row", "kana": "と", "romaji": "to", "wordCount": 2, "icon": "🧵", "motif": "thread", "items": [["と", "と / to", "與、和 / and"], ["いと", "いと / ito", "絲線 / thread"], ["おと", "おと / oto", "聲音 / sound"]]}, {"row": "NA-row", "kana": "な", "romaji": "na", "wordCount": 2, "icon": "☀︎", "motif": "sun", "items": [["な", "な / na", "那 / na"], ["なつ", "なつ / natsu", "夏天 / summer"], ["なまえ", "なまえ / namae", "名字 / name"]]}, {"row": "NA-row", "kana": "に", "romaji": "ni", "wordCount": 2, "icon": "🥩", "motif": "meat", "items": [["に", "に / ni", "尼 / ni"], ["にく", "にく / niku", "肉 / meat"], ["にほん", "にほん / nihon", "日本 / Japan"]]}, {"row": "NA-row", "kana": "ぬ", "romaji": "nu", "wordCount": 2, "icon": "🐶", "motif": "dog", "items": [["ぬ", "ぬ / nu", "努 / nu"], ["いぬ", "いぬ / inu", "狗 / dog"], ["ぬの", "ぬの / nuno", "布料 / cloth"]]}, {"row": "NA-row", "kana": "ね", "romaji": "ne", "wordCount": 2, "icon": "🐱", "motif": "cat", "items": [["ね", "ね / ne", "呢 / ne"], ["ねこ", "ねこ / neko", "貓 / cat"], ["ねつ", "ねつ / netsu", "發燒 / fever"]]}, {"row": "NA-row", "kana": "の", "romaji": "no", "wordCount": 2, "icon": "💰", "motif": "money", "items": [["の", "の / no", "的（助詞） / of"], ["おかね", "おかね / okane", "錢 / money"], ["のみもの", "のみもの / nomimono", "飲料 / drink"]]}, {"row": "HA-row", "kana": "は", "romaji": "ha", "wordCount": 2, "icon": "🌸", "motif": "flower", "items": [["は", "は / ha", "牙齒 / tooth"], ["はな", "はな / hana", "花 / flower"], ["はな", "はな / hana", "鼻子 / nose"]]}, {"row": "HA-row", "kana": "ひ", "romaji": "hi", "wordCount": 2, "icon": "🔥", "motif": "fire", "items": [["ひ", "ひ / hi", "火 / fire"], ["ひと", "ひと / hito", "人 / person"], ["ひこうき", "ひこうき / hikouki", "飛機 / airplane"]]}, {"row": "HA-row", "kana": "ふ", "romaji": "fu", "wordCount": 2, "icon": "⛵", "motif": "boat", "items": [["ふ", "ふ / fu", "麩 / wheat gluten"], ["とうふ", "とうふ / toufu", "豆腐 / tofu"], ["ふね", "ふね / fune", "船 / boat"]]}, {"row": "HA-row", "kana": "へ", "romaji": "he", "wordCount": 2, "icon": "🏠", "motif": "room", "items": [["へ", "へ / he", "往、向 / to"], ["へや", "へや / heya", "房間 / room"], ["へそ", "へそ / heso", "肚臍 / navel"]]}, {"row": "HA-row", "kana": "ほ", "romaji": "ho", "wordCount": 2, "icon": "⭐", "motif": "star", "items": [["ほ", "ほ / ho", "帆 / sail"], ["ほし", "ほし / hoshi", "星星 / star"], ["ほん", "ほん / hon", "書 / book"]]}, {"row": "MA-row", "kana": "ま", "romaji": "ma", "wordCount": 2, "icon": "🪟", "motif": "window", "items": [["ま", "ま / ma", "馬 / ma"], ["あたま", "あたま / atama", "頭 / head"], ["まど", "まど / mado", "窗戶 / window"]]}, {"row": "MA-row", "kana": "み", "romaji": "mi", "wordCount": 2, "icon": "👂", "motif": "ear", "items": [["み", "み / mi", "身、果實 / body, fruit"], ["みみ", "みみ / mimi", "耳朵 / ear"], ["みそ", "みそ / miso", "味噌 / miso"]]}, {"row": "MA-row", "kana": "む", "romaji": "mu", "wordCount": 2, "icon": "🐞", "motif": "insect", "items": [["む", "む / mu", "む音 / mu"], ["むし", "むし / mushi", "蟲 / insect"], ["さむい", "さむい / samui", "寒冷的 / cold"]]}, {"row": "MA-row", "kana": "め", "romaji": "me", "wordCount": 2, "icon": "👁️", "motif": "eye", "items": [["め", "め / me", "眼睛 / eye"], ["あめ", "あめ / ame", "雨 / rain"], ["めがね", "めがね / megane", "眼鏡 / glasses"]]}, {"row": "MA-row", "kana": "も", "romaji": "mo", "wordCount": 2, "icon": "🍑", "motif": "peach", "items": [["も", "も / mo", "也 / also"], ["もも", "もも / momo", "桃子 / peach"], ["もり", "もり / mori", "森林 / forest"]]}, {"row": "YA-row", "kana": "や", "romaji": "ya", "wordCount": 3, "icon": "🥬", "motif": "vegetable", "items": [["や", "や / ya", "や音 / ya"], ["やさい", "やさい / yasai", "蔬菜 / vegetable"], ["やきにく", "やきにく / yakiniku", "燒肉 / grilled meat"], ["やま", "やま / yama", "山 / mountain"]]}, {"row": "YA-row", "kana": "ゆ", "romaji": "yu", "wordCount": 3, "icon": "❄️", "motif": "snow", "items": [["ゆ", "ゆ / yu", "熱水 / hot water"], ["ゆき", "ゆき / yuki", "雪 / snow"], ["おゆ", "おゆ / oyu", "熱水 / hot water"], ["ゆび", "ゆび / yubi", "手指 / finger"]]}, {"row": "YA-row", "kana": "よ", "romaji": "yo", "wordCount": 3, "icon": "🏮", "motif": "nightmarket", "items": [["よ", "よ / yo", "よ音 / yo"], ["よる", "よる / yoru", "夜晚 / night"], ["よいち", "よいち / yoichi", "夜市 / night market"], ["よこ", "よこ / yoko", "旁邊 / side"]]}, {"row": "RA-row", "kana": "ら", "romaji": "ra", "wordCount": 3, "icon": "🌸", "motif": "sakura", "items": [["ら", "ら / ra", "ら音 / ra"], ["さくら", "さくら / sakura", "櫻花 / cherry blossom"], ["そら", "そら / sora", "天空 / sky"], ["らいおん", "らいおん / raion", "獅子 / lion"]]}, {"row": "RA-row", "kana": "り", "romaji": "ri", "wordCount": 3, "icon": "🐜", "motif": "ant", "items": [["り", "り / ri", "り音 / ri"], ["あり", "あり / ari", "螞蟻 / ant"], ["くすり", "くすり / kusuri", "藥 / medicine"], ["りんご", "りんご / ringo", "蘋果 / apple"]]}, {"row": "RA-row", "kana": "る", "romaji": "ru", "wordCount": 3, "icon": "🍲", "motif": "soup", "items": [["る", "る / ru", "る音 / ru"], ["ひる", "ひる / hiru", "中午 / noon"], ["よる", "よる / yoru", "夜晚 / night"], ["みそしる", "みそしる / misoshiru", "味噌湯 / miso soup"]]}, {"row": "RA-row", "kana": "れ", "romaji": "re", "wordCount": 3, "icon": "📚", "motif": "history", "items": [["れ", "れ / re", "れ音 / re"], ["れきし", "れきし / rekishi", "歷史 / history"], ["れいぞうこ", "れいぞうこ / reizouko", "冰箱 / refrigerator"], ["れもん", "れもん / remon", "檸檬 / lemon"]]}, {"row": "RA-row", "kana": "ろ", "romaji": "ro", "wordCount": 3, "icon": "🛁", "motif": "bath", "items": [["ろ", "ろ / ro", "ろ音 / ro"], ["おふろ", "おふろ / ofuro", "洗澡、浴缸 / bath"], ["ろうそく", "ろうそく / rousoku", "蠟燭 / candle"], ["こころ", "こころ / kokoro", "心 / heart"]]}, {"row": "WA-row", "kana": "わ", "romaji": "wa", "wordCount": 4, "icon": "🐊", "motif": "crocodile", "items": [["わ", "わ / wa", "わ音 / wa"], ["わたし", "わたし / watashi", "我 / I"], ["でんわ", "でんわ / denwa", "電話 / telephone"], ["わに", "わに / wani", "鱷魚 / crocodile"], ["たわし", "たわし / tawashi", "菜瓜布 / scrub brush"]]}, {"row": "WA-row", "kana": "を", "romaji": "wo", "wordCount": 2, "icon": "📖", "motif": "book", "items": [["を", "を / wo", "受詞助詞（發音 o） / object marker"], ["ほんを", "ほん を / hon o", "書（受詞例句）"], ["みずを", "みず を / mizu o", "水（受詞例句）"]]}, {"row": "WA-row", "kana": "ん", "romaji": "n", "wordCount": 3, "icon": "🚃", "motif": "train", "items": [["ん", "ん / n", "鼻音 n"], ["りんご", "りんご / ringo", "蘋果 / apple"], ["ほん", "ほん / hon", "書 / book"], ["でんしゃ", "でんしゃ / densha", "電車 / train"]]}];
 
-    function playAudio(src){
-      return new Promise((resolve, reject) => {
-        let finished = false;
-        let interval = null;
+// =========================================================
+// 資料區：Tab 2 促音
+// =========================================================
+const sokuonPairs = [[["きて", "きて / kite", "來"], ["きって", "きって / kitte", "郵票"], "っ = t 前停半拍，kite → kitte"], [["さか", "さか / saka", "坡道"], ["さっか", "さっか / sakka", "作家"], "っ = k 前停半拍，saka → sakka"], [["きぷ", "きぷ / kipu", "錯誤示範"], ["きっぷ", "きっぷ / kippu", "車票"], "正確是 きっぷ，不是 きぷ"], [["ざし", "ざし / zashi", "錯誤示範"], ["ざっし", "ざっし / zasshi", "雜誌"], "正確是 ざっし，不是 ざし"]];
 
-        const cleanup = () => {
-          if (interval) clearInterval(interval);
-          audioPlayer.onended = null;
-          audioPlayer.onerror = null;
-        };
-        const safeResolve = (value) => {
-          if (finished) return;
-          finished = true;
-          cleanup();
-          resolve(value);
-        };
-        const safeReject = (err) => {
-          if (finished) return;
-          finished = true;
-          cleanup();
-          reject(err);
-        };
+const sokuonWords = [["がっこう", "がっこう / gakkou", "學校"], ["きっぷ", "きっぷ / kippu", "車票"], ["きって", "きって / kitte", "郵票"], ["ざっし", "ざっし / zasshi", "雜誌"], ["ベッド", "べっど / beddo", "床"], ["コップ", "こっぷ / koppu", "杯子"]];
 
-        audioPlayer.pause();
-        audioPlayer.currentTime = 0;
-        audioPlayer.src = src;
-        audioPlayer.onended = () => safeResolve(true);
-        audioPlayer.onerror = () => safeReject(new Error(src));
+// =========================================================
+// 資料區：Tab 3 長音
+// =========================================================
+const choonPairs = [[["おばさん", "おばさん / obasan", "阿姨"], ["おばあさん", "おばあさん / obaasan", "奶奶"], "あ → ああ，音拉長一拍"], [["ゆき", "ゆき / yuki", "雪"], ["ゆうき", "ゆうき / yuuki", "勇氣"], "ゆ → ゆう，音拉長一拍"], [["ここ", "ここ / koko", "這裡"], ["こうこう", "こうこう / koukou", "高中"], "お段常用 おう 表示長音"], [["とおい", "とおい / tooi", "遠"], ["おおきい", "おおきい / ookii", "大的"], "おお / とお 都是長音練習"]];
 
-        interval = setInterval(() => {
-          if (state.stopRequested) {
-            audioPlayer.pause();
-            audioPlayer.currentTime = 0;
-            safeResolve(false);
-          }
-        }, 50);
+const choonWords = [["おかあさん", "おかあさん / okaasan", "媽媽"], ["おとうさん", "おとうさん / otousan", "爸爸"], ["せんせい", "せんせい / sensei", "老師"], ["がくせい", "がくせい / gakusei", "學生"], ["とうきょう", "とうきょう / toukyou", "東京"], ["こうえん", "こうえん / kouen", "公園"]];
 
-        const playPromise = audioPlayer.play();
-        if (playPromise && typeof playPromise.then === 'function') {
-          playPromise.catch(err => {
-            if (state.stopRequested || audioPlayer.paused) safeResolve(false);
-            else safeReject(err);
-          });
-        }
-      });
-    }
+// =========================================================
+// 資料區：Tab 4 濁音・半濁音
+// =========================================================
+const dakuonPairs = [[["か", "か / ka", "清音 ka"], ["が", "が / ga", "濁音 ga"], "か行加濁點「゛」→ が行"], [["き", "き / ki", "清音 ki"], ["ぎ", "ぎ / gi", "濁音 gi"], "き → ぎ"], [["く", "く / ku", "清音 ku"], ["ぐ", "ぐ / gu", "濁音 gu"], "く → ぐ"], [["け", "け / ke", "清音 ke"], ["げ", "げ / ge", "濁音 ge"], "け → げ"], [["こ", "こ / ko", "清音 ko"], ["ご", "ご / go", "濁音 go"], "こ → ご"], [["さ", "さ / sa", "清音 sa"], ["ざ", "ざ / za", "濁音 za"], "さ行加濁點「゛」→ ざ行"], [["し", "し / shi", "清音 shi"], ["じ", "じ / ji", "濁音 ji"], "し → じ"], [["す", "す / su", "清音 su"], ["ず", "ず / zu", "濁音 zu"], "す → ず"], [["せ", "せ / se", "清音 se"], ["ぜ", "ぜ / ze", "濁音 ze"], "せ → ぜ"], [["そ", "そ / so", "清音 so"], ["ぞ", "ぞ / zo", "濁音 zo"], "そ → ぞ"], [["た", "た / ta", "清音 ta"], ["だ", "だ / da", "濁音 da"], "た行加濁點「゛」→ だ行"], [["ち", "ち / chi", "清音 chi"], ["ぢ", "ぢ / ji", "濁音 ji（較少用）"], "ち → ぢ"], [["つ", "つ / tsu", "清音 tsu"], ["づ", "づ / zu", "濁音 zu（較少用）"], "つ → づ"], [["て", "て / te", "清音 te"], ["で", "で / de", "濁音 de"], "て → で"], [["と", "と / to", "清音 to"], ["ど", "ど / do", "濁音 do"], "と → ど"], [["は", "は / ha", "清音 ha"], ["ば", "ば / ba", "濁音 ba"], "は行加濁點「゛」→ ば行"], [["ひ", "ひ / hi", "清音 hi"], ["び", "び / bi", "濁音 bi"], "ひ → び"], [["ふ", "ふ / fu", "清音 fu"], ["ぶ", "ぶ / bu", "濁音 bu"], "ふ → ぶ"], [["へ", "へ / he", "清音 he"], ["べ", "べ / be", "濁音 be"], "へ → べ"], [["ほ", "ほ / ho", "清音 ho"], ["ぼ", "ぼ / bo", "濁音 bo"], "ほ → ぼ"], [["は", "は / ha", "清音 ha"], ["ぱ", "ぱ / pa", "半濁音 pa"], "は行加半濁點「゜」→ ぱ行"], [["ひ", "ひ / hi", "清音 hi"], ["ぴ", "ぴ / pi", "半濁音 pi"], "ひ → ぴ"], [["ふ", "ふ / fu", "清音 fu"], ["ぷ", "ぷ / pu", "半濁音 pu"], "ふ → ぷ"], [["へ", "へ / he", "清音 he"], ["ぺ", "ぺ / pe", "半濁音 pe"], "へ → ぺ"], [["ほ", "ほ / ho", "清音 ho"], ["ぽ", "ぽ / po", "半濁音 po"], "ほ → ぽ"]];
+const dakuonWords = [["がっこう", "がっこう / gakkou", "學校 / school"], ["かぎ", "かぎ / kagi", "鑰匙 / key"], ["ごはん", "ごはん / gohan", "飯 / rice, meal"], ["ざっし", "ざっし / zasshi", "雜誌 / magazine"], ["じかん", "じかん / jikan", "時間 / time"], ["みず", "みず / mizu", "水 / water"], ["でんわ", "でんわ / denwa", "電話 / telephone"], ["どこ", "どこ / doko", "哪裡 / where"], ["ぶた", "ぶた / buta", "豬 / pig"], ["べんとう", "べんとう / bentou", "便當 / lunch box"], ["ぼうし", "ぼうし / boushi", "帽子 / hat"], ["パン", "ぱん / pan", "麵包 / bread"], ["えんぴつ", "えんぴつ / enpitsu", "鉛筆 / pencil"]];
 
-    function currentCards(){
-      const q = state.q.trim().toLowerCase();
-      return cards.filter(card => {
-        const byRow = state.filter === 'ALL' || card.row === state.filter;
-        const text = [card.row, card.kana, card.romaji, ...card.items.flat()].join(' ').toLowerCase();
-        return byRow && (!q || text.includes(q));
-      });
-    }
+// =========================================================
+// 資料區：Tab 5 拗音
+// =========================================================
+const youonPairs = [[["き", "き / base", "大字"], ["きゃ", "きゃ / kya", "kya"], "き + 小ゃ → きゃ"], [["き", "き / base", "大字"], ["きゅ", "きゅ / kyu", "kyu"], "き + 小ゅ → きゅ"], [["き", "き / base", "大字"], ["きょ", "きょ / kyo", "kyo"], "き + 小ょ → きょ"], [["し", "し / base", "大字"], ["しゃ", "しゃ / sha", "sha"], "し + 小ゃ → しゃ"], [["し", "し / base", "大字"], ["しゅ", "しゅ / shu", "shu"], "し + 小ゅ → しゅ"], [["し", "し / base", "大字"], ["しょ", "しょ / sho", "sho"], "し + 小ょ → しょ"], [["ち", "ち / base", "大字"], ["ちゃ", "ちゃ / cha", "cha"], "ち + 小ゃ → ちゃ"], [["ち", "ち / base", "大字"], ["ちゅ", "ちゅ / chu", "chu"], "ち + 小ゅ → ちゅ"], [["ち", "ち / base", "大字"], ["ちょ", "ちょ / cho", "cho"], "ち + 小ょ → ちょ"], [["に", "に / base", "大字"], ["にゃ", "にゃ / nya", "nya"], "に + 小ゃ → にゃ"], [["に", "に / base", "大字"], ["にゅ", "にゅ / nyu", "nyu"], "に + 小ゅ → にゅ"], [["に", "に / base", "大字"], ["にょ", "にょ / nyo", "nyo"], "に + 小ょ → にょ"], [["ひ", "ひ / base", "大字"], ["ひゃ", "ひゃ / hya", "hya"], "ひ + 小ゃ → ひゃ"], [["ひ", "ひ / base", "大字"], ["ひゅ", "ひゅ / hyu", "hyu"], "ひ + 小ゅ → ひゅ"], [["ひ", "ひ / base", "大字"], ["ひょ", "ひょ / hyo", "hyo"], "ひ + 小ょ → ひょ"], [["み", "み / base", "大字"], ["みゃ", "みゃ / mya", "mya"], "み + 小ゃ → みゃ"], [["み", "み / base", "大字"], ["みゅ", "みゅ / myu", "myu"], "み + 小ゅ → みゅ"], [["み", "み / base", "大字"], ["みょ", "みょ / myo", "myo"], "み + 小ょ → みょ"], [["り", "り / base", "大字"], ["りゃ", "りゃ / rya", "rya"], "り + 小ゃ → りゃ"], [["り", "り / base", "大字"], ["りゅ", "りゅ / ryu", "ryu"], "り + 小ゅ → りゅ"], [["り", "り / base", "大字"], ["りょ", "りょ / ryo", "ryo"], "り + 小ょ → りょ"], [["ぎ", "ぎ / base", "大字"], ["ぎゃ", "ぎゃ / gya", "gya"], "ぎ + 小ゃ → ぎゃ"], [["ぎ", "ぎ / base", "大字"], ["ぎゅ", "ぎゅ / gyu", "gyu"], "ぎ + 小ゅ → ぎゅ"], [["ぎ", "ぎ / base", "大字"], ["ぎょ", "ぎょ / gyo", "gyo"], "ぎ + 小ょ → ぎょ"], [["じ", "じ / base", "大字"], ["じゃ", "じゃ / ja", "ja"], "じ + 小ゃ → じゃ"], [["じ", "じ / base", "大字"], ["じゅ", "じゅ / ju", "ju"], "じ + 小ゅ → じゅ"], [["じ", "じ / base", "大字"], ["じょ", "じょ / jo", "jo"], "じ + 小ょ → じょ"], [["び", "び / base", "大字"], ["びゃ", "びゃ / bya", "bya"], "び + 小ゃ → びゃ"], [["び", "び / base", "大字"], ["びゅ", "びゅ / byu", "byu"], "び + 小ゅ → びゅ"], [["び", "び / base", "大字"], ["びょ", "びょ / byo", "byo"], "び + 小ょ → びょ"], [["ぴ", "ぴ / base", "大字"], ["ぴゃ", "ぴゃ / pya", "pya"], "ぴ + 小ゃ → ぴゃ"], [["ぴ", "ぴ / base", "大字"], ["ぴゅ", "ぴゅ / pyu", "pyu"], "ぴ + 小ゅ → ぴゅ"], [["ぴ", "ぴ / base", "大字"], ["ぴょ", "ぴょ / pyo", "pyo"], "ぴ + 小ょ → ぴょ"]];
+const youonWords = [["きょう", "きょう / kyou", "今天 / today"], ["しゃしん", "しゃしん / shashin", "照片 / photo"], ["しゅくだい", "しゅくだい / shukudai", "作業 / homework"], ["ちゃ", "ちゃ / cha", "茶 / tea"], ["ちゅうごく", "ちゅうごく / chuugoku", "中國 / China"], ["にゃん", "にゃん / nyan", "喵 / meow"], ["ひゃく", "ひゃく / hyaku", "一百 / hundred"], ["ぎゅうにく", "ぎゅうにく / gyuuniku", "牛肉 / beef"], ["じゅぎょう", "じゅぎょう / jugyou", "課程 / class"], ["びょういん", "びょういん / byouin", "醫院 / hospital"]];
 
-    function getCardEl(card){
-      return [...grid.querySelectorAll('.card')].find(el => el.dataset.kana === card.kana) || null;
-    }
+// =========================================================
+// 狀態與 DOM 參照
+// =========================================================
+const state = {filter:'ALL',q:'',audioMode:'kana',playing:false,autoPlay:false,stopRequested:false,playIndex:0,autoPlayIndex:0,lastPlayMode:'kana',lastAutoMode:'kana',flippedAll:false};
+const grid=document.getElementById('grid'), rowFilters=document.getElementById('rowFilters'), resultStat=document.getElementById('resultStat'), audioStatus=document.getElementById('audioStatus'), searchInput=document.getElementById('searchInput'), audioMode=document.getElementById('audioMode'), playAllBtn=document.getElementById('playAllBtn'), shuffleBtn=document.getElementById('shuffleBtn'), flipAllBtn=document.getElementById('flipAllBtn'), autoPlayBtn=document.getElementById('autoPlayBtn'); const audioPlayer=new Audio(); audioPlayer.preload='auto';
 
-    function clearCardEffects(){
-      [...grid.querySelectorAll('.card')].forEach(el => {
-        el.classList.remove('active');
-        el.classList.remove('playing');
-      });
-    }
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 
-    function clearPlayingState(card){
-      const target = getCardEl(card);
-      if (!target) return;
-      target.classList.remove('active');
-      target.classList.remove('playing');
-    }
+function norm(s){return String(s||'').toLowerCase().replace(/[ō]/g,'ou').replace(/[ū]/g,'uu').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')}
 
-    function applyBaseFaces(){
-      [...grid.querySelectorAll('.card')].forEach(el => {
-        if (state.flippedAll) {
-          el.classList.add('is-flipped');
-          return;
-        }
-        if (state.audioMode === 'words') el.classList.add('is-flipped');
-        else el.classList.remove('is-flipped');
-      });
-    }
+function status(m,e=false){audioStatus.textContent=m;audioStatus.classList.toggle('status-error',e)}
 
-    function showCardFace(card, faceMode){
-      const target = getCardEl(card);
-      if (!target) return;
-      if (faceMode === 'words') target.classList.add('is-flipped');
-      else target.classList.remove('is-flipped');
-    }
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+function speakJapanese(text){return new Promise(r=>{if(!('speechSynthesis'in window))return r(false);speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='ja-JP';u.rate=.82;u.onend=()=>r(true);u.onerror=()=>r(false);speechSynthesis.speak(u)})}
 
-    function flipCardToOpposite(card, faceMode){
-      const target = getCardEl(card);
-      if (!target) return;
-      if (faceMode === 'words') target.classList.remove('is-flipped');
-      else target.classList.add('is-flipped');
-    }
+async function playAudio(src,fb=''){return new Promise(resolve=>{let done=false;const finish=async ok=>{if(done)return;done=true;audioPlayer.onended=null;audioPlayer.onerror=null;if(!ok&&fb)await speakJapanese(fb);resolve(ok)};audioPlayer.pause();audioPlayer.currentTime=0;audioPlayer.src=src;audioPlayer.onended=()=>finish(true);audioPlayer.onerror=()=>finish(false);const p=audioPlayer.play();if(p&&p.catch)p.catch(()=>finish(false))})}
+function getSingle(c){return `audio/${norm(c.romaji)}.mp3`}function getSeg(c,i){return `audio/${norm(c.romaji)}_words_${i}.mp3`}
 
-    function setPlayingCard(card){
-      clearCardEffects();
-      const target = getCardEl(card);
-      if (!target) return;
-      target.classList.add('active');
-      target.classList.add('playing');
-      target.scrollIntoView({behavior:'smooth', block:'center'});
-    }
+async function playCard(c,mode){if(mode==='kana')await playAudio(getSingle(c),c.kana);else{const ws=c.items.slice(1);for(let i=1;i<=ws.length;i++){if(state.stopRequested)return;const fb=ws[i-1][0];await playAudio(getSeg(c,i),fb);await sleep(500);await playAudio(getSeg(c,i),fb);if(i<ws.length)await sleep(500)}}}
 
-    async function playSingleCard(card){ await playAudio(getSingleAudioSrc(card)); }
+function currentCards(){const q=state.q.trim().toLowerCase();return cards.filter(c=>(state.filter==='ALL'||c.row===state.filter)&&(!q||[c.row,c.kana,c.romaji,...c.items.flat()].join(' ').toLowerCase().includes(q)))}
 
-    async function playWordSegments(card){
-      const count = card.wordCount || 0;
-      if (!count) throw new Error(`缺少 wordCount：${card.romaji}`);
-      for (let i = 1; i <= count; i++) {
-        if (state.stopRequested) return;
-        await playAudio(getWordSegmentAudioSrc(card, i));
-        if (state.stopRequested) return;
-        await sleep(500);
-        await playAudio(getWordSegmentAudioSrc(card, i));
-        if (state.stopRequested) return;
-        if (i < count) await sleep(500);
-      }
-    }
+function getEl(c){return [...grid.querySelectorAll('.card')].find(e=>e.dataset.kana===c.kana)}function clearFx(){grid.querySelectorAll('.card').forEach(e=>e.classList.remove('active','playing'))}
 
-    async function playCard(card, mode){
-      if (mode === 'kana') await playSingleCard(card);
-      else await playWordSegments(card);
-    }
+function applyFaces(){grid.querySelectorAll('.card').forEach(e=>{if(state.flippedAll||state.audioMode==='words')e.classList.add('is-flipped');else e.classList.remove('is-flipped')})}
 
-    async function playSequential(list, mode, startIndex){
-      if (!list.length || state.playing) return;
-      state.playing = true;
-      state.stopRequested = false;
-      state.lastPlayMode = mode;
+function showFace(c,m){const e=getEl(c);if(e)(m==='words'?e.classList.add('is-flipped'):e.classList.remove('is-flipped'))}
 
-      try {
-        for (let i = startIndex; i < list.length; i++) {
-          const card = list[i];
-          state.playIndex = i;
+function flipOpp(c,m){const e=getEl(c);if(e)(m==='words'?e.classList.remove('is-flipped'):e.classList.add('is-flipped'))}function setPlay(c){clearFx();const e=getEl(c);if(e){e.classList.add('active','playing');e.scrollIntoView({behavior:'smooth',block:'center'})}}
 
-          if (state.stopRequested) {
-            setStatus(`播放已停止（下次將從第 ${state.playIndex + 1} 張繼續）`);
-            break;
-          }
+async function playSeq(list,mode,start){if(!list.length||state.playing)return;state.playing=true;state.stopRequested=false;state.lastPlayMode=mode;try{for(let i=start;i<list.length;i++){const c=list[i];state.playIndex=i;if(state.stopRequested)break;setPlay(c);status(`播放中：${c.kana}（${mode==='kana'?'單音':'單字'}）`);await playCard(c,mode);if(state.stopRequested)break;getEl(c)?.classList.remove('active','playing');flipOpp(c,mode);state.playIndex=i+1;await sleep(500)}if(!state.stopRequested&&state.playIndex>=list.length){state.playIndex=0;status('播放完成')}}finally{state.playing=false;state.stopRequested=false;playAllBtn.textContent='▶ 播放一輪';playAllBtn.classList.remove('active');clearFx()}}
 
-          setPlayingCard(card);
-          setStatus(`播放中：${card.kana}（${mode === 'kana' ? '單音' : '單字'}）`);
+async function autoPlay(){const list=currentCards();if(!list.length||state.playing)return;state.playing=true;state.stopRequested=false;state.lastAutoMode=state.audioMode;playAllBtn.disabled=true;try{for(let i=state.autoPlayIndex;i<list.length;i++){const c=list[i];state.autoPlayIndex=i;if(!state.autoPlay||state.stopRequested)break;setPlay(c);status(`🔁 自動播放中：${c.kana}（${state.audioMode==='kana'?'單音':'單字'}）`);await playCard(c,state.audioMode);if(!state.autoPlay||state.stopRequested)break;getEl(c)?.classList.remove('active','playing');flipOpp(c,state.audioMode);state.autoPlayIndex=i+1;await sleep(700)}if(state.autoPlay&&state.autoPlayIndex>=list.length){status('🔁 自動播放完成');state.autoPlay=false;state.autoPlayIndex=0;autoPlayBtn.textContent='🔁 自動播放：關';autoPlayBtn.classList.remove('active')}}finally{state.playing=false;playAllBtn.disabled=false;autoPlayBtn.disabled=false;state.stopRequested=false;clearFx()}}
 
-          try {
-            await playCard(card, mode);
-          } catch (err) {
-            setStatus(`找不到音檔：${err.message}，請確認 audio 資料夾與檔名。`, true);
-            break;
-          }
+function renderFilters(){const defs=[['ALL','全部'],['A-row','あ行'],['KA-row','か行'],['SA-row','さ行'],['TA-row','た行'],['NA-row','な行'],['HA-row','は行'],['MA-row','ま行'],['YA-row','や行'],['RA-row','ら行'],['WA-row','わ行']];rowFilters.innerHTML=defs.map(([k,l])=>`<button class="${state.filter===k?'active':''}" data-filter="${k}">${l}</button>`).join('');rowFilters.querySelectorAll('button').forEach(b=>b.onclick=()=>{state.filter=b.dataset.filter;state.playIndex=0;state.autoPlayIndex=0;
 
-          if (state.stopRequested) {
-            setStatus(`播放已停止（下次將從第 ${state.playIndex + 1} 張繼續）`);
-            break;
-          }
+// 初始渲染
+renderFilters();
+renderCards();
+applyFaces();
+status('已切換行別')})}
 
-          clearPlayingState(card);
-          flipCardToOpposite(card, mode);
-          state.playIndex = i + 1;
-          await sleep(500);
-        }
+function renderCards(){const list=currentCards();resultStat.textContent=`目前顯示 ${list.length} 張卡`;grid.innerHTML=list.map(c=>{const rows=c.items.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('');return `<article class="card-wrap"><div class="card" data-kana="${esc(c.kana)}"><section class="face front"><div class="tag">${esc(c.row)}</div><div class="art"><div class="motif">${esc(c.icon)}</div><div><div class="kana">${esc(c.kana)}</div><div class="roman">${esc(c.romaji)}</div></div></div></section><section class="face back"><div class="tag">${esc(c.row)}</div><p><b>${esc(c.kana)}｜${esc(c.romaji)}</b></p><table><thead><tr><th>日文</th><th>平假名 / 羅馬拼音</th><th>中文 / English</th></tr></thead><tbody>${rows}</tbody></table><div class="actions"><button class="play-one" data-r="${esc(c.romaji)}">🔊 單音</button><button class="play-words" data-r="${esc(c.romaji)}">▶ 單字</button></div></section></div></article>`}).join('');grid.querySelectorAll('.card').forEach(e=>e.onclick=ev=>{if(ev.target.closest('button'))return;e.classList.toggle('is-flipped')});grid.querySelectorAll('.play-one').forEach(b=>b.onclick=async ev=>{ev.stopPropagation();const c=list.find(x=>x.romaji===b.dataset.r);showFace(c,'kana');setPlay(c);await playCard(c,'kana');clearFx();showFace(c,'kana')});grid.querySelectorAll('.play-words').forEach(b=>b.onclick=async ev=>{ev.stopPropagation();const c=list.find(x=>x.romaji===b.dataset.r);showFace(c,'words');setPlay(c);await playCard(c,'words');clearFx();showFace(c,'words')});applyFaces()}
 
-        if (!state.stopRequested && state.playIndex >= list.length) {
-          state.playIndex = 0;
-          setStatus('播放完成');
-        }
-      } finally {
-        state.playing = false;
-        state.stopRequested = false;
-        playAllBtn.textContent = '▶ 播放一輪';
-        playAllBtn.classList.remove('active');
-        clearCardEffects();
-      }
-    }
+function hi(s,k){s=esc(s);if(k==='sokuon')return s.replace(/っ/g,'<span class="red">っ</span>').replace(/ッ/g,'<span class="red">ッ</span>');if(k==='choon')return s.replace(/あさん/g,'<span class="red">あ</span>さん').replace(/ゆう/g,'ゆ<span class="red">う</span>').replace(/こう/g,'こ<span class="red">う</span>').replace(/おお/g,'お<span class="red">お</span>').replace(/せい/g,'せ<span class="red">い</span>');if(k==='dakuon')return s.replace(/[がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ]/g,m=>'<span class="red">'+m+'</span>');if(k==='youon')return s.replace(/[ゃゅょ]/g,m=>'<span class="red">'+m+'</span>');return s}
 
-    async function autoPlayCards(){
-      const list = currentCards();
-      if (!list.length || state.playing) return;
-      state.playing = true;
-      state.stopRequested = false;
-      state.lastAutoMode = state.audioMode;
-      playAllBtn.disabled = true;
+async function playLesson(t){await playAudio(`audio/${norm(t)}.mp3`,t)}
 
-      try {
-        for (let i = state.autoPlayIndex; i < list.length; i++) {
-          const card = list[i];
-          state.autoPlayIndex = i;
+async function playCompare(a,b){await playLesson(a);await sleep(650);await playLesson(b)}function renderPairs(id,pairs,k){document.getElementById(id).innerHTML=pairs.map((p,i)=>`<article class="pair"><span class="badge">第 ${i+1} 組</span><div class="compare"><div class="side"><div class="jp">${hi(p[0][0],k)}</div><div class="muted">${esc(p[0][1])}</div><div>${esc(p[0][2])}</div><button onclick="playLesson('${esc(p[0][0])}')">播放A</button></div><div class="side"><div class="jp">${hi(p[1][0],k)}</div><div class="muted">${esc(p[1][1])}</div><div>${esc(p[1][2])}</div><button onclick="playLesson('${esc(p[1][0])}')">播放B</button></div></div><p>${esc(p[2])}</p><button onclick="playCompare('${esc(p[0][0])}','${esc(p[1][0])}')">A → B 比較播放 / 跟讀</button></article>`).join('')}
 
-          if (!state.autoPlay || state.stopRequested) {
-            clearCardEffects();
-            setStatus(`🔁 自動播放已停止（下次將從第 ${state.autoPlayIndex + 1} 張繼續）`);
-            break;
-          }
+function renderYouonPairs(){document.getElementById('youonPairs').innerHTML=youonPairs.map((p,i)=>`<article class="pair"><span class="badge">第 ${i+1} 組</span><div class="compare"><div class="side"><div class="jp">${esc(p[2].split(' → ')[0])}</div><div class="muted">組合前</div><div>大字 + 小字</div><button onclick="playLesson('${esc(p[0][0])}')">播放大字</button></div><div class="side"><div class="jp">${hi(p[1][0],'youon')}</div><div class="muted">${esc(p[1][1])}</div><div>${esc(p[1][2])}</div><button onclick="playLesson('${esc(p[1][0])}')">播放拗音</button></div></div><p>${esc(p[2])}</p><button onclick="playLesson('${esc(p[1][0])}')">拗音跟讀</button></article>`).join('')}
 
-          setPlayingCard(card);
-          setStatus(`🔁 自動播放中：${card.kana}（${state.audioMode === 'kana' ? '單音' : '單字'}）`);
+function renderWords(id,words,k){document.getElementById(id).innerHTML=words.map(w=>`<article class="word"><div class="jp">${hi(w[0],k)}</div><div class="muted">${esc(w[1])}</div><div>${esc(w[2])}</div><button onclick="playLesson('${esc(w[0])}')">🔊 播放</button></article>`).join('')}
 
-          try {
-            await playCard(card, state.audioMode);
-          } catch (err) {
-            clearCardEffects();
-            setStatus(`自動播放失敗：${err.message}`, true);
-            state.autoPlay = false;
-            state.autoPlayIndex = 0;
-            autoPlayBtn.textContent = '🔁 自動播放：關';
-            autoPlayBtn.classList.remove('active');
-            break;
-          }
+// =========================================================
+// 事件綁定 / 初始化
+// =========================================================
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active')});
 
-          if (!state.autoPlay || state.stopRequested) {
-            clearCardEffects();
-            setStatus(`🔁 自動播放已停止（下次將從第 ${state.autoPlayIndex + 1} 張繼續）`);
-            break;
-          }
+playAllBtn.onclick=async()=>{if(state.playing&&!state.autoPlay){state.stopRequested=true;audioPlayer.pause();return}const list=currentCards();if(state.lastPlayMode!==state.audioMode)state.playIndex=0;if(state.playIndex>=list.length)state.playIndex=0;playAllBtn.textContent='⏹ 停止';playAllBtn.classList.add('active');await playSeq(list,state.audioMode,state.playIndex)};
 
-          clearPlayingState(card);
-          flipCardToOpposite(card, state.audioMode);
-          state.autoPlayIndex = i + 1;
-          await sleep(700);
-        }
+autoPlayBtn.onclick=async()=>{if(state.autoPlay){state.autoPlay=false;state.stopRequested=true;audioPlayer.pause();autoPlayBtn.textContent='🔁 自動播放：關';autoPlayBtn.classList.remove('active');return}state.autoPlay=true;autoPlayBtn.textContent='🔁 自動播放：開';autoPlayBtn.classList.add('active');await autoPlay()};
 
-        if (state.autoPlay && state.autoPlayIndex >= list.length) {
-          clearCardEffects();
-          setStatus('🔁 自動播放完成');
-          state.autoPlay = false;
-          state.autoPlayIndex = 0;
-          autoPlayBtn.textContent = '🔁 自動播放：關';
-          autoPlayBtn.classList.remove('active');
-        }
-      } finally {
-        state.playing = false;
-        playAllBtn.disabled = false;
-        autoPlayBtn.disabled = false;
-        state.stopRequested = false;
-      }
-    }
+shuffleBtn.onclick=()=>{cards.sort(()=>Math.random()-.5);renderCards();applyFaces()};
 
-    function renderFilters(){
-      const defs = [['ALL','全部'],['A-row','あ行'],['KA-row','か行'],['SA-row','さ行']];
-      rowFilters.innerHTML = defs.map(([key,label]) => `
-        <button class="${state.filter===key?'active':''}" data-filter="${key}">${label}</button>
-      `).join('');
+flipAllBtn.onclick=()=>{state.flippedAll=!state.flippedAll;flipAllBtn.textContent=state.flippedAll?'全部翻回正面':'全部翻到背面';renderCards();applyFaces()};
 
-      [...rowFilters.querySelectorAll('button')].forEach(btn => {
-        btn.onclick = () => {
-          state.filter = btn.dataset.filter;
-          state.playIndex = 0;
-          state.autoPlayIndex = 0;
-          state.stopRequested = true;
-          audioPlayer.pause();
-          audioPlayer.currentTime = 0;
-          clearCardEffects();
-          renderFilters();
-          renderCards();
-          applyBaseFaces();
-          setStatus('已切換行別（播放已重置）');
-        };
-      });
-    }
+searchInput.oninput=()=>{state.q=searchInput.value;renderCards();applyFaces()};
 
-    function renderCards(){
-      const list = currentCards();
-      resultStat.textContent = `目前顯示 ${list.length} 張卡`;
+audioMode.onchange=()=>{state.audioMode=audioMode.value;state.playIndex=0;state.autoPlayIndex=0;applyFaces();status(`已切換為：${state.audioMode==='kana'?'單音':'單字'} 模式`)};
 
-      grid.innerHTML = list.map(card => {
-        const tableRows = card.items.map(row => `
-          <tr>
-            <td>${escapeHtml(row[0])}</td>
-            <td>${escapeHtml(row[1])}</td>
-            <td>${escapeHtml(row[2])}</td>
-          </tr>`).join('');
+// 初始渲染
+renderFilters();
+renderCards();
+applyFaces();
 
-        return `
-          <article class="card-wrap">
-            <div class="card ${state.flippedAll ? 'is-flipped' : ''}" data-kana="${escapeHtml(card.kana)}" tabindex="0" role="button" aria-label="${escapeHtml(card.kana)} 卡片，點擊翻面">
-              <section class="face front">
-                <div class="tag">${escapeHtml(card.row)}</div>
-                <div class="art" aria-hidden="true">
-                  <div class="motif ${escapeHtml(card.motif)}">${escapeHtml(card.icon)}</div>
-                  <div>
-                    <div class="kana">${escapeHtml(card.kana)}</div>
-                    <div class="roman">${escapeHtml(card.romaji)}</div>
-                  </div>
-                </div>
-              </section>
-              <section class="face back">
-                <div class="tag">${escapeHtml(card.row)}</div>
-                <p class="mini" style="font-size:18px;color:var(--ink);font-weight:700;">${escapeHtml(card.kana)}｜${escapeHtml(card.romaji)}</p>
-                <table>
-                  <thead><tr><th>日文</th><th>平假名 / 羅馬拼音</th><th>中文 / English</th></tr></thead>
-                  <tbody>${tableRows}</tbody>
-                </table>
-                <div class="actions">
-                  <button class="play-one" data-romaji="${escapeHtml(card.romaji)}">🔊 單音 mp3</button>
-                  <button class="play-words" data-romaji="${escapeHtml(card.romaji)}">▶ 單字 mp3</button>
-                </div>
-              </section>
-            </div>
-          </article>`;
-      }).join('');
-
-      [...grid.querySelectorAll('.card')].forEach(el => {
-        el.addEventListener('click', e => {
-          if (e.target.closest('.play-one') || e.target.closest('.play-words')) return;
-          el.classList.toggle('is-flipped');
-        });
-        el.addEventListener('keydown', e => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            el.classList.toggle('is-flipped');
-          }
-        });
-      });
-
-      [...grid.querySelectorAll('.play-one')].forEach(btn => {
-        btn.onclick = async (e) => {
-          e.stopPropagation();
-          const card = list.find(c => c.romaji === btn.dataset.romaji);
-          if (!card) return;
-          showCardFace(card, 'kana');
-          setPlayingCard(card);
-          setStatus(`播放中：${card.kana}（單音）`);
-          try {
-            await playCard(card, 'kana');
-          } catch (err) {
-            setStatus(`找不到音檔：${err.message}`, true);
-          } finally {
-            clearCardEffects();
-            showCardFace(card, 'kana');
-          }
-        };
-      });
-
-      [...grid.querySelectorAll('.play-words')].forEach(btn => {
-        btn.onclick = async (e) => {
-          e.stopPropagation();
-          const card = list.find(c => c.romaji === btn.dataset.romaji);
-          if (!card) return;
-          showCardFace(card, 'words');
-          setPlayingCard(card);
-          setStatus(`播放中：${card.kana}（單字）`);
-          try {
-            await playCard(card, 'words');
-          } catch (err) {
-            setStatus(`找不到音檔：${err.message}`, true);
-          } finally {
-            clearCardEffects();
-            showCardFace(card, 'words');
-          }
-        };
-      });
-
-      applyBaseFaces();
-    }
-
-    function shuffle(){
-      for (let i = cards.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [cards[i], cards[j]] = [cards[j], cards[i]];
-      }
-      renderCards();
-      applyBaseFaces();
-    }
-
-    function isLineBrowser(){ return /Line\//i.test(navigator.userAgent); }
-    function initLineTip(){
-      if (isLineBrowser()){
-        const tip = document.getElementById('lineAudioTip');
-        const btn = document.getElementById('openExternalBtn');
-        if (tip && btn){
-          tip.style.display = 'block';
-          btn.href = window.location.href;
-          btn.target = '_blank';
-          btn.rel = 'noopener noreferrer';
-        }
-      }
-    }
-
-    playAllBtn.onclick = async () => {
-      if (state.playing && !state.autoPlay) {
-        state.stopRequested = true;
-        audioPlayer.pause();
-        audioPlayer.currentTime = 0;
-        playAllBtn.textContent = '▶ 播放一輪';
-        playAllBtn.classList.remove('active');
-        setStatus(`播放已停止（下次將從第 ${state.playIndex + 1} 張繼續）`);
-        return;
-      }
-      const list = currentCards();
-      if (state.lastPlayMode !== state.audioMode) state.playIndex = 0;
-      if (state.playIndex >= list.length) state.playIndex = 0;
-      playAllBtn.textContent = '⏹ 停止';
-      playAllBtn.classList.add('active');
-      setStatus(`▶ 播放一輪：${state.audioMode === 'kana' ? '單音' : '單字'} 模式（從第 ${state.playIndex + 1} 張開始）`);
-      await playSequential(list, state.audioMode, state.playIndex);
-    };
-
-    shuffleBtn.onclick = shuffle;
-
-    flipAllBtn.onclick = () => {
-      state.flippedAll = !state.flippedAll;
-      flipAllBtn.textContent = state.flippedAll ? '全部翻回正面' : '全部翻到背面';
-      renderCards();
-      applyBaseFaces();
-    };
-
-    autoPlayBtn.onclick = async () => {
-      if (state.autoPlay) {
-        state.autoPlay = false;
-        state.stopRequested = true;
-        audioPlayer.pause();
-        audioPlayer.currentTime = 0;
-        clearCardEffects();
-        autoPlayBtn.textContent = '🔁 自動播放：關';
-        autoPlayBtn.classList.remove('active');
-        setStatus(`🔁 自動播放已停止（下次將從第 ${state.autoPlayIndex + 1} 張繼續）`);
-        return;
-      }
-      const list = currentCards();
-      if (state.lastAutoMode !== state.audioMode) state.autoPlayIndex = 0;
-      if (state.autoPlayIndex >= list.length) state.autoPlayIndex = 0;
-      state.autoPlay = true;
-      state.stopRequested = false;
-      autoPlayBtn.textContent = '🔁 自動播放：開';
-      autoPlayBtn.classList.add('active');
-      setStatus(`已切換為：🔁 自動播放開啟（從第 ${state.autoPlayIndex + 1} 張開始）`);
-      await autoPlayCards();
-    };
-
-    searchInput.oninput = () => {
-      state.q = searchInput.value;
-      state.playIndex = 0;
-      state.autoPlayIndex = 0;
-      state.stopRequested = true;
-      audioPlayer.pause();
-      audioPlayer.currentTime = 0;
-      clearCardEffects();
-      renderCards();
-      applyBaseFaces();
-      setStatus('搜尋已更新（播放已重置）');
-    };
-
-    audioMode.onchange = () => {
-      state.audioMode = audioMode.value;
-      state.playIndex = 0;
-      state.autoPlayIndex = 0;
-      state.stopRequested = true;
-      audioPlayer.pause();
-      audioPlayer.currentTime = 0;
-      clearCardEffects();
-      applyBaseFaces();
-      setStatus(`已切換為：${state.audioMode === 'kana' ? '單音' : '單字'} 模式`);
-    };
-
-    initLineTip();
-    renderFilters();
-    renderCards();
-    applyBaseFaces();
-  </script>
+renderPairs('sokuonPairs',sokuonPairs,'sokuon');
+renderWords('sokuonWords',sokuonWords,'sokuon');
+renderPairs('choonPairs',choonPairs,'choon');
+renderWords('choonWords',choonWords,'choon');
+renderPairs('dakuonPairs',dakuonPairs,'dakuon');
+renderWords('dakuonWords',dakuonWords,'dakuon');
+renderYouonPairs();
+renderWords('youonWords',youonWords,'youon');
+</script>
 </body>
 </html>
