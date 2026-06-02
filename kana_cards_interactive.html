@@ -11,7 +11,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kana平假名46+ Sokuon促音+ Choon長音</title>
+<title>Kana 46 + Sokuon + Choon + Dakuon + Youon</title>
 
 <style>
 /* =========================================================
@@ -191,6 +191,16 @@ th{
 .red{
   color:var(--red);
   font-weight:900}
+.pair,.word{cursor:pointer}
+.lineTip{
+  background:#fff5f5;
+  border:1px solid #fecaca;
+  color:#b42318;
+  border-radius:18px;
+  padding:12px 14px;
+  line-height:1.6;
+  margin:12px 0;
+  font-weight:700}
 #playAllBtn,#autoPlayBtn{
   color:var(--red);
   font-weight:700;
@@ -212,6 +222,7 @@ th{
 <div class="badge">日文 · KANA LEARNING</div>
 <h1>平假名50音｜促音｜長音｜濁音｜拗音</h1>
 <p class="sub">Tab 1：完整46張平假名卡。Tab 2–5：可聽、可比、可跟讀；若 MP3 不存在，會自動改用瀏覽器日文語音。</p>
+<div id="lineTip" class="lineTip" style="display:none;">LINE 內建瀏覽器可能限制瀏覽器語音；若無聲，請用右上角「⋯」→「在瀏覽器開啟」。若已上傳 audio/*.mp3，會優先播放 MP3。</div>
 </section>
 
 <nav class="tabs">
@@ -375,6 +386,253 @@ const youonPairs = [[["き", "き / base", "大字"], ["きゃ", "きゃ / kya",
 const youonWords = [["きょう", "きょう / kyou", "今天 / today"], ["しゃしん", "しゃしん / shashin", "照片 / photo"], ["しゅくだい", "しゅくだい / shukudai", "作業 / homework"], ["ちゃ", "ちゃ / cha", "茶 / tea"], ["ちゅうごく", "ちゅうごく / chuugoku", "中國 / China"], ["にゃん", "にゃん / nyan", "喵 / meow"], ["ひゃく", "ひゃく / hyaku", "一百 / hundred"], ["ぎゅうにく", "ぎゅうにく / gyuuniku", "牛肉 / beef"], ["じゅぎょう", "じゅぎょう / jugyou", "課程 / class"], ["びょういん", "びょういん / byouin", "醫院 / hospital"]];
 
 // =========================================================
+// 音檔對照表：支援新版羅馬拼音 MP3
+// =========================================================
+const audioNameMap = {
+  "あ": "a",
+  "あい": "ai",
+  "あお": "ao",
+  "い": "i",
+  "いえ": "ie",
+  "いいえ": "iie",
+  "う": "u",
+  "うえ": "ue",
+  "え": "e",
+  "絵": "e",
+  "映画": "eiga",
+  "お": "o",
+  "か": "ka",
+  "かい": "kai",
+  "かお": "kao",
+  "かき": "kaki",
+  "き": "ki",
+  "きく": "kiku",
+  "く": "ku",
+  "いか": "ika",
+  "くち": "kuchi",
+  "け": "ke",
+  "いけ": "ike",
+  "こ": "ko",
+  "こい": "koi",
+  "さ": "sa",
+  "あさ": "asa",
+  "かさ": "kasa",
+  "さけ": "sake",
+  "し": "shi",
+  "いし": "ishi",
+  "うし": "ushi",
+  "しか": "shika",
+  "す": "su",
+  "すし": "sushi",
+  "いす": "isu",
+  "せ": "se",
+  "せかい": "sekai",
+  "あせ": "ase",
+  "そ": "so",
+  "うそ": "uso",
+  "た": "ta",
+  "かた": "kata",
+  "たこ": "tako",
+  "ち": "chi",
+  "ちず": "chizu",
+  "つ": "tsu",
+  "くつ": "kutsu",
+  "あつい": "atsui",
+  "て": "te",
+  "てがみ": "tegami",
+  "てつ": "tetsu",
+  "と": "to",
+  "いと": "ito",
+  "おと": "oto",
+  "な": "na",
+  "なつ": "natsu",
+  "なまえ": "namae",
+  "に": "ni",
+  "にく": "niku",
+  "にほん": "nihon",
+  "ぬ": "nu",
+  "いぬ": "inu",
+  "ぬの": "nuno",
+  "ね": "ne",
+  "ねこ": "neko",
+  "ねつ": "netsu",
+  "の": "no",
+  "おかね": "okane",
+  "のみもの": "nomimono",
+  "は": "ha",
+  "はな": "hana",
+  "ひ": "hi",
+  "ひと": "hito",
+  "ひこうき": "hikouki",
+  "ふ": "fu",
+  "とうふ": "toufu",
+  "ふね": "fune",
+  "へ": "he",
+  "へや": "heya",
+  "へそ": "heso",
+  "ほ": "ho",
+  "ほし": "hoshi",
+  "ほん": "hon",
+  "ま": "ma",
+  "あたま": "atama",
+  "まど": "mado",
+  "み": "mi",
+  "みみ": "mimi",
+  "みそ": "miso",
+  "む": "mu",
+  "むし": "mushi",
+  "さむい": "samui",
+  "め": "me",
+  "あめ": "ame",
+  "めがね": "megane",
+  "も": "mo",
+  "もも": "momo",
+  "もり": "mori",
+  "や": "ya",
+  "やさい": "yasai",
+  "やきにく": "yakiniku",
+  "やま": "yama",
+  "ゆ": "yu",
+  "ゆき": "yuki",
+  "おゆ": "oyu",
+  "ゆび": "yubi",
+  "よ": "yo",
+  "よる": "yoru",
+  "よいち": "yoichi",
+  "よこ": "yoko",
+  "ら": "ra",
+  "さくら": "sakura",
+  "そら": "sora",
+  "らいおん": "raion",
+  "り": "ri",
+  "あり": "ari",
+  "くすり": "kusuri",
+  "りんご": "ringo",
+  "る": "ru",
+  "ひる": "hiru",
+  "みそしる": "misoshiru",
+  "れ": "re",
+  "れきし": "rekishi",
+  "れいぞうこ": "reizouko",
+  "れもん": "remon",
+  "ろ": "ro",
+  "おふろ": "ofuro",
+  "ろうそく": "rousoku",
+  "こころ": "kokoro",
+  "わ": "wa",
+  "わたし": "watashi",
+  "でんわ": "denwa",
+  "わに": "wani",
+  "たわし": "tawashi",
+  "を": "wo",
+  "ほんを": "hon_o",
+  "みずを": "mizu_o",
+  "ん": "n",
+  "でんしゃ": "densha",
+  "きて": "kite",
+  "きって": "kitte",
+  "さか": "saka",
+  "さっか": "sakka",
+  "きぷ": "kipu",
+  "きっぷ": "kippu",
+  "ざし": "zashi",
+  "ざっし": "zasshi",
+  "おばさん": "obasan",
+  "おばあさん": "obaasan",
+  "ゆうき": "yuuki",
+  "ここ": "koko",
+  "こうこう": "koukou",
+  "とおい": "tooi",
+  "おおきい": "ookii",
+  "が": "ga",
+  "ぎ": "gi",
+  "ぐ": "gu",
+  "げ": "ge",
+  "ご": "go",
+  "ざ": "za",
+  "じ": "ji",
+  "ず": "zu",
+  "ぜ": "ze",
+  "ぞ": "zo",
+  "だ": "da",
+  "ぢ": "ji_dji",
+  "づ": "zu_dzu",
+  "で": "de",
+  "ど": "do",
+  "ば": "ba",
+  "び": "bi",
+  "ぶ": "bu",
+  "べ": "be",
+  "ぼ": "bo",
+  "ぱ": "pa",
+  "ぴ": "pi",
+  "ぷ": "pu",
+  "ぺ": "pe",
+  "ぽ": "po",
+  "きゃ": "kya",
+  "きゅ": "kyu",
+  "きょ": "kyo",
+  "しゃ": "sha",
+  "しゅ": "shu",
+  "しょ": "sho",
+  "ちゃ": "cha",
+  "ちゅ": "chu",
+  "ちょ": "cho",
+  "にゃ": "nya",
+  "にゅ": "nyu",
+  "にょ": "nyo",
+  "ひゃ": "hya",
+  "ひゅ": "hyu",
+  "ひょ": "hyo",
+  "みゃ": "mya",
+  "みゅ": "myu",
+  "みょ": "myo",
+  "りゃ": "rya",
+  "りゅ": "ryu",
+  "りょ": "ryo",
+  "ぎゃ": "gya",
+  "ぎゅ": "gyu",
+  "ぎょ": "gyo",
+  "じゃ": "ja",
+  "じゅ": "ju",
+  "じょ": "jo",
+  "びゃ": "bya",
+  "びゅ": "byu",
+  "びょ": "byo",
+  "ぴゃ": "pya",
+  "ぴゅ": "pyu",
+  "ぴょ": "pyo",
+  "がっこう": "gakkou",
+  "ベッド": "beddo",
+  "コップ": "koppu",
+  "おかあさん": "okaasan",
+  "おとうさん": "otousan",
+  "せんせい": "sensei",
+  "がくせい": "gakusei",
+  "とうきょう": "toukyou",
+  "こうえん": "kouen",
+  "かぎ": "kagi",
+  "ごはん": "gohan",
+  "じかん": "jikan",
+  "みず": "mizu",
+  "どこ": "doko",
+  "ぶた": "buta",
+  "べんとう": "bentou",
+  "ぼうし": "boushi",
+  "パン": "pan",
+  "えんぴつ": "enpitsu",
+  "きょう": "kyou",
+  "しゃしん": "shashin",
+  "しゅくだい": "shukudai",
+  "ちゅうごく": "chuugoku",
+  "にゃん": "nyan",
+  "ひゃく": "hyaku",
+  "ぎゅうにく": "gyuuniku",
+  "じゅぎょう": "jugyou",
+  "びょういん": "byouin"
+};
+
+// =========================================================
 // 狀態與 DOM 參照
 // =========================================================
 const state = {filter:'ALL',q:'',audioMode:'kana',playing:false,autoPlay:false,stopRequested:false,playIndex:0,autoPlayIndex:0,lastPlayMode:'kana',lastAutoMode:'kana',flippedAll:false};
@@ -387,12 +645,133 @@ function norm(s){return String(s||'').toLowerCase().replace(/[ō]/g,'ou').replac
 function status(m,e=false){audioStatus.textContent=m;audioStatus.classList.toggle('status-error',e)}
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
-function speakJapanese(text){return new Promise(r=>{if(!('speechSynthesis'in window))return r(false);speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='ja-JP';u.rate=.82;u.onend=()=>r(true);u.onerror=()=>r(false);speechSynthesis.speak(u)})}
 
-async function playAudio(src,fb=''){return new Promise(resolve=>{let done=false;const finish=async ok=>{if(done)return;done=true;audioPlayer.onended=null;audioPlayer.onerror=null;if(!ok&&fb)await speakJapanese(fb);resolve(ok)};audioPlayer.pause();audioPlayer.currentTime=0;audioPlayer.src=src;audioPlayer.onended=()=>finish(true);audioPlayer.onerror=()=>finish(false);const p=audioPlayer.play();if(p&&p.catch)p.catch(()=>finish(false))})}
-function getSingle(c){return `audio/${norm(c.romaji)}.mp3`}function getSeg(c,i){return `audio/${norm(c.romaji)}_words_${i}.mp3`}
+function isLineBrowser(){
+  return /Line/i.test(navigator.userAgent || "");
+}
 
-async function playCard(c,mode){if(mode==='kana')await playAudio(getSingle(c),c.kana);else{const ws=c.items.slice(1);for(let i=1;i<=ws.length;i++){if(state.stopRequested)return;const fb=ws[i-1][0];await playAudio(getSeg(c,i),fb);await sleep(500);await playAudio(getSeg(c,i),fb);if(i<ws.length)await sleep(500)}}}
+function showLineTipIfNeeded(){
+  const tip=document.getElementById('lineTip');
+  if(tip && isLineBrowser()) tip.style.display='block';
+}
+
+function speakJapanese(text){
+  return new Promise(r=>{
+    if(!('speechSynthesis' in window)){
+      showLineTipIfNeeded();
+      return r(false);
+    }
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='ja-JP';
+    u.rate=.82;
+    u.onend=()=>r(true);
+    u.onerror=()=>{
+      showLineTipIfNeeded();
+      r(false);
+    };
+    speechSynthesis.speak(u);
+  });
+}
+
+function playAudioFileOnly(src){
+  return new Promise(resolve=>{
+    let done=false;
+    const finish=ok=>{
+      if(done)return;
+      done=true;
+      audioPlayer.onended=null;
+      audioPlayer.onerror=null;
+      resolve(ok);
+    };
+    audioPlayer.pause();
+    audioPlayer.currentTime=0;
+    audioPlayer.src=src;
+    audioPlayer.onended=()=>finish(true);
+    audioPlayer.onerror=()=>finish(false);
+    const p=audioPlayer.play();
+    if(p&&p.catch)p.catch(()=>finish(false));
+  });
+}
+
+async function playAudio(src,fb=''){
+  const ok = await playAudioFileOnly(src);
+  if(!ok && fb) await speakJapanese(fb);
+  return ok;
+}
+
+async function playAudioCandidates(srcList,fb=''){
+  for(const src of srcList){
+    if(!src) continue;
+    const ok = await playAudioFileOnly(src);
+    if(ok) return true;
+  }
+  if(fb) await speakJapanese(fb);
+  return false;
+}
+
+function audioNameForText(text){
+  return audioNameMap[text] || norm(text);
+}
+
+function audioSrcForText(text){
+  const name = audioNameForText(text);
+  return name ? `audio/${name}.mp3` : '';
+}
+
+function getSingle(c){
+  return `audio/${norm(c.romaji)}.mp3`;
+}
+
+function getOldSeg(c,i){
+  return `audio/${norm(c.romaji)}_words_${i}.mp3`;
+}
+
+function getWordRomajiFromItem(item){
+  if(!item || !item[1]) return '';
+  const parts = String(item[1]).split('/');
+  return parts.length > 1 ? norm(parts[parts.length-1]) : '';
+}
+
+function getNewWordSrc(item){
+  if(!item) return '';
+  const jp = item[0];
+  const mapped = audioNameMap[jp];
+  const romaji = mapped || getWordRomajiFromItem(item);
+  return romaji ? `audio/${romaji}.mp3` : '';
+}
+
+async function playCard(c,mode){
+  if(mode==='kana'){
+    await playAudioCandidates([getSingle(c)],c.kana);
+    return;
+  }
+
+  const ws=c.items.slice(1);
+  for(let i=1;i<=ws.length;i++){
+    if(state.stopRequested)return;
+
+    const item = ws[i-1];
+    const fb = item[0];
+
+    // 新舊 MP3 兼容：
+    // 1. 新版：audio/kata.mp3, audio/tako.mp3 ...
+    // 2. 舊版：audio/ta_words_1.mp3, audio/ta_words_2.mp3 ...
+    await playAudioCandidates([
+      getNewWordSrc(item),
+      getOldSeg(c,i)
+    ],fb);
+
+    await sleep(500);
+
+    await playAudioCandidates([
+      getNewWordSrc(item),
+      getOldSeg(c,i)
+    ],fb);
+
+    if(i<ws.length) await sleep(500);
+  }
+}
 
 function currentCards(){const q=state.q.trim().toLowerCase();return cards.filter(c=>(state.filter==='ALL'||c.row===state.filter)&&(!q||[c.row,c.kana,c.romaji,...c.items.flat()].join(' ').toLowerCase().includes(q)))}
 
@@ -414,19 +793,99 @@ function renderFilters(){const defs=[['ALL','全部'],['A-row','あ行'],['KA-ro
 renderFilters();
 renderCards();
 applyFaces();
+showLineTipIfNeeded();
 status('已切換行別')})}
 
-function renderCards(){const list=currentCards();resultStat.textContent=`目前顯示 ${list.length} 張卡`;grid.innerHTML=list.map(c=>{const rows=c.items.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('');return `<article class="card-wrap"><div class="card" data-kana="${esc(c.kana)}"><section class="face front"><div class="tag">${esc(c.row)}</div><div class="art"><div class="motif">${esc(c.icon)}</div><div><div class="kana">${esc(c.kana)}</div><div class="roman">${esc(c.romaji)}</div></div></div></section><section class="face back"><div class="tag">${esc(c.row)}</div><p><b>${esc(c.kana)}｜${esc(c.romaji)}</b></p><table><thead><tr><th>日文</th><th>平假名 / 羅馬拼音</th><th>中文 / English</th></tr></thead><tbody>${rows}</tbody></table><div class="actions"><button class="play-one" data-r="${esc(c.romaji)}">🔊 單音</button><button class="play-words" data-r="${esc(c.romaji)}">▶ 單字</button></div></section></div></article>`}).join('');grid.querySelectorAll('.card').forEach(e=>e.onclick=ev=>{if(ev.target.closest('button'))return;e.classList.toggle('is-flipped')});grid.querySelectorAll('.play-one').forEach(b=>b.onclick=async ev=>{ev.stopPropagation();const c=list.find(x=>x.romaji===b.dataset.r);showFace(c,'kana');setPlay(c);await playCard(c,'kana');clearFx();showFace(c,'kana')});grid.querySelectorAll('.play-words').forEach(b=>b.onclick=async ev=>{ev.stopPropagation();const c=list.find(x=>x.romaji===b.dataset.r);showFace(c,'words');setPlay(c);await playCard(c,'words');clearFx();showFace(c,'words')});applyFaces()}
+function renderCards(){
+  const list=currentCards();
+  resultStat.textContent=`目前顯示 ${list.length} 張卡`;
+
+  grid.innerHTML=list.map(c=>{
+    const rows=c.items.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('');
+    return `<article class="card-wrap"><div class="card" data-kana="${esc(c.kana)}"><section class="face front"><div class="tag">${esc(c.row)}</div><div class="art"><div class="motif">${esc(c.icon)}</div><div><div class="kana">${esc(c.kana)}</div><div class="roman">${esc(c.romaji)}</div></div></div></section><section class="face back"><div class="tag">${esc(c.row)}</div><p><b>${esc(c.kana)}｜${esc(c.romaji)}</b></p><table><thead><tr><th>日文</th><th>平假名 / 羅馬拼音</th><th>中文 / English</th></tr></thead><tbody>${rows}</tbody></table><div class="actions"><button class="play-one" data-r="${esc(c.romaji)}">🔊 單音</button><button class="play-words" data-r="${esc(c.romaji)}">▶ 單字</button></div></section></div></article>`;
+  }).join('');
+
+  // Tab 1 新規則：
+  // 正面任意處：播放單音 + 翻面
+  // 背面任意處：不動；只有按「單音 / 單字」按鈕才播放
+  grid.querySelectorAll('.card').forEach(e=>{
+    e.onclick=async ev=>{
+      if(ev.target.closest('button')) return;
+
+      const c=list.find(x=>x.kana===e.dataset.kana);
+      if(!c) return;
+
+      const isBack=e.classList.contains('is-flipped');
+      if(isBack) return;
+
+      setPlay(c);
+      status(`播放中：${c.kana}（單音）`);
+      await playCard(c,'kana');
+      clearFx();
+      e.classList.add('is-flipped');
+    };
+  });
+
+  grid.querySelectorAll('.play-one').forEach(b=>{
+    b.onclick=async ev=>{
+      ev.stopPropagation();
+      const c=list.find(x=>x.romaji===b.dataset.r);
+      showFace(c,'kana');
+      setPlay(c);
+      await playCard(c,'kana');
+      clearFx();
+      showFace(c,'kana');
+    };
+  });
+
+  grid.querySelectorAll('.play-words').forEach(b=>{
+    b.onclick=async ev=>{
+      ev.stopPropagation();
+      const c=list.find(x=>x.romaji===b.dataset.r);
+      showFace(c,'words');
+      setPlay(c);
+      await playCard(c,'words');
+      clearFx();
+      showFace(c,'words');
+    };
+  });
+
+  applyFaces();
+}
 
 function hi(s,k){s=esc(s);if(k==='sokuon')return s.replace(/っ/g,'<span class="red">っ</span>').replace(/ッ/g,'<span class="red">ッ</span>');if(k==='choon')return s.replace(/あさん/g,'<span class="red">あ</span>さん').replace(/ゆう/g,'ゆ<span class="red">う</span>').replace(/こう/g,'こ<span class="red">う</span>').replace(/おお/g,'お<span class="red">お</span>').replace(/せい/g,'せ<span class="red">い</span>');if(k==='dakuon')return s.replace(/[がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ]/g,m=>'<span class="red">'+m+'</span>');if(k==='youon')return s.replace(/[ゃゅょ]/g,m=>'<span class="red">'+m+'</span>');return s}
 
-async function playLesson(t){await playAudio(`audio/${norm(t)}.mp3`,t)}
+async function playLesson(t){await playAudioCandidates([audioSrcForText(t)],t)}
 
-async function playCompare(a,b){await playLesson(a);await sleep(650);await playLesson(b)}function renderPairs(id,pairs,k){document.getElementById(id).innerHTML=pairs.map((p,i)=>`<article class="pair"><span class="badge">第 ${i+1} 組</span><div class="compare"><div class="side"><div class="jp">${hi(p[0][0],k)}</div><div class="muted">${esc(p[0][1])}</div><div>${esc(p[0][2])}</div><button onclick="playLesson('${esc(p[0][0])}')">播放A</button></div><div class="side"><div class="jp">${hi(p[1][0],k)}</div><div class="muted">${esc(p[1][1])}</div><div>${esc(p[1][2])}</div><button onclick="playLesson('${esc(p[1][0])}')">播放B</button></div></div><p>${esc(p[2])}</p><button onclick="playCompare('${esc(p[0][0])}','${esc(p[1][0])}')">A → B 比較播放 / 跟讀</button></article>`).join('')}
+async function playCompare(a,b){await playLesson(a);await sleep(650);await playLesson(b)}function renderPairs(id,pairs,k){
+  document.getElementById(id).innerHTML=pairs.map((p,i)=>`<article class="pair" onclick="if(!event.target.closest('button')) playCompare('${esc(p[0][0])}','${esc(p[1][0])}')"><span class="badge">第 ${i+1} 組</span><div class="compare"><div class="side"><div class="jp">${hi(p[0][0],k)}</div><div class="muted">${esc(p[0][1])}</div><div>${esc(p[0][2])}</div><button onclick="event.stopPropagation();playLesson('${esc(p[0][0])}')">播放A</button></div><div class="side"><div class="jp">${hi(p[1][0],k)}</div><div class="muted">${esc(p[1][1])}</div><div>${esc(p[1][2])}</div><button onclick="event.stopPropagation();playLesson('${esc(p[1][0])}')">播放B</button></div></div><p>${esc(p[2])}</p><button onclick="event.stopPropagation();playCompare('${esc(p[0][0])}','${esc(p[1][0])}')">A → B 比較播放 / 跟讀</button></article>`).join('');
+}
 
-function renderYouonPairs(){document.getElementById('youonPairs').innerHTML=youonPairs.map((p,i)=>`<article class="pair"><span class="badge">第 ${i+1} 組</span><div class="compare"><div class="side"><div class="jp">${esc(p[2].split(' → ')[0])}</div><div class="muted">組合前</div><div>大字 + 小字</div><button onclick="playLesson('${esc(p[0][0])}')">播放大字</button></div><div class="side"><div class="jp">${hi(p[1][0],'youon')}</div><div class="muted">${esc(p[1][1])}</div><div>${esc(p[1][2])}</div><button onclick="playLesson('${esc(p[1][0])}')">播放拗音</button></div></div><p>${esc(p[2])}</p><button onclick="playLesson('${esc(p[1][0])}')">拗音跟讀</button></article>`).join('')}
+function smallKanaFromNote(note){
+  if(note.includes('小ゃ')) return 'や';
+  if(note.includes('小ゅ')) return 'ゆ';
+  if(note.includes('小ょ')) return 'よ';
+  return '';
+}
 
-function renderWords(id,words,k){document.getElementById(id).innerHTML=words.map(w=>`<article class="word"><div class="jp">${hi(w[0],k)}</div><div class="muted">${esc(w[1])}</div><div>${esc(w[2])}</div><button onclick="playLesson('${esc(w[0])}')">🔊 播放</button></article>`).join('')}
+async function playYouonSequence(base,note,target){
+  const small = smallKanaFromNote(note);
+  await playLesson(base);
+  if(small){
+    await sleep(350);
+    await playLesson(small);
+  }
+  await sleep(650);
+  await playLesson(target);
+}
+
+function renderYouonPairs(){
+  document.getElementById('youonPairs').innerHTML=youonPairs.map((p,i)=>`<article class="pair" onclick="if(!event.target.closest('button')) playYouonSequence('${esc(p[0][0])}','${esc(p[2])}','${esc(p[1][0])}')"><span class="badge">第 ${i+1} 組</span><div class="compare"><div class="side"><div class="jp">${esc(p[2].split(' → ')[0])}</div><div class="muted">組合前</div><div>大字 + 小字</div><button onclick="event.stopPropagation();playYouonSequence('${esc(p[0][0])}','${esc(p[2])}','${esc(p[1][0])}')">播放組合</button></div><div class="side"><div class="jp">${hi(p[1][0],'youon')}</div><div class="muted">${esc(p[1][1])}</div><div>${esc(p[1][2])}</div><button onclick="event.stopPropagation();playLesson('${esc(p[1][0])}')">播放拗音</button></div></div><p>${esc(p[2])}</p><button onclick="event.stopPropagation();playYouonSequence('${esc(p[0][0])}','${esc(p[2])}','${esc(p[1][0])}')">組合 → 拗音跟讀</button></article>`).join('');
+}
+
+function renderWords(id,words,k){
+  document.getElementById(id).innerHTML=words.map(w=>`<article class="word" onclick="if(!event.target.closest('button')) playLesson('${esc(w[0])}')"><div class="jp">${hi(w[0],k)}</div><div class="muted">${esc(w[1])}</div><div>${esc(w[2])}</div><button onclick="event.stopPropagation();playLesson('${esc(w[0])}')">🔊 播放</button></article>`).join('');
+}
 
 // =========================================================
 // 事件綁定 / 初始化
