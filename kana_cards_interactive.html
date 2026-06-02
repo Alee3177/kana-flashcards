@@ -201,7 +201,7 @@ th{
   line-height:1.6;
   margin:12px 0;
   font-weight:700}
-#playAllBtn,#autoPlayBtn{
+#playAllBtn,#restartRoundBtn,#autoPlayBtn{
   color:var(--red);
   font-weight:700;
   border-color:#f3c7c7}
@@ -242,6 +242,7 @@ th{
 </div>
 <div class="row">
 <button id="playAllBtn">▶ 播放一輪</button>
+<button id="restartRoundBtn">🔁 重頭開始</button>
 <button id="shuffleBtn">隨機排序</button>
 <button id="flipAllBtn">全部翻到背面</button>
 <button id="autoPlayBtn">🔁 自動播放：關</button>
@@ -635,8 +636,8 @@ const audioNameMap = {
 // =========================================================
 // 狀態與 DOM 參照
 // =========================================================
-const state = {filter:'ALL',q:'',audioMode:'kana',playing:false,autoPlay:false,stopRequested:false,playIndex:0,autoPlayIndex:0,lastPlayMode:'kana',lastAutoMode:'kana',flippedAll:false};
-const grid=document.getElementById('grid'), rowFilters=document.getElementById('rowFilters'), resultStat=document.getElementById('resultStat'), audioStatus=document.getElementById('audioStatus'), searchInput=document.getElementById('searchInput'), audioMode=document.getElementById('audioMode'), playAllBtn=document.getElementById('playAllBtn'), shuffleBtn=document.getElementById('shuffleBtn'), flipAllBtn=document.getElementById('flipAllBtn'), autoPlayBtn=document.getElementById('autoPlayBtn'); const audioPlayer=new Audio(); audioPlayer.preload='auto';
+const state = {filter:'ALL',q:'',audioMode:'kana',playing:false,paused:false,autoPlay:false,stopRequested:false,pendingRestart:false,playIndex:0,autoPlayIndex:0,lastPlayMode:'kana',lastAutoMode:'kana',flippedAll:false};
+const grid=document.getElementById('grid'), rowFilters=document.getElementById('rowFilters'), resultStat=document.getElementById('resultStat'), audioStatus=document.getElementById('audioStatus'), searchInput=document.getElementById('searchInput'), audioMode=document.getElementById('audioMode'), playAllBtn=document.getElementById('playAllBtn'), shuffleBtn=document.getElementById('shuffleBtn'), flipAllBtn=document.getElementById('flipAllBtn'), autoPlayBtn=document.getElementById('autoPlayBtn'), restartRoundBtn=document.getElementById('restartRoundBtn'); const audioPlayer=new Audio(); audioPlayer.preload='auto';
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 
@@ -657,6 +658,7 @@ function showLineTipIfNeeded(){
 
 function speakJapanese(text){
   return new Promise(r=>{
+    if(state.stopRequested) return r(false);
     if(!('speechSynthesis' in window)){
       showLineTipIfNeeded();
       return r(false);
@@ -665,7 +667,7 @@ function speakJapanese(text){
     const u=new SpeechSynthesisUtterance(text);
     u.lang='ja-JP';
     u.rate=.82;
-    u.onend=()=>r(true);
+    u.onend=()=>r(!state.stopRequested);
     u.onerror=()=>{
       showLineTipIfNeeded();
       r(false);
@@ -682,6 +684,8 @@ function playAudioFileOnly(src){
       done=true;
       audioPlayer.onended=null;
       audioPlayer.onerror=null;
+      audioPlayer.onpause=null;
+      audioPlayer.onabort=null;
       resolve(ok);
     };
     audioPlayer.pause();
@@ -689,6 +693,8 @@ function playAudioFileOnly(src){
     audioPlayer.src=src;
     audioPlayer.onended=()=>finish(true);
     audioPlayer.onerror=()=>finish(false);
+    audioPlayer.onabort=()=>finish(false);
+    audioPlayer.onpause=()=>{ if(state.stopRequested) finish(false); };
     const p=audioPlayer.play();
     if(p&&p.catch)p.catch(()=>finish(false));
   });
@@ -701,12 +707,15 @@ async function playAudio(src,fb=''){
 }
 
 async function playAudioCandidates(srcList,fb=''){
+  if(state.stopRequested) return false;
   for(const src of srcList){
+    if(state.stopRequested) return false;
     if(!src) continue;
     const ok = await playAudioFileOnly(src);
     if(ok) return true;
+    if(state.stopRequested) return false;
   }
-  if(fb) await speakJapanese(fb);
+  if(!state.stopRequested && fb) await speakJapanese(fb);
   return false;
 }
 
@@ -783,11 +792,96 @@ function showFace(c,m){const e=getEl(c);if(e)(m==='words'?e.classList.add('is-fl
 
 function flipOpp(c,m){const e=getEl(c);if(e)(m==='words'?e.classList.remove('is-flipped'):e.classList.add('is-flipped'))}function setPlay(c){clearFx();const e=getEl(c);if(e){e.classList.add('active','playing');e.scrollIntoView({behavior:'smooth',block:'center'})}}
 
-async function playSeq(list,mode,start){if(!list.length||state.playing)return;state.playing=true;state.stopRequested=false;state.lastPlayMode=mode;try{for(let i=start;i<list.length;i++){const c=list[i];state.playIndex=i;if(state.stopRequested)break;setPlay(c);status(`播放中：${c.kana}（${mode==='kana'?'單音':'單字'}）`);await playCard(c,mode);if(state.stopRequested)break;getEl(c)?.classList.remove('active','playing');flipOpp(c,mode);state.playIndex=i+1;await sleep(500)}if(!state.stopRequested&&state.playIndex>=list.length){state.playIndex=0;status('播放完成')}}finally{state.playing=false;state.stopRequested=false;playAllBtn.textContent='▶ 播放一輪';playAllBtn.classList.remove('active');clearFx()}}
+async function playSeq(list,mode,start){
+  if(!list.length || state.playing) return;
+
+  state.playing=true;
+  state.paused=false;
+  state.stopRequested=false;
+  state.lastPlayMode=mode;
+
+  playAllBtn.textContent='⏸ 暫停';
+  playAllBtn.classList.add('active');
+
+  try{
+    for(let i=start;i<list.length;i++){
+      const c=list[i];
+      state.playIndex=i;
+
+      if(state.stopRequested) break;
+
+      setPlay(c);
+      status(`播放中：${c.kana}（${mode==='kana'?'單音':'單字'}）`);
+
+      await playCard(c,mode);
+
+      if(state.stopRequested) break;
+
+      getEl(c)?.classList.remove('active','playing');
+      flipOpp(c,mode);
+      state.playIndex=i+1;
+
+      await sleep(500);
+    }
+
+    if(!state.stopRequested && state.playIndex>=list.length){
+      state.playIndex=0;
+      state.paused=false;
+      status('播放完成，可按「播放一輪」再練一次');
+    }
+  }finally{
+    state.playing=false;
+    state.stopRequested=false;
+
+    if(state.pendingRestart){
+      state.pendingRestart=false;
+      clearFx();
+      playAllBtn.textContent='⏸ 暫停';
+      playAllBtn.classList.add('active');
+      setTimeout(()=>startRound(true),80);
+      return;
+    }
+
+    if(state.paused){
+      playAllBtn.textContent='▶ 繼續';
+      playAllBtn.classList.add('active');
+      status(`已暫停在第 ${state.playIndex+1} 張；可按「繼續」或「重頭開始」`);
+    }else{
+      playAllBtn.textContent='▶ 播放一輪';
+      playAllBtn.classList.remove('active');
+    }
+
+    clearFx();
+  }
+}
+
+function stopCurrentAudio(){
+  try{ audioPlayer.pause(); }catch(e){}
+  try{ if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){}
+}
+
+async function startRound(reset=false){
+  const list=currentCards();
+  if(!list.length) return;
+
+  if(reset){
+    state.playIndex=0;
+    state.paused=false;
+  }
+
+  if(state.lastPlayMode!==state.audioMode){
+    state.playIndex=0;
+    state.paused=false;
+  }
+
+  if(state.playIndex>=list.length) state.playIndex=0;
+
+  await playSeq(list,state.audioMode,state.playIndex);
+}
 
 async function autoPlay(){const list=currentCards();if(!list.length||state.playing)return;state.playing=true;state.stopRequested=false;state.lastAutoMode=state.audioMode;playAllBtn.disabled=true;try{for(let i=state.autoPlayIndex;i<list.length;i++){const c=list[i];state.autoPlayIndex=i;if(!state.autoPlay||state.stopRequested)break;setPlay(c);status(`🔁 自動播放中：${c.kana}（${state.audioMode==='kana'?'單音':'單字'}）`);await playCard(c,state.audioMode);if(!state.autoPlay||state.stopRequested)break;getEl(c)?.classList.remove('active','playing');flipOpp(c,state.audioMode);state.autoPlayIndex=i+1;await sleep(700)}if(state.autoPlay&&state.autoPlayIndex>=list.length){status('🔁 自動播放完成');state.autoPlay=false;state.autoPlayIndex=0;autoPlayBtn.textContent='🔁 自動播放：關';autoPlayBtn.classList.remove('active')}}finally{state.playing=false;playAllBtn.disabled=false;autoPlayBtn.disabled=false;state.stopRequested=false;clearFx()}}
 
-function renderFilters(){const defs=[['ALL','全部'],['A-row','あ行'],['KA-row','か行'],['SA-row','さ行'],['TA-row','た行'],['NA-row','な行'],['HA-row','は行'],['MA-row','ま行'],['YA-row','や行'],['RA-row','ら行'],['WA-row','わ行']];rowFilters.innerHTML=defs.map(([k,l])=>`<button class="${state.filter===k?'active':''}" data-filter="${k}">${l}</button>`).join('');rowFilters.querySelectorAll('button').forEach(b=>b.onclick=()=>{state.filter=b.dataset.filter;state.playIndex=0;state.autoPlayIndex=0;
+function renderFilters(){const defs=[['ALL','全部'],['A-row','あ行'],['KA-row','か行'],['SA-row','さ行'],['TA-row','た行'],['NA-row','な行'],['HA-row','は行'],['MA-row','ま行'],['YA-row','や行'],['RA-row','ら行'],['WA-row','わ行']];rowFilters.innerHTML=defs.map(([k,l])=>`<button class="${state.filter===k?'active':''}" data-filter="${k}">${l}</button>`).join('');rowFilters.querySelectorAll('button').forEach(b=>b.onclick=()=>{state.filter=b.dataset.filter;state.playIndex=0;state.autoPlayIndex=0;state.paused=false;playAllBtn.textContent='▶ 播放一輪';playAllBtn.classList.remove('active');
 
 // 初始渲染
 renderFilters();
@@ -892,9 +986,35 @@ function renderWords(id,words,k){
 // =========================================================
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active')});
 
-playAllBtn.onclick=async()=>{if(state.playing&&!state.autoPlay){state.stopRequested=true;audioPlayer.pause();return}const list=currentCards();if(state.lastPlayMode!==state.audioMode)state.playIndex=0;if(state.playIndex>=list.length)state.playIndex=0;playAllBtn.textContent='⏹ 停止';playAllBtn.classList.add('active');await playSeq(list,state.audioMode,state.playIndex)};
+playAllBtn.onclick=async()=>{
+  if(state.playing && !state.autoPlay){
+    state.paused=true;
+    state.stopRequested=true;
+    stopCurrentAudio();
+    playAllBtn.textContent='▶ 繼續';
+    status(`已暫停在第 ${state.playIndex+1} 張；可按「繼續」或「重頭開始」`);
+    return;
+  }
 
-autoPlayBtn.onclick=async()=>{if(state.autoPlay){state.autoPlay=false;state.stopRequested=true;audioPlayer.pause();autoPlayBtn.textContent='🔁 自動播放：關';autoPlayBtn.classList.remove('active');return}state.autoPlay=true;autoPlayBtn.textContent='🔁 自動播放：開';autoPlayBtn.classList.add('active');await autoPlay()};
+  await startRound(false);
+};
+
+restartRoundBtn.onclick=async()=>{
+  state.playIndex=0;
+  state.paused=false;
+
+  if(state.playing && !state.autoPlay){
+    state.pendingRestart=true;
+    state.stopRequested=true;
+    stopCurrentAudio();
+    status('準備從第 1 張重新開始');
+    return;
+  }
+
+  await startRound(true);
+};
+
+autoPlayBtn.onclick=async()=>{if(state.autoPlay){state.autoPlay=false;state.stopRequested=true;stopCurrentAudio();autoPlayBtn.textContent='🔁 自動播放：關';autoPlayBtn.classList.remove('active');return}state.autoPlay=true;autoPlayBtn.textContent='🔁 自動播放：開';autoPlayBtn.classList.add('active');await autoPlay()};
 
 shuffleBtn.onclick=()=>{cards.sort(()=>Math.random()-.5);renderCards();applyFaces()};
 
@@ -902,7 +1022,7 @@ flipAllBtn.onclick=()=>{state.flippedAll=!state.flippedAll;flipAllBtn.textConten
 
 searchInput.oninput=()=>{state.q=searchInput.value;renderCards();applyFaces()};
 
-audioMode.onchange=()=>{state.audioMode=audioMode.value;state.playIndex=0;state.autoPlayIndex=0;applyFaces();status(`已切換為：${state.audioMode==='kana'?'單音':'單字'} 模式`)};
+audioMode.onchange=()=>{state.audioMode=audioMode.value;state.playIndex=0;state.autoPlayIndex=0;state.paused=false;playAllBtn.textContent='▶ 播放一輪';playAllBtn.classList.remove('active');applyFaces();status(`已切換為：${state.audioMode==='kana'?'單音':'單字'} 模式`)};
 
 // 初始渲染
 renderFilters();
