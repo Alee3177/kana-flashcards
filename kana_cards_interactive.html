@@ -11,7 +11,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kana 46 + Sokuon + Choon + Dakuon + Youon</title>
+<title>Kana 46 + Sokuon + Choon + Dakuon + Youon - Pause Fix</title>
 
 <style>
 /* =========================================================
@@ -694,7 +694,7 @@ function playAudioFileOnly(src){
     audioPlayer.onended=()=>finish(true);
     audioPlayer.onerror=()=>finish(false);
     audioPlayer.onabort=()=>finish(false);
-    audioPlayer.onpause=()=>{ if(state.stopRequested) finish(false); };
+    audioPlayer.onpause=()=>finish(false);
     const p=audioPlayer.play();
     if(p&&p.catch)p.catch(()=>finish(false));
   });
@@ -791,6 +791,18 @@ function applyFaces(){grid.querySelectorAll('.card').forEach(e=>{if(state.flippe
 function showFace(c,m){const e=getEl(c);if(e)(m==='words'?e.classList.add('is-flipped'):e.classList.remove('is-flipped'))}
 
 function flipOpp(c,m){const e=getEl(c);if(e)(m==='words'?e.classList.remove('is-flipped'):e.classList.add('is-flipped'))}function setPlay(c){clearFx();const e=getEl(c);if(e){e.classList.add('active','playing');e.scrollIntoView({behavior:'smooth',block:'center'})}}
+
+
+function pauseRound(reason='已暫停'){
+  if(!state.playing || state.autoPlay) return false;
+  state.paused=true;
+  state.stopRequested=true;
+  stopCurrentAudio();
+  playAllBtn.textContent='▶ 繼續';
+  playAllBtn.classList.add('active');
+  status(`${reason}在第 ${state.playIndex+1} 張；可按「繼續」或「重頭開始」`);
+  return true;
+}
 
 async function playSeq(list,mode,start){
   if(!list.length || state.playing) return;
@@ -909,9 +921,13 @@ function renderCards(){
       const c=list.find(x=>x.kana===e.dataset.kana);
       if(!c) return;
 
+      // 播放一輪中：點任意卡片 = 暫停一輪，不再插播造成流程卡住。
+      if(pauseRound('已因點選卡片而暫停')) return;
+
       const isBack=e.classList.contains('is-flipped');
       if(isBack) return;
 
+      state.stopRequested=false;
       setPlay(c);
       status(`播放中：${c.kana}（單音）`);
       await playCard(c,'kana');
@@ -923,6 +939,8 @@ function renderCards(){
   grid.querySelectorAll('.play-one').forEach(b=>{
     b.onclick=async ev=>{
       ev.stopPropagation();
+      if(pauseRound('已因點選單音按鈕而暫停')) return;
+      state.stopRequested=false;
       const c=list.find(x=>x.romaji===b.dataset.r);
       showFace(c,'kana');
       setPlay(c);
@@ -935,6 +953,8 @@ function renderCards(){
   grid.querySelectorAll('.play-words').forEach(b=>{
     b.onclick=async ev=>{
       ev.stopPropagation();
+      if(pauseRound('已因點選單字按鈕而暫停')) return;
+      state.stopRequested=false;
       const c=list.find(x=>x.romaji===b.dataset.r);
       showFace(c,'words');
       setPlay(c);
@@ -988,11 +1008,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelect
 
 playAllBtn.onclick=async()=>{
   if(state.playing && !state.autoPlay){
-    state.paused=true;
-    state.stopRequested=true;
-    stopCurrentAudio();
-    playAllBtn.textContent='▶ 繼續';
-    status(`已暫停在第 ${state.playIndex+1} 張；可按「繼續」或「重頭開始」`);
+    pauseRound('已暫停');
     return;
   }
 
