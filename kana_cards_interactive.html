@@ -3,7 +3,7 @@
   維護版：Tab 1 平假名50音 + Tab 2 促音 + Tab 3 長音 + Tab 4 濁音・半濁音 + Tab 5 拗音
   說明：
   1. 單檔 HTML，可直接上傳 GitHub Pages。
-  2. 若 audio/*.mp3 不存在，會退回瀏覽器日文語音。
+  2. 嚴格只播放 audio/*.mp3；找不到音檔時不啟動瀏覽器語音。
   3. 播放動畫不使用 transform，避免覆蓋卡片翻面效果。
 -->
 <!doctype html>
@@ -11,7 +11,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kana 46 + Sokuon + Choon + Dakuon + Youon - LINE Audio Lock Fix</title>
+<title>Kana 46 + Sokuon + Choon + Dakuon + Youon - STRICT MP3 SEQ LOCK</title>
 
 <style>
 /* =========================================================
@@ -221,8 +221,8 @@ th{
 <section class="hero">
 <div class="badge">日文 · KANA LEARNING</div>
 <h1>平假名50音｜促音｜長音｜濁音｜拗音</h1>
-<p class="sub">Tab 1：完整46張平假名卡。Tab 2–5：可聽、可比、可跟讀；若 MP3 不存在，會自動改用瀏覽器日文語音。</p>
-<div id="lineTip" class="lineTip" style="display:none;">LINE 內建瀏覽器可能限制瀏覽器語音；若無聲，請用右上角「⋯」→「在瀏覽器開啟」。若已上傳 audio/*.mp3，會優先播放 MP3。</div>
+<p class="sub">Tab 1：完整46張平假名卡。Tab 2–5：嚴格只播 MP3；不使用瀏覽器語音，避免 LINE 內建瀏覽器亂念英文。</p>
+<div id="lineTip" class="lineTip" style="display:block;">版本：STRICT_MP3_SEQLOCK_20260603｜只播 MP3｜TTS 已移除｜單字只播一次｜舊輪播會被完整中斷</div>
 </section>
 
 <nav class="tabs">
@@ -636,7 +636,7 @@ const audioNameMap = {
 // =========================================================
 // 狀態與 DOM 參照
 // =========================================================
-const state = {filter:'ALL',q:'',audioMode:'kana',playing:false,paused:false,autoPlay:false,stopRequested:false,pendingRestart:false,playIndex:0,autoPlayIndex:0,lastPlayMode:'kana',lastAutoMode:'kana',flippedAll:false,audioRunId:0};
+const state = {filter:'ALL',q:'',audioMode:'kana',playing:false,paused:false,autoPlay:false,stopRequested:false,pendingRestart:false,playIndex:0,autoPlayIndex:0,lastPlayMode:'kana',lastAutoMode:'kana',flippedAll:false,audioRunId:0,seqRunId:0};
 const grid=document.getElementById('grid'), rowFilters=document.getElementById('rowFilters'), resultStat=document.getElementById('resultStat'), audioStatus=document.getElementById('audioStatus'), searchInput=document.getElementById('searchInput'), audioMode=document.getElementById('audioMode'), playAllBtn=document.getElementById('playAllBtn'), shuffleBtn=document.getElementById('shuffleBtn'), flipAllBtn=document.getElementById('flipAllBtn'), autoPlayBtn=document.getElementById('autoPlayBtn'), restartRoundBtn=document.getElementById('restartRoundBtn'); const audioPlayer=new Audio(); audioPlayer.preload='auto';
 let currentAudioFinish=null;
 let currentSpeechFinish=null;
@@ -663,6 +663,8 @@ function guardedSleep(ms){
 }
 
 function stopEverythingForUiChange(){
+  // 作廢所有仍在 await 中的舊播放流程，避免切換後繼續往下跑
+  state.seqRunId++;
   state.stopRequested=true;
   state.playing=false;
   state.paused=false;
@@ -712,40 +714,10 @@ function cancelCurrentMedia(){
 }
 
 function speakJapanese(text,runId=state.audioRunId){
-  return new Promise(r=>{
-    if(state.stopRequested || runId!==state.audioRunId) return r(false);
-    if(!('speechSynthesis' in window)){
-      showLineTipIfNeeded();
-      return r(false);
-    }
-
-    let done=false;
-    const finish=ok=>{
-      if(done) return;
-      done=true;
-      if(currentSpeechFinish===finish) currentSpeechFinish=null;
-      r(!!ok && !state.stopRequested && runId===state.audioRunId);
-    };
-
-    if(currentSpeechFinish){
-      const f=currentSpeechFinish;
-      currentSpeechFinish=null;
-      f(false);
-    }
-
-    try{ speechSynthesis.cancel(); }catch(e){}
-    currentSpeechFinish=finish;
-
-    const u=new SpeechSynthesisUtterance(text);
-    u.lang='ja-JP';
-    u.rate=.82;
-    u.onend=()=>finish(true);
-    u.onerror=()=>{
-      showLineTipIfNeeded();
-      finish(false);
-    };
-    try{ speechSynthesis.speak(u); }catch(e){ finish(false); }
-  });
+  // LINE/Android WebView 會把日文 fallback 誤交給英文 TTS，造成 "New York Pizza" 之類亂音。
+  // 本版本完全停用瀏覽器語音；缺 MP3 就安靜並提示。
+  showLineTipIfNeeded();
+  return Promise.resolve(false);
 }
 
 function playAudioFileOnly(src,runId=state.audioRunId){
@@ -794,7 +766,9 @@ function playAudioFileOnly(src,runId=state.audioRunId){
 async function playAudio(src,fb=''){
   const runId=state.audioRunId;
   const ok = await playAudioFileOnly(src,runId);
-  if(!ok && fb && !state.stopRequested && runId===state.audioRunId) await speakJapanese(fb,runId);
+  if(!ok && fb && !state.stopRequested && runId===state.audioRunId){
+    status(`找不到或無法播放：${src}｜${fb}`, true);
+  }
   return ok;
 }
 
@@ -808,7 +782,9 @@ async function playAudioCandidates(srcList,fb=''){
     if(ok) return true;
     if(state.stopRequested || runId!==state.audioRunId) return false;
   }
-  if(!state.stopRequested && runId===state.audioRunId && fb) await speakJapanese(fb,runId);
+  if(fb && !state.stopRequested && runId===state.audioRunId){
+    status(`找不到或無法播放音檔：${fb}`, true);
+  }
   return false;
 }
 
@@ -843,29 +819,32 @@ function getNewWordSrc(item){
   return romaji ? `audio/${romaji}.mp3` : '';
 }
 
-async function playCard(c,mode){
+async function playCard(c,mode,seqId=state.seqRunId){
+  if(seqId!==state.seqRunId || state.stopRequested) return false;
+
   if(mode==='kana'){
     await playAudioCandidates([getSingle(c)],c.kana);
-    return;
+    return seqId===state.seqRunId && !state.stopRequested;
   }
 
   const ws=c.items.slice(1);
   for(let i=1;i<=ws.length;i++){
-    if(state.stopRequested)return;
+    if(state.stopRequested || seqId!==state.seqRunId) return false;
 
     const item = ws[i-1];
     const fb = item[0];
 
-    // 新舊 MP3 兼容：
-    // 1. 新版：audio/kata.mp3, audio/tako.mp3 ...
-    // 2. 舊版：audio/ta_words_1.mp3, audio/ta_words_2.mp3 ...
-    await playAudioCandidates([
-      getNewWordSrc(item),
-      getOldSeg(c,i)
-    ],fb);
+    // 嚴格只播新版單字檔：audio/kata.mp3, audio/tako.mp3 ...
+    // 不再回退舊版 *_words_*.mp3，避免同一單字或錯誤舊音檔造成雙聲。
+    await playAudioCandidates([getNewWordSrc(item)],fb);
 
-    if(i<ws.length) await guardedSleep(650);
+    if(state.stopRequested || seqId!==state.seqRunId) return false;
+    if(i<ws.length){
+      const ok = await guardedSleep(650);
+      if(!ok || state.stopRequested || seqId!==state.seqRunId) return false;
+    }
   }
+  return seqId===state.seqRunId && !state.stopRequested;
 }
 
 function currentCards(){const q=state.q.trim().toLowerCase();return cards.filter(c=>(state.filter==='ALL'||c.row===state.filter)&&(!q||[c.row,c.kana,c.romaji,...c.items.flat()].join(' ').toLowerCase().includes(q)))}
@@ -881,18 +860,25 @@ function flipOpp(c,m){const e=getEl(c);if(e)(m==='words'?e.classList.remove('is-
 
 function pauseRound(reason='已暫停'){
   if(!state.playing || state.autoPlay) return false;
+  // 作廢正在 await 的播放輪次，確保不會再自動跳下一張
+  state.seqRunId++;
   state.paused=true;
   state.stopRequested=true;
+  state.autoPlay=false;
   stopCurrentAudio();
   playAllBtn.textContent='▶ 繼續';
   playAllBtn.classList.add('active');
+  autoPlayBtn.textContent='🔁 自動播放：關';
+  autoPlayBtn.classList.remove('active');
   status(`${reason}在第 ${state.playIndex+1} 張；可按「繼續」或「重頭開始」`);
+  clearFx();
   return true;
 }
 
 async function playSeq(list,mode,start){
   if(!list.length || state.playing) return;
 
+  const seqId = ++state.seqRunId;
   cancelCurrentMedia();
   state.playing=true;
   state.paused=false;
@@ -904,31 +890,37 @@ async function playSeq(list,mode,start){
 
   try{
     for(let i=start;i<list.length;i++){
+      if(state.stopRequested || seqId!==state.seqRunId) break;
+
       const c=list[i];
       state.playIndex=i;
-
-      if(state.stopRequested) break;
 
       setPlay(c);
       status(`播放中：${c.kana}（${mode==='kana'?'單音':'單字'}）`);
 
-      await playCard(c,mode);
+      await playCard(c,mode,seqId);
 
-      if(state.stopRequested) break;
+      if(state.stopRequested || seqId!==state.seqRunId) break;
 
       getEl(c)?.classList.remove('active','playing');
       flipOpp(c,mode);
       state.playIndex=i+1;
 
-      await guardedSleep(500);
+      const ok = await guardedSleep(500);
+      if(!ok || state.stopRequested || seqId!==state.seqRunId) break;
     }
 
-    if(!state.stopRequested && state.playIndex>=list.length){
+    if(seqId===state.seqRunId && !state.stopRequested && state.playIndex>=list.length){
       state.playIndex=0;
       state.paused=false;
       status('播放完成，可按「播放一輪」再練一次');
     }
   }finally{
+    // 如果已經被新的操作作廢，不要再改回按鈕或重啟舊流程
+    if(seqId!==state.seqRunId){
+      return;
+    }
+
     state.playing=false;
     state.stopRequested=false;
 
@@ -1032,7 +1024,9 @@ function renderCards(){
       state.stopRequested=false;
       setPlay(c);
       status(`播放中：${c.kana}（單音）`);
-      await playCard(c,'kana');
+      const seqId = ++state.seqRunId;
+      await playCard(c,'kana',seqId);
+      if(seqId!==state.seqRunId) return;
       clearFx();
       e.classList.add('is-flipped');
     };
@@ -1047,7 +1041,9 @@ function renderCards(){
       const c=list.find(x=>x.romaji===b.dataset.r);
       showFace(c,'kana');
       setPlay(c);
-      await playCard(c,'kana');
+      const seqId = ++state.seqRunId;
+      await playCard(c,'kana',seqId);
+      if(seqId!==state.seqRunId) return;
       clearFx();
       showFace(c,'kana');
     };
@@ -1062,7 +1058,9 @@ function renderCards(){
       const c=list.find(x=>x.romaji===b.dataset.r);
       showFace(c,'words');
       setPlay(c);
-      await playCard(c,'words');
+      const seqId = ++state.seqRunId;
+      await playCard(c,'words',seqId);
+      if(seqId!==state.seqRunId) return;
       clearFx();
       showFace(c,'words');
     };
@@ -1112,7 +1110,7 @@ function renderWords(id,words,k){
 // =========================================================
 // 事件綁定 / 初始化
 // =========================================================
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active')});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{stopEverythingForUiChange();document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active');playAllBtn.textContent='▶ 播放一輪';playAllBtn.classList.remove('active');autoPlayBtn.textContent='🔁 自動播放：關';autoPlayBtn.classList.remove('active');status('已切換分頁，播放已停止')});
 
 playAllBtn.onclick=async()=>{
   if(state.autoPlay){
