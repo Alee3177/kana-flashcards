@@ -636,8 +636,10 @@ const audioNameMap = {
 // =========================================================
 // 狀態與 DOM 參照
 // =========================================================
-const state = {filter:'ALL',q:'',audioMode:'kana',playing:false,paused:false,autoPlay:false,stopRequested:false,pendingRestart:false,playIndex:0,autoPlayIndex:0,lastPlayMode:'kana',lastAutoMode:'kana',flippedAll:false};
+const state = {filter:'ALL',q:'',audioMode:'kana',playing:false,paused:false,autoPlay:false,stopRequested:false,pendingRestart:false,playIndex:0,autoPlayIndex:0,lastPlayMode:'kana',lastAutoMode:'kana',flippedAll:false,audioRunId:0};
 const grid=document.getElementById('grid'), rowFilters=document.getElementById('rowFilters'), resultStat=document.getElementById('resultStat'), audioStatus=document.getElementById('audioStatus'), searchInput=document.getElementById('searchInput'), audioMode=document.getElementById('audioMode'), playAllBtn=document.getElementById('playAllBtn'), shuffleBtn=document.getElementById('shuffleBtn'), flipAllBtn=document.getElementById('flipAllBtn'), autoPlayBtn=document.getElementById('autoPlayBtn'), restartRoundBtn=document.getElementById('restartRoundBtn'); const audioPlayer=new Audio(); audioPlayer.preload='auto';
+let currentAudioFinish=null;
+let currentSpeechFinish=null;
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 
@@ -656,66 +658,134 @@ function showLineTipIfNeeded(){
   if(tip && isLineBrowser()) tip.style.display='block';
 }
 
-function speakJapanese(text){
+function finishCurrentMedia(ok=false){
+  if(currentAudioFinish){
+    const f=currentAudioFinish;
+    currentAudioFinish=null;
+    f(ok);
+  }
+  if(currentSpeechFinish){
+    const f=currentSpeechFinish;
+    currentSpeechFinish=null;
+    f(ok);
+  }
+}
+
+function cancelCurrentMedia(){
+  state.audioRunId++;
+  finishCurrentMedia(false);
+  try{
+    audioPlayer.onended=null;
+    audioPlayer.onerror=null;
+    audioPlayer.onabort=null;
+    audioPlayer.onpause=null;
+    audioPlayer.pause();
+    audioPlayer.currentTime=0;
+    audioPlayer.removeAttribute('src');
+    audioPlayer.load();
+  }catch(e){}
+  try{ if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){}
+  return state.audioRunId;
+}
+
+function speakJapanese(text,runId=state.audioRunId){
   return new Promise(r=>{
-    if(state.stopRequested) return r(false);
+    if(state.stopRequested || runId!==state.audioRunId) return r(false);
     if(!('speechSynthesis' in window)){
       showLineTipIfNeeded();
       return r(false);
     }
-    speechSynthesis.cancel();
+
+    let done=false;
+    const finish=ok=>{
+      if(done) return;
+      done=true;
+      if(currentSpeechFinish===finish) currentSpeechFinish=null;
+      r(!!ok && !state.stopRequested && runId===state.audioRunId);
+    };
+
+    if(currentSpeechFinish){
+      const f=currentSpeechFinish;
+      currentSpeechFinish=null;
+      f(false);
+    }
+
+    try{ speechSynthesis.cancel(); }catch(e){}
+    currentSpeechFinish=finish;
+
     const u=new SpeechSynthesisUtterance(text);
     u.lang='ja-JP';
     u.rate=.82;
-    u.onend=()=>r(!state.stopRequested);
+    u.onend=()=>finish(true);
     u.onerror=()=>{
       showLineTipIfNeeded();
-      r(false);
+      finish(false);
     };
-    speechSynthesis.speak(u);
+    try{ speechSynthesis.speak(u); }catch(e){ finish(false); }
   });
 }
 
-function playAudioFileOnly(src){
+function playAudioFileOnly(src,runId=state.audioRunId){
   return new Promise(resolve=>{
+    if(state.stopRequested || runId!==state.audioRunId) return resolve(false);
+
     let done=false;
     const finish=ok=>{
       if(done)return;
       done=true;
+      if(currentAudioFinish===finish) currentAudioFinish=null;
       audioPlayer.onended=null;
       audioPlayer.onerror=null;
       audioPlayer.onpause=null;
       audioPlayer.onabort=null;
-      resolve(ok);
+      resolve(!!ok && !state.stopRequested && runId===state.audioRunId);
     };
-    audioPlayer.pause();
-    audioPlayer.currentTime=0;
+
+    if(currentAudioFinish){
+      const f=currentAudioFinish;
+      currentAudioFinish=null;
+      f(false);
+    }
+
+    audioPlayer.onended=null;
+    audioPlayer.onerror=null;
+    audioPlayer.onpause=null;
+    audioPlayer.onabort=null;
+
+    try{
+      audioPlayer.pause();
+      audioPlayer.currentTime=0;
+    }catch(e){}
+
+    currentAudioFinish=finish;
     audioPlayer.src=src;
     audioPlayer.onended=()=>finish(true);
     audioPlayer.onerror=()=>finish(false);
     audioPlayer.onabort=()=>finish(false);
-    audioPlayer.onpause=()=>finish(false);
+
     const p=audioPlayer.play();
     if(p&&p.catch)p.catch(()=>finish(false));
   });
 }
 
 async function playAudio(src,fb=''){
-  const ok = await playAudioFileOnly(src);
-  if(!ok && fb) await speakJapanese(fb);
+  const runId=state.audioRunId;
+  const ok = await playAudioFileOnly(src,runId);
+  if(!ok && fb && !state.stopRequested && runId===state.audioRunId) await speakJapanese(fb,runId);
   return ok;
 }
 
 async function playAudioCandidates(srcList,fb=''){
-  if(state.stopRequested) return false;
+  const runId=state.audioRunId;
+  if(state.stopRequested || runId!==state.audioRunId) return false;
   for(const src of srcList){
-    if(state.stopRequested) return false;
+    if(state.stopRequested || runId!==state.audioRunId) return false;
     if(!src) continue;
-    const ok = await playAudioFileOnly(src);
+    const ok = await playAudioFileOnly(src,runId);
     if(ok) return true;
-    if(state.stopRequested) return false;
+    if(state.stopRequested || runId!==state.audioRunId) return false;
   }
-  if(!state.stopRequested && fb) await speakJapanese(fb);
+  if(!state.stopRequested && runId===state.audioRunId && fb) await speakJapanese(fb,runId);
   return false;
 }
 
@@ -807,6 +877,7 @@ function pauseRound(reason='已暫停'){
 async function playSeq(list,mode,start){
   if(!list.length || state.playing) return;
 
+  cancelCurrentMedia();
   state.playing=true;
   state.paused=false;
   state.stopRequested=false;
@@ -868,8 +939,7 @@ async function playSeq(list,mode,start){
 }
 
 function stopCurrentAudio(){
-  try{ audioPlayer.pause(); }catch(e){}
-  try{ if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){}
+  cancelCurrentMedia();
 }
 
 async function startRound(reset=false){
@@ -927,6 +997,7 @@ function renderCards(){
       const isBack=e.classList.contains('is-flipped');
       if(isBack) return;
 
+      cancelCurrentMedia();
       state.stopRequested=false;
       setPlay(c);
       status(`播放中：${c.kana}（單音）`);
@@ -940,6 +1011,7 @@ function renderCards(){
     b.onclick=async ev=>{
       ev.stopPropagation();
       if(pauseRound('已因點選單音按鈕而暫停')) return;
+      cancelCurrentMedia();
       state.stopRequested=false;
       const c=list.find(x=>x.romaji===b.dataset.r);
       showFace(c,'kana');
@@ -954,6 +1026,7 @@ function renderCards(){
     b.onclick=async ev=>{
       ev.stopPropagation();
       if(pauseRound('已因點選單字按鈕而暫停')) return;
+      cancelCurrentMedia();
       state.stopRequested=false;
       const c=list.find(x=>x.romaji===b.dataset.r);
       showFace(c,'words');
@@ -969,7 +1042,11 @@ function renderCards(){
 
 function hi(s,k){s=esc(s);if(k==='sokuon')return s.replace(/っ/g,'<span class="red">っ</span>').replace(/ッ/g,'<span class="red">ッ</span>');if(k==='choon')return s.replace(/あさん/g,'<span class="red">あ</span>さん').replace(/ゆう/g,'ゆ<span class="red">う</span>').replace(/こう/g,'こ<span class="red">う</span>').replace(/おお/g,'お<span class="red">お</span>').replace(/せい/g,'せ<span class="red">い</span>');if(k==='dakuon')return s.replace(/[がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ]/g,m=>'<span class="red">'+m+'</span>');if(k==='youon')return s.replace(/[ゃゅょ]/g,m=>'<span class="red">'+m+'</span>');return s}
 
-async function playLesson(t){await playAudioCandidates([audioSrcForText(t)],t)}
+async function playLesson(t){
+  cancelCurrentMedia();
+  state.stopRequested=false;
+  await playAudioCandidates([audioSrcForText(t)],t);
+}
 
 async function playCompare(a,b){await playLesson(a);await sleep(650);await playLesson(b)}function renderPairs(id,pairs,k){
   document.getElementById(id).innerHTML=pairs.map((p,i)=>`<article class="pair" onclick="if(!event.target.closest('button')) playCompare('${esc(p[0][0])}','${esc(p[1][0])}')"><span class="badge">第 ${i+1} 組</span><div class="compare"><div class="side"><div class="jp">${hi(p[0][0],k)}</div><div class="muted">${esc(p[0][1])}</div><div>${esc(p[0][2])}</div><button onclick="event.stopPropagation();playLesson('${esc(p[0][0])}')">播放A</button></div><div class="side"><div class="jp">${hi(p[1][0],k)}</div><div class="muted">${esc(p[1][1])}</div><div>${esc(p[1][2])}</div><button onclick="event.stopPropagation();playLesson('${esc(p[1][0])}')">播放B</button></div></div><p>${esc(p[2])}</p><button onclick="event.stopPropagation();playCompare('${esc(p[0][0])}','${esc(p[1][0])}')">A → B 比較播放 / 跟讀</button></article>`).join('');
