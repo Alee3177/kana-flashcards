@@ -222,7 +222,7 @@ th{
 <div class="badge">日文 · KANA LEARNING</div>
 <h1>平假名50音｜促音｜長音｜濁音｜拗音</h1>
 <p class="sub">Tab 1：完整46張平假名卡。Tab 2–5：嚴格只播 MP3；不使用瀏覽器語音，避免 LINE 內建瀏覽器亂念英文。</p>
-<div id="lineTip" class="lineTip" style="display:block;">版本：STRICT_MP3_SEQLOCK_20260603｜只播 MP3｜TTS 已移除｜單字只播一次｜舊輪播會被完整中斷</div>
+<div id="lineTip" class="lineTip" style="display:block;">版本：STRICT_MP3_NO_SCROLL_20260603｜只播 MP3｜TTS 已移除｜單字只播一次｜播放一輪不自動捲動</div>
 </section>
 
 <nav class="tabs">
@@ -855,7 +855,20 @@ function applyFaces(){grid.querySelectorAll('.card').forEach(e=>{if(state.flippe
 
 function showFace(c,m){const e=getEl(c);if(e)(m==='words'?e.classList.add('is-flipped'):e.classList.remove('is-flipped'))}
 
-function flipOpp(c,m){const e=getEl(c);if(e)(m==='words'?e.classList.remove('is-flipped'):e.classList.add('is-flipped'))}function setPlay(c){clearFx();const e=getEl(c);if(e){e.classList.add('active','playing');e.scrollIntoView({behavior:'smooth',block:'center'})}}
+function flipOpp(c,m){const e=getEl(c);if(e)(m==='words'?e.classList.remove('is-flipped'):e.classList.add('is-flipped'))}
+
+function setPlay(c,shouldScroll=false){
+  clearFx();
+  const e=getEl(c);
+  if(e){
+    e.classList.add('active','playing');
+    // LINE 內建瀏覽器對 scrollIntoView 很敏感，播放一輪時會造成畫面被強制往下拉。
+    // 預設不自動捲動；只有未來明確需要時才傳 shouldScroll=true。
+    if(shouldScroll){
+      try{ e.scrollIntoView({behavior:'auto',block:'nearest'}); }catch(err){}
+    }
+  }
+}
 
 
 function pauseRound(reason='已暫停'){
@@ -865,6 +878,7 @@ function pauseRound(reason='已暫停'){
   state.paused=true;
   state.stopRequested=true;
   state.autoPlay=false;
+  state.playing=false;
   stopCurrentAudio();
   playAllBtn.textContent='▶ 繼續';
   playAllBtn.classList.add('active');
@@ -918,6 +932,7 @@ async function playSeq(list,mode,start){
   }finally{
     // 如果已經被新的操作作廢，不要再改回按鈕或重啟舊流程
     if(seqId!==state.seqRunId){
+      state.playing=false;
       return;
     }
 
