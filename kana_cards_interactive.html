@@ -11,7 +11,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kana 46 + Sokuon + Choon + Dakuon + Youon - Pause Fix</title>
+<title>Kana 46 + Sokuon + Choon + Dakuon + Youon - LINE Audio Lock Fix</title>
 
 <style>
 /* =========================================================
@@ -649,6 +649,29 @@ function status(m,e=false){audioStatus.textContent=m;audioStatus.classList.toggl
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 
+function guardedSleep(ms){
+  const runId=state.audioRunId;
+  return new Promise(resolve=>{
+    const started=Date.now();
+    const tick=()=>{
+      if(state.stopRequested || runId!==state.audioRunId) return resolve(false);
+      if(Date.now()-started>=ms) return resolve(true);
+      setTimeout(tick,40);
+    };
+    tick();
+  });
+}
+
+function stopEverythingForUiChange(){
+  state.stopRequested=true;
+  state.playing=false;
+  state.paused=false;
+  state.pendingRestart=false;
+  state.autoPlay=false;
+  cancelCurrentMedia();
+  clearFx();
+}
+
 function isLineBrowser(){
   return /Line/i.test(navigator.userAgent || "");
 }
@@ -841,14 +864,7 @@ async function playCard(c,mode){
       getOldSeg(c,i)
     ],fb);
 
-    await sleep(500);
-
-    await playAudioCandidates([
-      getNewWordSrc(item),
-      getOldSeg(c,i)
-    ],fb);
-
-    if(i<ws.length) await sleep(500);
+    if(i<ws.length) await guardedSleep(650);
   }
 }
 
@@ -904,7 +920,7 @@ async function playSeq(list,mode,start){
       flipOpp(c,mode);
       state.playIndex=i+1;
 
-      await sleep(500);
+      await guardedSleep(500);
     }
 
     if(!state.stopRequested && state.playIndex>=list.length){
@@ -961,16 +977,31 @@ async function startRound(reset=false){
   await playSeq(list,state.audioMode,state.playIndex);
 }
 
-async function autoPlay(){const list=currentCards();if(!list.length||state.playing)return;state.playing=true;state.stopRequested=false;state.lastAutoMode=state.audioMode;playAllBtn.disabled=true;try{for(let i=state.autoPlayIndex;i<list.length;i++){const c=list[i];state.autoPlayIndex=i;if(!state.autoPlay||state.stopRequested)break;setPlay(c);status(`🔁 自動播放中：${c.kana}（${state.audioMode==='kana'?'單音':'單字'}）`);await playCard(c,state.audioMode);if(!state.autoPlay||state.stopRequested)break;getEl(c)?.classList.remove('active','playing');flipOpp(c,state.audioMode);state.autoPlayIndex=i+1;await sleep(700)}if(state.autoPlay&&state.autoPlayIndex>=list.length){status('🔁 自動播放完成');state.autoPlay=false;state.autoPlayIndex=0;autoPlayBtn.textContent='🔁 自動播放：關';autoPlayBtn.classList.remove('active')}}finally{state.playing=false;playAllBtn.disabled=false;autoPlayBtn.disabled=false;state.stopRequested=false;clearFx()}}
+async function autoPlay(){const list=currentCards();if(!list.length||state.playing)return;state.playing=true;state.stopRequested=false;state.lastAutoMode=state.audioMode;playAllBtn.disabled=true;try{for(let i=state.autoPlayIndex;i<list.length;i++){const c=list[i];state.autoPlayIndex=i;if(!state.autoPlay||state.stopRequested)break;setPlay(c);status(`🔁 自動播放中：${c.kana}（${state.audioMode==='kana'?'單音':'單字'}）`);await playCard(c,state.audioMode);if(!state.autoPlay||state.stopRequested)break;getEl(c)?.classList.remove('active','playing');flipOpp(c,state.audioMode);state.autoPlayIndex=i+1;await guardedSleep(700)}if(state.autoPlay&&state.autoPlayIndex>=list.length){status('🔁 自動播放完成');state.autoPlay=false;state.autoPlayIndex=0;autoPlayBtn.textContent='🔁 自動播放：關';autoPlayBtn.classList.remove('active')}}finally{state.playing=false;playAllBtn.disabled=false;autoPlayBtn.disabled=false;state.stopRequested=false;clearFx()}}
 
-function renderFilters(){const defs=[['ALL','全部'],['A-row','あ行'],['KA-row','か行'],['SA-row','さ行'],['TA-row','た行'],['NA-row','な行'],['HA-row','は行'],['MA-row','ま行'],['YA-row','や行'],['RA-row','ら行'],['WA-row','わ行']];rowFilters.innerHTML=defs.map(([k,l])=>`<button class="${state.filter===k?'active':''}" data-filter="${k}">${l}</button>`).join('');rowFilters.querySelectorAll('button').forEach(b=>b.onclick=()=>{state.filter=b.dataset.filter;state.playIndex=0;state.autoPlayIndex=0;state.paused=false;playAllBtn.textContent='▶ 播放一輪';playAllBtn.classList.remove('active');
-
-// 初始渲染
-renderFilters();
-renderCards();
-applyFaces();
-showLineTipIfNeeded();
-status('已切換行別')})}
+function renderFilters(){
+  const defs=[['ALL','全部'],['A-row','あ行'],['KA-row','か行'],['SA-row','さ行'],['TA-row','た行'],['NA-row','な行'],['HA-row','は行'],['MA-row','ま行'],['YA-row','や行'],['RA-row','ら行'],['WA-row','わ行']];
+  rowFilters.innerHTML=defs.map(([k,l])=>`<button class="${state.filter===k?'active':''}" data-filter="${k}">${l}</button>`).join('');
+  rowFilters.querySelectorAll('button').forEach(b=>{
+    b.onclick=()=>{
+      stopEverythingForUiChange();
+      state.filter=b.dataset.filter;
+      state.playIndex=0;
+      state.autoPlayIndex=0;
+      state.paused=false;
+      state.autoPlay=false;
+      playAllBtn.textContent='▶ 播放一輪';
+      playAllBtn.classList.remove('active');
+      autoPlayBtn.textContent='🔁 自動播放：關';
+      autoPlayBtn.classList.remove('active');
+      renderFilters();
+      renderCards();
+      applyFaces();
+      showLineTipIfNeeded();
+      status('已切換行別');
+    };
+  });
+}
 
 function renderCards(){
   const list=currentCards();
@@ -1048,7 +1079,7 @@ async function playLesson(t){
   await playAudioCandidates([audioSrcForText(t)],t);
 }
 
-async function playCompare(a,b){await playLesson(a);await sleep(650);await playLesson(b)}function renderPairs(id,pairs,k){
+async function playCompare(a,b){await playLesson(a);await guardedSleep(650);await playLesson(b)}function renderPairs(id,pairs,k){
   document.getElementById(id).innerHTML=pairs.map((p,i)=>`<article class="pair" onclick="if(!event.target.closest('button')) playCompare('${esc(p[0][0])}','${esc(p[1][0])}')"><span class="badge">第 ${i+1} 組</span><div class="compare"><div class="side"><div class="jp">${hi(p[0][0],k)}</div><div class="muted">${esc(p[0][1])}</div><div>${esc(p[0][2])}</div><button onclick="event.stopPropagation();playLesson('${esc(p[0][0])}')">播放A</button></div><div class="side"><div class="jp">${hi(p[1][0],k)}</div><div class="muted">${esc(p[1][1])}</div><div>${esc(p[1][2])}</div><button onclick="event.stopPropagation();playLesson('${esc(p[1][0])}')">播放B</button></div></div><p>${esc(p[2])}</p><button onclick="event.stopPropagation();playCompare('${esc(p[0][0])}','${esc(p[1][0])}')">A → B 比較播放 / 跟讀</button></article>`).join('');
 }
 
@@ -1063,10 +1094,10 @@ async function playYouonSequence(base,note,target){
   const small = smallKanaFromNote(note);
   await playLesson(base);
   if(small){
-    await sleep(350);
+    await guardedSleep(350);
     await playLesson(small);
   }
-  await sleep(650);
+  await guardedSleep(650);
   await playLesson(target);
 }
 
@@ -1084,7 +1115,17 @@ function renderWords(id,words,k){
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active')});
 
 playAllBtn.onclick=async()=>{
-  if(state.playing && !state.autoPlay){
+  if(state.autoPlay){
+    state.autoPlay=false;
+    state.stopRequested=true;
+    stopCurrentAudio();
+    autoPlayBtn.textContent='🔁 自動播放：關';
+    autoPlayBtn.classList.remove('active');
+    status('已停止自動播放');
+    return;
+  }
+
+  if(state.playing){
     pauseRound('已暫停');
     return;
   }
